@@ -1,1 +1,2 @@
-dotnet run --project ./ZZCakeBuild/CakeBuild.csproj -- "$@"
+#!/bin/bash
+dotnet build VintageStoryModManager/VintageStoryModManager.csproj "$@"

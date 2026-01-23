@@ -1,2 +1,2 @@
-dotnet run --project ZZCakeBuild/CakeBuild.csproj -- $args
-exit $LASTEXITCODE;
+dotnet build VintageStoryModManager/VintageStoryModManager.csproj $args
+exit $LASTEXITCODE
