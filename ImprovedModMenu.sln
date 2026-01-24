@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VintageStoryModManager", "VintageStoryModManager\VintageStoryModManager.csproj", "{F4BA62CC-3E40-49E0-BC85-A0D287B49F2E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VintageStoryModManager.Tests", "VintageStoryModManager.Tests\VintageStoryModManager.Tests.csproj", "{33F50B03-D68E-4399-B76A-C43C70BE836F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{F4BA62CC-3E40-49E0-BC85-A0D287B49F2E}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{F4BA62CC-3E40-49E0-BC85-A0D287B49F2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4BA62CC-3E40-49E0-BC85-A0D287B49F2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33F50B03-D68E-4399-B76A-C43C70BE836F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33F50B03-D68E-4399-B76A-C43C70BE836F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33F50B03-D68E-4399-B76A-C43C70BE836F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33F50B03-D68E-4399-B76A-C43C70BE836F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

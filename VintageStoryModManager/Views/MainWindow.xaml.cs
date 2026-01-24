@@ -334,6 +334,7 @@ public partial class MainWindow : Window
     private readonly ModCompatibilityCommentsService _modCompatibilityCommentsService = new();
     private readonly ModDatabaseService _modDatabaseService = new();
     private readonly ModUpdateService _modUpdateService = new();
+    private readonly ModListService _modListService = new();
     private DataBackupService _dataBackupService;
     private readonly ModActivityLoggingService _modActivityLoggingService;
     private readonly UserConfigurationService _userConfiguration;
@@ -402,6 +403,12 @@ public partial class MainWindow : Window
     // ViewModel
     private MainViewModel? _viewModel;
     private ModBrowserViewModel? _modBrowserViewModel;
+    private DataBackupViewModel? _dataBackupViewModel;
+    private ModOperationsViewModel? _modOperationsViewModel;
+    private PresetManagementViewModel? _presetManagementViewModel;
+    private CloudModlistViewModel? _cloudModlistViewModel;
+    private ModSelectionViewModel? _modSelectionViewModel;
+    private ModListUIStateViewModel? _uiStateViewModel;
     private readonly List<MenuItem> _customThemeMenuItems = new();
 
     #endregion
@@ -420,6 +427,15 @@ public partial class MainWindow : Window
             _userConfiguration.CustomDataBackupLocation);
         _modActivityLoggingService = new ModActivityLoggingService(_userConfiguration);
         _serverTargetService = new ServerTargetService(_userConfiguration.GetConfigurationDirectory());
+
+        // Initialize Phase 2 ViewModels
+        InitializeOperationsViewModels();
+
+        // Initialize Phase 3 ViewModels
+        InitializePresetsViewModels();
+
+        // Initialize Phase 4 ViewModels
+        InitializeSelectionAndUIStateViewModels();
 
         InitializeComponent();
 
@@ -491,6 +507,528 @@ public partial class MainWindow : Window
 
         UpdateCloudModlistControlsEnabledState();
         UpdateLocalModlistControlsEnabledState();
+    }
+
+    #endregion
+
+    #region Phase 2 ViewModels Initialization
+
+    private void InitializeOperationsViewModels()
+    {
+        // Initialize DataBackupViewModel
+        _dataBackupViewModel = new DataBackupViewModel(
+            _dataBackupService,
+            _userConfiguration,
+            this,
+            () => _dataDirectory ?? string.Empty,
+            () => _gameDirectory);
+
+        // Wire up DataBackupViewModel callbacks
+        _dataBackupViewModel.OnDataFolderRestored += async () => await RefreshModsAsync().ConfigureAwait(false);
+        _dataBackupViewModel.OnBackupLocationChanged += (newLocation) =>
+        {
+            _dataBackupService = new DataBackupService(
+                _userConfiguration.GetConfigurationDirectory(),
+                newLocation);
+            _viewModel?.ReportStatus($"Backup location changed to: {newLocation}");
+        };
+        _dataBackupViewModel.OnBackupsDeleted += RefreshDataBackupMenu;
+
+        // Initialize ModOperationsViewModel
+        _modOperationsViewModel = new ModOperationsViewModel(
+            _modUpdateService,
+            _modDatabaseService,
+            _modActivityLoggingService,
+            _userConfiguration,
+            this);
+
+        // Wire up ModOperationsViewModel callbacks
+        _modOperationsViewModel.OnReportStatus += (message, isError) => _viewModel?.ReportStatus(message, isError);
+        _modOperationsViewModel.OnRequestAutomaticBackupAsync += CreateAutomaticBackupAsync;
+        _modOperationsViewModel.OnRequestRefreshAsync += async () => await RefreshModsAsync().ConfigureAwait(false);
+        _modOperationsViewModel.OnDeleteMod += TryDeleteModAtPath_Wrapper;
+        _modOperationsViewModel.OnInstallModAsync += InstallModAsync_Wrapper;
+        _modOperationsViewModel.OnUpdateModAsync += UpdateSingleModAsync_Wrapper;
+        _modOperationsViewModel.OnUpdateAllModsAsync += UpdateAllModsAsync_Wrapper;
+        _modOperationsViewModel.OnFixModDependenciesAsync += FixModDependenciesAsync_Wrapper;
+    }
+
+    // Wrapper methods for ModOperationsViewModel callbacks
+
+    private bool TryDeleteModAtPath_Wrapper(ModListItemViewModel mod)
+    {
+        if (!TryGetManagedModPath(mod, out var modPath, out var errorMessage))
+        {
+            if (!string.IsNullOrWhiteSpace(errorMessage))
+                WpfMessageBox.Show(errorMessage!,
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            return false;
+        }
+
+        return TryDeleteModAtPath(mod, modPath);
+    }
+
+    private async Task<bool> InstallModAsync_Wrapper(ModListItemViewModel mod)
+    {
+        var release = SelectReleaseForInstall(mod);
+        if (release is null) return false;
+
+        if (!TryGetInstallTargetPath(mod, release, out var targetPath, out var errorMessage))
+        {
+            if (!string.IsNullOrWhiteSpace(errorMessage))
+                WpfMessageBox.Show(errorMessage!,
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            return false;
+        }
+
+        _isModUpdateInProgress = true;
+        UpdateSelectedModButtons();
+
+        try
+        {
+            var descriptor = new ModUpdateDescriptor(
+                mod.ModId,
+                mod.DisplayName,
+                release.DownloadUri,
+                targetPath,
+                false,
+                release.FileName,
+                release.Version,
+                mod.Version);
+
+            var progress = new Progress<ModUpdateProgress>(p =>
+                _viewModel?.ReportStatus($"{mod.DisplayName}: {p.Message}"));
+
+            var result = await _modUpdateService
+                .UpdateAsync(descriptor, _userConfiguration.CacheAllVersionsLocally, progress)
+                .ConfigureAwait(true);
+
+            if (!result.Success)
+            {
+                var message = string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? "The installation failed."
+                    : result.ErrorMessage!;
+                _viewModel?.ReportStatus($"Failed to install {mod.DisplayName}: {message}", true);
+                WpfMessageBox.Show($"Failed to install {mod.DisplayName}:{Environment.NewLine}{message}",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return false;
+            }
+
+            var versionText = string.IsNullOrWhiteSpace(release.Version) ? string.Empty : $" {release.Version}";
+            _viewModel?.ReportStatus($"Installed {mod.DisplayName}{versionText}.");
+            _modActivityLoggingService.LogModInstall(mod.DisplayName ?? mod.ModId ?? "Unknown", release.Version);
+
+            if (mod.IsSelected) RemoveFromSelection(mod);
+            _viewModel?.RemoveSearchResult(mod);
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            _viewModel?.ReportStatus("Installation cancelled.");
+            return false;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            _viewModel?.ReportStatus($"Failed to install {mod.DisplayName}: {ex.Message}", true);
+            WpfMessageBox.Show($"Failed to install {mod.DisplayName}:{Environment.NewLine}{ex.Message}",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return false;
+        }
+        finally
+        {
+            _isModUpdateInProgress = false;
+            UpdateSelectedModButtons();
+        }
+    }
+
+    private async Task<bool> UpdateSingleModAsync_Wrapper(ModListItemViewModel mod)
+    {
+        IReadOnlyDictionary<ModListItemViewModel, ModReleaseInfo>? overrides = null;
+        if (mod.SelectedVersionOption is { Release: { } selectedRelease, IsInstalled: false })
+            overrides = new Dictionary<ModListItemViewModel, ModReleaseInfo>
+            {
+                [mod] = selectedRelease
+            };
+
+        await UpdateModsAsync(new[] { mod }, false, overrides);
+        return true; // UpdateModsAsync handles all error reporting
+    }
+
+    private async Task UpdateAllModsAsync_Wrapper()
+    {
+        if (_isApplyingPreset || _isModUpdateInProgress || _viewModel?.ModsView == null) return;
+
+        var mods = _viewModel.ModsView.Cast<ModListItemViewModel>()
+            .Where(mod => mod.CanUpdate)
+            .ToList();
+
+        Dictionary<ModListItemViewModel, ModReleaseInfo>? overrides = null;
+        foreach (var mod in mods)
+            if (mod.SelectedVersionOption is { Release: { } selectedRelease, IsInstalled: false })
+            {
+                overrides ??= new Dictionary<ModListItemViewModel, ModReleaseInfo>();
+                overrides[mod] = selectedRelease;
+            }
+
+        if (mods.Count == 0)
+        {
+            WpfMessageBox.Show("All mods are already up to date.",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new UpdateModsDialog(_userConfiguration, mods, overrides)
+        {
+            Owner = this
+        };
+
+        var dialogResult = dialog.ShowDialog();
+        if (dialogResult != true) return;
+
+        var selectedMods = dialog.SelectedMods;
+        if (selectedMods.Count == 0) return;
+
+        Dictionary<ModListItemViewModel, ModReleaseInfo>? selectedOverrides = null;
+        if (overrides != null)
+            foreach (var mod in selectedMods)
+                if (overrides.TryGetValue(mod, out var release) && release != null)
+                {
+                    selectedOverrides ??= new Dictionary<ModListItemViewModel, ModReleaseInfo>();
+                    selectedOverrides[mod] = release;
+                }
+
+        await UpdateModsAsync(selectedMods, true, selectedOverrides).ConfigureAwait(true);
+    }
+
+    private async Task<bool> FixModDependenciesAsync_Wrapper(ModListItemViewModel mod)
+    {
+        var errorSourcePathsBeforeFix = _viewModel?.GetSourcePathsForModsWithErrors() ?? [];
+        var modsToRefresh = new HashSet<string>(errorSourcePathsBeforeFix, StringComparer.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(mod.SourcePath)) modsToRefresh.Add(mod.SourcePath);
+
+        _isModUpdateInProgress = true;
+        UpdateSelectedModButtons();
+
+        var failures = new List<string>();
+        var anySuccess = false;
+        var processedDependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            foreach (var dependency in mod.Dependencies)
+            {
+                if (dependency.IsGameOrCoreDependency || !processedDependencies.Add(dependency.ModId)) continue;
+
+                var installedDependency = _viewModel?.FindInstalledModById(dependency.ModId);
+
+                var isMissing = mod.MissingDependencies.Any(d =>
+                    string.Equals(d.ModId, dependency.ModId, StringComparison.OrdinalIgnoreCase));
+                if (!isMissing && installedDependency is null) isMissing = true;
+
+                if (!isMissing && installedDependency != null)
+                {
+                    var satisfies =
+                        VersionStringUtility.SatisfiesMinimumVersion(dependency.Version, installedDependency.Version);
+                    if (!satisfies) isMissing = true;
+                }
+
+                if (isMissing)
+                {
+                    var result = await InstallOrUpdateDependencyAsync(dependency, installedDependency)
+                        .ConfigureAwait(true);
+                    if (!result.Success)
+                    {
+                        failures.Add($"{dependency.Display}: {result.Message}");
+                        _viewModel?.ReportStatus($"Failed to install dependency {dependency.Display}: {result.Message}",
+                            true);
+                    }
+                    else
+                    {
+                        anySuccess = true;
+                        _viewModel?.ReportStatus(result.Message);
+                    }
+
+                    continue;
+                }
+
+                if (installedDependency != null && !installedDependency.IsActive)
+                {
+                    installedDependency.IsActive = true;
+                    anySuccess = true;
+                    _viewModel?.ReportStatus($"Activated dependency {installedDependency.DisplayName}.");
+                }
+            }
+        }
+        finally
+        {
+            _isModUpdateInProgress = false;
+            UpdateSelectedModButtons();
+        }
+
+        if (_viewModel is { } viewModel && modsToRefresh.Count > 0)
+        {
+            try
+            {
+                await viewModel.RefreshModsWithErrorsAsync(modsToRefresh).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                WpfMessageBox.Show(
+                    $"The mods with errors could not be refreshed after fixing dependencies:{Environment.NewLine}{ex.Message}",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+
+            UpdateSelectedModButtons();
+        }
+
+        return anySuccess;
+    }
+
+    private void RefreshDataBackupMenu()
+    {
+        // Placeholder - this will be implemented to refresh the backup menu items
+        // For now, just do nothing as the menu is dynamically populated on open
+    }
+
+    #endregion
+
+    #region Phase 3 ViewModels Initialization
+
+    private void InitializePresetsViewModels()
+    {
+        // Initialize PresetManagementViewModel
+        _presetManagementViewModel = new PresetManagementViewModel(
+            _modListService,
+            _userConfiguration,
+            this,
+            () => _viewModel?.InstalledGameVersion,
+            () => _viewModel?.GetInstalledModsSnapshot() ?? Array.Empty<ModListItemViewModel>(),
+            GetCurrentModStates);
+
+        // Wire up PresetManagementViewModel callbacks
+        _presetManagementViewModel.OnRequestSavePreset += SavePreset_Wrapper;
+        _presetManagementViewModel.OnRequestLoadPreset += LoadPreset_Wrapper;
+        _presetManagementViewModel.OnReportStatus += (message, isError) => _viewModel?.ReportStatus(message, isError);
+        _presetManagementViewModel.OnBuildModConfigOptions += () => BuildModConfigOptions();
+        _presetManagementViewModel.OnGetUploaderName += () => ResolveUploaderName(_cloudModlistStore?.CurrentUserId);
+        _presetManagementViewModel.OnResolveGameVersion += ResolveGameVersion;
+        _presetManagementViewModel.OnReadModConfigurations += TryReadModConfigurations;
+        _presetManagementViewModel.OnEnsureModListDirectory += () => EnsureModListDirectory();
+        _presetManagementViewModel.OnEnsureRebuiltModListDirectory += () => EnsureRebuiltModListDirectory();
+        _presetManagementViewModel.OnBuildSuggestedFileName += BuildSuggestedFileName;
+        _presetManagementViewModel.OnModlistSaved += (filePath) => RefreshLocalModlists(true, new[] { filePath });
+
+        // Initialize CloudModlistViewModel
+        _cloudModlistViewModel = new CloudModlistViewModel(this, _userConfiguration);
+
+        // Wire up CloudModlistViewModel callbacks
+        _cloudModlistViewModel.OnReportStatus += (message, isError) => _viewModel?.ReportStatus(message, isError);
+        _cloudModlistViewModel.OnSaveToCloudAsync += SaveModlistToCloudAsync_Wrapper;
+        _cloudModlistViewModel.OnLoadFromCloudAsync += LoadCloudModlistAsync_Wrapper;
+        _cloudModlistViewModel.OnDeleteCloudModlistAsync += DeleteCloudModlistAsync_Wrapper;
+        _cloudModlistViewModel.OnRefreshCloudModlistsAsync += RefreshCloudModlistsAsync;
+        _cloudModlistViewModel.OnManageCloudModlistsAsync += ManageCloudModlistsAsync_Wrapper;
+        _cloudModlistViewModel.OnRequestCloudRefresh += async (force) =>
+        {
+            if (_viewModel?.IsViewingModlistTab == true)
+                await RefreshCloudModlistsAsync(force);
+            else
+                _cloudModlistsLoaded = false;
+        };
+    }
+
+    // Wrapper methods for PresetManagementViewModel callbacks
+
+    private void SavePreset_Wrapper()
+    {
+        var presetDirectory = EnsurePresetDirectory();
+        TrySaveSnapshot(
+            presetDirectory,
+            "Save Mod Preset",
+            "Preset files (*.json)|*.json|All files (*.*)|*.*",
+            "Presets must be saved inside the Presets folder.",
+            "Preset",
+            () => _userConfiguration.GetLastSelectedPresetName(),
+            name =>
+            {
+                _userConfiguration.SetLastSelectedPresetName(name);
+                _viewModel?.ReportStatus($"Saved preset \"{name}\".");
+            },
+            "preset",
+            false,
+            false);
+    }
+
+    private async Task LoadPreset_Wrapper()
+    {
+        if (_viewModel is null) return;
+
+        var modListDirectory = EnsureModListDirectory();
+        var dialog = new OpenFileDialog
+        {
+            Title = "Load Modlist",
+            Filter = "Modlist files (*.json;*.pdf)|*.json;*.pdf|JSON files (*.json)|*.json|PDF files (*.pdf)|*.pdf|All files (*.*)|*.*",
+            DefaultExt = ".json",
+            InitialDirectory = modListDirectory,
+            Multiselect = false
+        };
+
+        var dialogResult = dialog.ShowDialog(this);
+        if (dialogResult != true) return;
+
+        await LoadModlistFromFileAsync(dialog.FileName).ConfigureAwait(true);
+    }
+
+    private IReadOnlyList<ModPresetModState> GetCurrentModStates()
+    {
+        return _viewModel?.GetCurrentModStates() ?? Array.Empty<ModPresetModState>();
+    }
+
+    // Wrapper methods for CloudModlistViewModel callbacks
+
+    private async Task<bool> SaveModlistToCloudAsync_Wrapper()
+    {
+        try
+        {
+            await SaveModlistToCloudAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> LoadCloudModlistAsync_Wrapper(CloudModlistListEntry entry)
+    {
+        try
+        {
+            if (_viewModel is null) return false;
+
+            var ensuredEntry = await EnsureCloudModlistContentAsync(entry);
+            if (ensuredEntry is null) return false;
+            entry = ensuredEntry;
+
+            string cacheDirectory;
+            try
+            {
+                cacheDirectory = EnsureCloudModListCacheDirectory();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                WpfMessageBox.Show($"Failed to prepare the cloud modlist cache:\n{ex.Message}",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return false;
+            }
+
+            var cacheFileName = BuildSuggestedFileName(entry.Name ?? entry.DisplayName, "Cloud Modlist");
+            var cacheFilePath = GetUniqueFilePath(cacheDirectory, cacheFileName, ".json");
+
+            try
+            {
+                await File.WriteAllTextAsync(cacheFilePath, entry.ContentJson);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                WpfMessageBox.Show($"Failed to cache the selected modlist:\n{ex.Message}",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return false;
+            }
+
+            await LoadModlistFromFileAsync(cacheFilePath).ConfigureAwait(true);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> DeleteCloudModlistAsync_Wrapper(CloudModlistListEntry entry)
+    {
+        try
+        {
+            await ExecuteCloudOperationAsync(async store =>
+            {
+                await store.DeleteAsync(entry.SlotKey);
+                var slotLabel = FormatCloudSlotLabel(entry.SlotKey);
+                _viewModel?.ReportStatus($"Deleted cloud modlist from {slotLabel}.");
+            }, "delete the cloud modlist");
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task ManageCloudModlistsAsync_Wrapper()
+    {
+        await ExecuteCloudOperationAsync(async store =>
+        {
+            await ShowCloudModlistManagementDialogAsync(store);
+        }, "manage your cloud modlists");
+    }
+
+    #endregion
+
+    #region Phase 4 ViewModels Initialization
+
+    private void InitializeSelectionAndUIStateViewModels()
+    {
+        // Initialize ModSelectionViewModel
+        _modSelectionViewModel = new ModSelectionViewModel();
+
+        // Wire up ModSelectionViewModel callbacks
+        _modSelectionViewModel.OnSelectionChanged += UpdateSelectedModButtons;
+        _modSelectionViewModel.OnGetModsInViewOrder += GetModsInViewOrder;
+        _modSelectionViewModel.OnFindModBySourcePath += (path) => _viewModel?.FindModBySourcePath(path);
+        _modSelectionViewModel.OnSelectedModPropertyChanged += (mod, propertyName) =>
+        {
+            if (string.IsNullOrEmpty(propertyName) ||
+                propertyName == nameof(ModListItemViewModel.CanFixDependencyIssues) ||
+                propertyName == nameof(ModListItemViewModel.HasDependencyIssues) ||
+                propertyName == nameof(ModListItemViewModel.MissingDependencies) ||
+                propertyName == nameof(ModListItemViewModel.DependencyHasErrors))
+            {
+                RefreshSelectedModFixButton(mod);
+            }
+
+            if (string.IsNullOrEmpty(propertyName) ||
+                propertyName == nameof(ModListItemViewModel.Version))
+            {
+                RefreshSelectedModCopyForServerButton(mod);
+            }
+        };
+
+        // Initialize ModListUIStateViewModel
+        _uiStateViewModel = new ModListUIStateViewModel();
+    }
+
+    private List<ModListItemViewModel> GetModsInViewOrder()
+    {
+        var view = _viewModel?.CurrentModsView;
+        if (view == null) return new List<ModListItemViewModel>();
+
+        return view.Cast<ModListItemViewModel>().ToList();
     }
 
     #endregion
@@ -4176,24 +4714,7 @@ public partial class MainWindow : Window
     {
         if (_viewModel?.RefreshCommand == null) return;
 
-        List<string>? selectedSourcePaths = null;
-        string? anchorSourcePath = null;
-
-        if (_selectedMods.Count > 0)
-        {
-            var dedup = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            selectedSourcePaths = new List<string>(_selectedMods.Count);
-
-            foreach (var selected in _selectedMods)
-            {
-                var sourcePath = selected.SourcePath;
-                if (string.IsNullOrWhiteSpace(sourcePath)) continue;
-
-                if (dedup.Add(sourcePath)) selectedSourcePaths.Add(sourcePath);
-            }
-
-            if (selectedSourcePaths.Count > 0 && _selectionAnchor is { } anchor) anchorSourcePath = anchor.SourcePath;
-        }
+        var (selectedSourcePaths, anchorSourcePath) = _modSelectionViewModel?.GetSelectionSnapshot() ?? (null, null);
 
         if (allowModDetailsRefresh) _viewModel.ForceNextRefreshToLoadDetails();
 
@@ -4744,7 +5265,7 @@ public partial class MainWindow : Window
         {
             var modifiers = Keyboard.Modifiers;
             if ((modifiers & (ModifierKeys.Control | ModifierKeys.Alt | ModifierKeys.Windows)) == ModifierKeys.None &&
-                _selectedMods.Count > 0)
+                (_modSelectionViewModel?.HasSelection ?? false))
             {
                 await DeleteSelectedModsAsync();
                 return true;
@@ -5143,19 +5664,19 @@ public partial class MainWindow : Window
 
     private async void DeleteModButton_OnClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not WpfButton button) return;
+        if (sender is not WpfButton button || _modOperationsViewModel is null) return;
 
         if (button.DataContext is ModListItemViewModel mod)
         {
             e.Handled = true;
-            await DeleteSingleModAsync(mod);
+            await _modOperationsViewModel.DeleteModCommand.ExecuteAsync(mod);
             return;
         }
 
-        if (_selectedMods.Count == 0) return;
+        if (_modSelectionViewModel?.SelectedMods.Count == 0) return;
 
         e.Handled = true;
-        await DeleteSelectedModsAsync();
+        await _modOperationsViewModel.DeleteMultipleModsCommand.ExecuteAsync(_modSelectionViewModel!.SelectedMods);
     }
 
     private void CloseModInfoButton_OnClick(object sender, RoutedEventArgs e)
@@ -5166,15 +5687,15 @@ public partial class MainWindow : Window
 
     private async Task DeleteSelectedModsAsync()
     {
-        if (_selectedMods.Count == 0) return;
+        if (_modSelectionViewModel?.SelectedMods.Count == 0) return;
 
-        if (_selectedMods.Count == 1)
+        if (_modSelectionViewModel?.SelectedMods.Count == 1)
         {
-            await DeleteSingleModAsync(_selectedMods[0]);
+            await DeleteSingleModAsync(_modSelectionViewModel.SelectedMods[0]);
             return;
         }
 
-        var modsToDelete = _selectedMods.ToList();
+        var modsToDelete = _modSelectionViewModel?.SelectedMods.ToList() ?? new List<ModListItemViewModel>();
         await DeleteMultipleModsAsync(modsToDelete);
     }
 
@@ -5334,226 +5855,22 @@ public partial class MainWindow : Window
 
     private async void FixModButton_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_isModUpdateInProgress) return;
+        if (_modOperationsViewModel is null || !_modOperationsViewModel.FixModDependenciesCommand.CanExecute(null)) return;
 
         if (sender is not WpfButton { DataContext: ModListItemViewModel mod }) return;
 
         e.Handled = true;
-
-        var dependencies = mod.Dependencies;
-        if (dependencies.Count == 0)
-        {
-            WpfMessageBox.Show("This mod does not declare dependencies that can be fixed automatically.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-
-        var errorSourcePathsBeforeFix =
-            _viewModel?.GetSourcePathsForModsWithErrors() ?? [];
-        var modsToRefresh = new HashSet<string>(errorSourcePathsBeforeFix, StringComparer.OrdinalIgnoreCase);
-
-        if (!string.IsNullOrWhiteSpace(mod.SourcePath)) modsToRefresh.Add(mod.SourcePath);
-
-        _isModUpdateInProgress = true;
-        UpdateSelectedModButtons();
-
-        var failures = new List<string>();
-        var anySuccess = false;
-        var processedDependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        try
-        {
-            foreach (var dependency in dependencies)
-            {
-                if (dependency.IsGameOrCoreDependency || !processedDependencies.Add(dependency.ModId)) continue;
-
-                var installedDependency = _viewModel?.FindInstalledModById(dependency.ModId);
-
-                var isMissing = mod.MissingDependencies.Any(d =>
-                    string.Equals(d.ModId, dependency.ModId, StringComparison.OrdinalIgnoreCase));
-                if (!isMissing && installedDependency is null) isMissing = true;
-
-                if (!isMissing && installedDependency != null)
-                {
-                    var satisfies =
-                        VersionStringUtility.SatisfiesMinimumVersion(dependency.Version, installedDependency.Version);
-                    if (!satisfies) isMissing = true;
-                }
-
-                if (isMissing)
-                {
-                    var result = await InstallOrUpdateDependencyAsync(dependency, installedDependency)
-                        .ConfigureAwait(true);
-                    if (!result.Success)
-                    {
-                        failures.Add($"{dependency.Display}: {result.Message}");
-                        _viewModel?.ReportStatus($"Failed to install dependency {dependency.Display}: {result.Message}",
-                            true);
-                    }
-                    else
-                    {
-                        anySuccess = true;
-                        _viewModel?.ReportStatus(result.Message);
-                    }
-
-                    continue;
-                }
-
-                if (installedDependency != null && !installedDependency.IsActive)
-                {
-                    installedDependency.IsActive = true;
-                    anySuccess = true;
-                    _viewModel?.ReportStatus($"Activated dependency {installedDependency.DisplayName}.");
-                }
-            }
-        }
-        finally
-        {
-            _isModUpdateInProgress = false;
-            UpdateSelectedModButtons();
-        }
-
-        if (_viewModel is { } viewModel && modsToRefresh.Count > 0)
-        {
-            try
-            {
-                await viewModel.RefreshModsWithErrorsAsync(modsToRefresh).ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                WpfMessageBox.Show(
-                    $"The mods with errors could not be refreshed after fixing dependencies:{Environment.NewLine}{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-
-            UpdateSelectedModButtons();
-        }
-
-        if (failures.Count > 0)
-        {
-            var message = string.Join(Environment.NewLine, failures);
-            WpfMessageBox.Show($"Some dependencies could not be resolved:{Environment.NewLine}{message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-            _viewModel?.ReportStatus($"Failed to resolve all dependencies for {mod.DisplayName}.", true);
-        }
-        else if (anySuccess)
-        {
-            _viewModel?.ReportStatus($"Resolved dependencies for {mod.DisplayName}.");
-        }
-        else
-        {
-            _viewModel?.ReportStatus($"Dependencies for {mod.DisplayName} are already satisfied.");
-        }
+        await _modOperationsViewModel.FixModDependenciesCommand.ExecuteAsync(mod);
     }
 
     private async void InstallModButton_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_isModUpdateInProgress) return;
+        if (_modOperationsViewModel is null || !_modOperationsViewModel.InstallModCommand.CanExecute(null)) return;
 
         if (sender is not WpfButton { DataContext: ModListItemViewModel mod }) return;
 
         e.Handled = true;
-
-        if (!mod.HasDownloadableRelease)
-        {
-            WpfMessageBox.Show("No downloadable releases are available for this mod.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-
-        var release = SelectReleaseForInstall(mod);
-        if (release is null)
-        {
-            WpfMessageBox.Show("No downloadable releases are available for this mod.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-
-        if (!TryGetInstallTargetPath(mod, release, out var targetPath, out var errorMessage))
-        {
-            if (!string.IsNullOrWhiteSpace(errorMessage))
-                WpfMessageBox.Show(errorMessage!,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-
-            return;
-        }
-
-        await CreateAutomaticBackupAsync("ModsUpdated").ConfigureAwait(true);
-
-        _isModUpdateInProgress = true;
-        UpdateSelectedModButtons();
-
-        try
-        {
-            var descriptor = new ModUpdateDescriptor(
-                mod.ModId,
-                mod.DisplayName,
-                release.DownloadUri,
-                targetPath,
-                false,
-                release.FileName,
-                release.Version,
-                mod.Version);
-
-            var progress = new Progress<ModUpdateProgress>(p =>
-                _viewModel?.ReportStatus($"{mod.DisplayName}: {p.Message}"));
-
-            var result = await _modUpdateService
-                .UpdateAsync(descriptor, _userConfiguration.CacheAllVersionsLocally, progress)
-                .ConfigureAwait(true);
-
-            if (!result.Success)
-            {
-                var message = string.IsNullOrWhiteSpace(result.ErrorMessage)
-                    ? "The installation failed."
-                    : result.ErrorMessage!;
-                _viewModel?.ReportStatus($"Failed to install {mod.DisplayName}: {message}", true);
-                WpfMessageBox.Show($"Failed to install {mod.DisplayName}:{Environment.NewLine}{message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return;
-            }
-
-            var versionText = string.IsNullOrWhiteSpace(release.Version) ? string.Empty : $" {release.Version}";
-            _viewModel?.ReportStatus($"Installed {mod.DisplayName}{versionText}.");
-            _modActivityLoggingService.LogModInstall(mod.DisplayName ?? mod.ModId ?? "Unknown", release.Version);
-
-            await RefreshModsAsync().ConfigureAwait(true);
-
-            if (mod.IsSelected) RemoveFromSelection(mod);
-
-            _viewModel?.RemoveSearchResult(mod);
-        }
-        catch (OperationCanceledException)
-        {
-            _viewModel?.ReportStatus("Installation cancelled.");
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
-        {
-            _viewModel?.ReportStatus($"Failed to install {mod.DisplayName}: {ex.Message}", true);
-            WpfMessageBox.Show($"Failed to install {mod.DisplayName}:{Environment.NewLine}{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
-        finally
-        {
-            _isModUpdateInProgress = false;
-            UpdateSelectedModButtons();
-        }
+        await _modOperationsViewModel.InstallModCommand.ExecuteAsync(mod);
     }
 
     private async Task<(bool Success, string Message)> InstallOrUpdateDependencyAsync(
@@ -5706,20 +6023,12 @@ public partial class MainWindow : Window
 
     private async void UpdateModButton_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_isModUpdateInProgress) return;
+        if (_modOperationsViewModel is null || !_modOperationsViewModel.UpdateModCommand.CanExecute(null)) return;
 
         if (sender is not WpfButton { DataContext: ModListItemViewModel mod }) return;
 
         e.Handled = true;
-
-        IReadOnlyDictionary<ModListItemViewModel, ModReleaseInfo>? overrides = null;
-        if (mod.SelectedVersionOption is { Release: { } selectedRelease, IsInstalled: false })
-            overrides = new Dictionary<ModListItemViewModel, ModReleaseInfo>
-            {
-                [mod] = selectedRelease
-            };
-
-        await UpdateModsAsync(new[] { mod }, false, overrides);
+        await _modOperationsViewModel.UpdateModCommand.ExecuteAsync(mod);
     }
 
     private async void SelectedModVersionComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -5772,53 +6081,9 @@ public partial class MainWindow : Window
 
     private async void UpdateAllModsMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_isApplyingPreset) return;
+        if (_modOperationsViewModel is null || !_modOperationsViewModel.UpdateAllModsCommand.CanExecute(null)) return;
 
-        if (_isModUpdateInProgress || _viewModel?.ModsView == null) return;
-
-        var mods = _viewModel.ModsView.Cast<ModListItemViewModel>()
-            .Where(mod => mod.CanUpdate)
-            .ToList();
-
-        Dictionary<ModListItemViewModel, ModReleaseInfo>? overrides = null;
-        foreach (var mod in mods)
-            if (mod.SelectedVersionOption is { Release: { } selectedRelease, IsInstalled: false })
-            {
-                overrides ??= new Dictionary<ModListItemViewModel, ModReleaseInfo>();
-                overrides[mod] = selectedRelease;
-            }
-
-        if (mods.Count == 0)
-        {
-            WpfMessageBox.Show("All mods are already up to date.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-
-        var dialog = new UpdateModsDialog(_userConfiguration, mods, overrides)
-        {
-            Owner = this
-        };
-
-        var dialogResult = dialog.ShowDialog();
-        if (dialogResult != true) return;
-
-        var selectedMods = dialog.SelectedMods;
-        if (selectedMods.Count == 0) return;
-
-        Dictionary<ModListItemViewModel, ModReleaseInfo>? selectedOverrides = null;
-        if (overrides != null)
-            foreach (var mod in selectedMods)
-                if (overrides.TryGetValue(mod, out var release) && release != null)
-                {
-                    selectedOverrides ??= new Dictionary<ModListItemViewModel, ModReleaseInfo>();
-                    selectedOverrides[mod] = release;
-                }
-
-        await CreateAutomaticBackupAsync("ModsUpdated").ConfigureAwait(true);
-        await UpdateModsAsync(selectedMods, true, selectedOverrides).ConfigureAwait(true);
+        await _modOperationsViewModel.UpdateAllModsCommand.ExecuteAsync(null);
     }
 
     private async void CheckModsCompatibilityMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -8039,38 +8304,13 @@ public partial class MainWindow : Window
 
     private async Task<bool> TryEnsureDataBackupBeforeLaunchAsync()
     {
-        if (!_userConfiguration.AutomaticDataBackupsEnabled) return true;
-        if (string.IsNullOrWhiteSpace(_dataDirectory) || !Directory.Exists(_dataDirectory)) return true;
+        if (_dataBackupViewModel is null) return true;
 
         ShowDataBackupOverlay("Preparing VintagestoryData backup...");
-        var progress = CreateDataBackupProgressReporter("Backing up VintagestoryData...");
-
-        var installedGameVersion = VintageStoryVersionLocator.GetInstalledVersion(_gameDirectory);
 
         try
         {
-            await _dataBackupService
-                .CreateBackupAsync(_dataDirectory!, installedGameVersion, progress, CancellationToken.None)
-                .ConfigureAwait(true);
-            return true;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            var response = WpfMessageBox.Show(
-                $"The automatic VintagestoryData backup failed:\n{ex.Message}\n\nLaunch Vintage Story without creating a backup?",
-                "Simple VS Manager",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-            return response == MessageBoxResult.Yes;
-        }
-        catch (Exception ex)
-        {
-            WpfMessageBox.Show(
-                $"The automatic VintagestoryData backup failed:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-            return false;
+            return await _dataBackupViewModel.TryEnsureDataBackupBeforeLaunchAsync();
         }
         finally
         {
@@ -8349,179 +8589,24 @@ public partial class MainWindow : Window
     {
         if (sender is not MenuItem menuItem || menuItem.Tag is not DataFolderBackupSummary summary) return;
 
-        if (string.IsNullOrWhiteSpace(_dataDirectory) || !Directory.Exists(_dataDirectory))
-        {
-            WpfMessageBox.Show(
-                "The VintagestoryData folder is not available. Please set it before restoring a backup.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
+        if (_dataBackupViewModel is null) return;
 
-        var confirmation = WpfMessageBox.Show(
-            "Restoring a VintagestoryData backup replaces the entire folder (the Cache folder will be cleared). Continue?",
-            "Simple VS Manager",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (confirmation != MessageBoxResult.Yes) return;
-
-        await RestoreDataBackupAsync(summary).ConfigureAwait(true);
+        await _dataBackupViewModel.RestoreBackupCommand.ExecuteAsync(summary);
     }
 
     private void OpenDataBackupDirectoryMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
-        var directory = _dataBackupService.GetBackupRootDirectory();
-        try
-        {
-            if (string.IsNullOrWhiteSpace(directory))
-            {
-                WpfMessageBox.Show(
-                    "The data backup directory is not available.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            Directory.CreateDirectory(directory);
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = directory,
-                UseShellExecute = true
-            });
-        }
-        catch (Win32Exception ex)
-        {
-            WpfMessageBox.Show(
-                $"Failed to open the data backup directory:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
-        {
-            WpfMessageBox.Show(
-                $"Failed to open the data backup directory:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
+        _dataBackupViewModel?.OpenBackupDirectoryCommand.Execute(null);
     }
 
     private void ChangeBackupLocationMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
-        var currentLocation = _dataBackupService.GetBackupRootDirectory();
-
-        using var dialog = new WinForms.FolderBrowserDialog
-        {
-            Description = "Select a folder where backups will be saved and loaded from.",
-            UseDescriptionForTitle = true,
-            ShowNewFolderButton = true
-        };
-
-        if (!string.IsNullOrWhiteSpace(currentLocation) && Directory.Exists(currentLocation))
-        {
-            dialog.InitialDirectory = currentLocation;
-            dialog.SelectedPath = currentLocation;
-        }
-
-        if (dialog.ShowDialog() != WinForms.DialogResult.OK) return;
-
-        var selectedPath = dialog.SelectedPath;
-        if (string.IsNullOrWhiteSpace(selectedPath)) return;
-
-        try
-        {
-            // Ensure the directory exists; creating it also validates write permissions
-            Directory.CreateDirectory(selectedPath);
-
-            _userConfiguration.SetCustomDataBackupLocation(selectedPath);
-            _dataBackupService = new DataBackupService(
-                _userConfiguration.GetConfigurationDirectory(),
-                _userConfiguration.CustomDataBackupLocation);
-
-            _viewModel?.ReportStatus($"Backup location changed to: {selectedPath}");
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
-        {
-            WpfMessageBox.Show(
-                $"Failed to set the backup location:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
+        _dataBackupViewModel?.ChangeBackupLocationCommand.Execute(null);
     }
 
     private void DeleteDataFolderBackupsMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(_dataDirectory))
-        {
-            WpfMessageBox.Show(
-                "Set the VintagestoryData folder before deleting backups.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
-
-        var installedVersion = VintageStoryVersionLocator.GetInstalledVersion(_gameDirectory);
-        var normalizedInstalledVersion = VersionStringUtility.Normalize(installedVersion);
-        if (string.IsNullOrWhiteSpace(normalizedInstalledVersion))
-        {
-            WpfMessageBox.Show(
-                "The installed Vintage Story version could not be determined, so backups cannot be deleted safely.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
-
-        var displayVersion = installedVersion ?? normalizedInstalledVersion;
-        var confirmation = WpfMessageBox.Show(
-            $"Delete all VintagestoryData backups for Vintage Story {displayVersion}? This action cannot be undone.",
-            "Simple VS Manager",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (confirmation != MessageBoxResult.Yes) return;
-
-        try
-        {
-            var deleted = _dataBackupService.DeleteBackups(_dataDirectory!, displayVersion);
-            if (deleted == 0)
-            {
-                WpfMessageBox.Show(
-                    "No backups matching the current data folder and Vintage Story version were found.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                return;
-            }
-
-            _viewModel?.ReportStatus(
-                deleted == 1
-                    ? "Deleted 1 VintagestoryData backup."
-                    : $"Deleted {deleted} VintagestoryData backups.");
-
-            WpfMessageBox.Show(
-                deleted == 1
-                    ? "Deleted 1 VintagestoryData backup."
-                    : $"Deleted {deleted} VintagestoryData backups.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException
-                                   or ArgumentException)
-        {
-            WpfMessageBox.Show(
-                $"Failed to delete the VintagestoryData backups:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
+        _dataBackupViewModel?.DeleteBackupsCommand.Execute(null);
     }
 
     private void RestoreBackupMenuItem_OnSubmenuOpened(object sender, RoutedEventArgs e)
@@ -9415,22 +9500,7 @@ public partial class MainWindow : Window
 
     private void SavePresetMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        var presetDirectory = EnsurePresetDirectory();
-        TrySaveSnapshot(
-            presetDirectory,
-            "Save Mod Preset",
-            "Preset files (*.json)|*.json|All files (*.*)|*.*",
-            "Presets must be saved inside the Presets folder.",
-            "Preset",
-            () => _userConfiguration.GetLastSelectedPresetName(),
-            name =>
-            {
-                _userConfiguration.SetLastSelectedPresetName(name);
-                _viewModel?.ReportStatus($"Saved preset \"{name}\".");
-            },
-            "preset",
-            false,
-            false);
+        _presetManagementViewModel?.SavePresetCommand.Execute(null);
     }
 
     private bool TrySaveModlist()
@@ -10072,13 +10142,7 @@ public partial class MainWindow : Window
 
     private void SaveModlistMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        if (TrySaveModlist(null, out var savedFilePath))
-        {
-            if (!string.IsNullOrWhiteSpace(savedFilePath))
-                RefreshLocalModlists(true, new[] { savedFilePath });
-            else
-                RefreshLocalModlists(true);
-        }
+        _presetManagementViewModel?.SaveModlistCommand.Execute(null);
     }
 
     private Task SaveModlistToCloudAsync()
@@ -10385,23 +10449,20 @@ public partial class MainWindow : Window
 
     private async void SaveModlistToCloudMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        await SaveModlistToCloudAsync();
-        if (_viewModel?.IsViewingModlistTab == true)
-            await RefreshCloudModlistsAsync(true);
-        else
-            _cloudModlistsLoaded = false;
+        if (_cloudModlistViewModel is null) return;
+        await _cloudModlistViewModel.SaveToCloudCommand.ExecuteAsync(null);
     }
 
     private async void SaveCloudModlistButton_OnClick(object sender, RoutedEventArgs e)
     {
-        await SaveModlistToCloudAsync();
-        if (_viewModel?.IsViewingModlistTab == true) await RefreshCloudModlistsAsync(true);
+        if (_cloudModlistViewModel is null) return;
+        await _cloudModlistViewModel.SaveToCloudCommand.ExecuteAsync(null);
     }
 
     private async void ModifyCloudModlistsButton_OnClick(object sender, RoutedEventArgs e)
     {
-        await ExecuteCloudOperationAsync(async store => { await ShowCloudModlistManagementDialogAsync(store); },
-            "manage your cloud modlists");
+        if (_cloudModlistViewModel is null) return;
+        await _cloudModlistViewModel.ManageCloudModlistsCommand.ExecuteAsync(null);
     }
 
     private async Task<bool> IsCloudUploaderNameAvailableAsync(FirebaseModlistStore store, string uploader)
@@ -10651,7 +10712,8 @@ public partial class MainWindow : Window
 
     private async void RefreshCloudModlistsButton_OnClick(object sender, RoutedEventArgs e)
     {
-        await RefreshCloudModlistsAsync(true);
+        if (_cloudModlistViewModel is null) return;
+        await _cloudModlistViewModel.RefreshCloudModlistsCommand.ExecuteAsync(true);
     }
 
     private void CloudModlistsDataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -10664,76 +10726,8 @@ public partial class MainWindow : Window
 
     private async void InstallCloudModlistButton_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_viewModel is null || _selectedCloudModlist is not CloudModlistListEntry entry) return;
-
-        var ensuredEntry = await EnsureCloudModlistContentAsync(entry);
-        if (ensuredEntry is null) return;
-        entry = ensuredEntry;
-
-        string cacheDirectory;
-        try
-        {
-            cacheDirectory = EnsureCloudModListCacheDirectory();
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            WpfMessageBox.Show($"Failed to prepare the cloud modlist cache:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-            return;
-        }
-
-        var cacheFileName = BuildSuggestedFileName(entry.Name ?? entry.DisplayName, "Cloud Modlist");
-        var cacheFilePath = GetUniqueFilePath(cacheDirectory, cacheFileName, ".json");
-
-        try
-        {
-            await File.WriteAllTextAsync(cacheFilePath, entry.ContentJson);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            WpfMessageBox.Show($"Failed to cache the selected modlist:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-            return;
-        }
-
-        var loadMode = PromptModlistLoadMode();
-        if (loadMode is not ModlistLoadMode mode) return;
-
-        if (mode == ModlistLoadMode.Replace && !EnsureModlistBackupBeforeLoad()) return;
-
-        PrepareForModlistLoad();
-
-        var loadOptions = GetModlistLoadOptions(mode);
-        var fallbackName = entry.Name ?? entry.DisplayName ?? "Modlist";
-
-        if (!TryLoadPresetFromFile(cacheFilePath,
-                fallbackName,
-                loadOptions,
-                out var preset,
-                out var errorMessage))
-        {
-            var message = string.IsNullOrWhiteSpace(errorMessage)
-                ? "Failed to load the downloaded cloud modlist."
-                : errorMessage!;
-            WpfMessageBox.Show(message,
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-            return;
-        }
-
-        if (preset is null) return;
-
-        await CreateAutomaticBackupAsync("ModlistLoaded").ConfigureAwait(true);
-        await ApplyPresetAsync(preset);
-        var status = mode == ModlistLoadMode.Replace
-            ? $"Installed cloud modlist \"{preset.Name}\"."
-            : $"Added mods from cloud modlist \"{preset.Name}\".";
-        _viewModel.ReportStatus(status);
+        if (_cloudModlistViewModel?.SelectedCloudModlist is null) return;
+        await _cloudModlistViewModel.LoadFromCloudCommand.ExecuteAsync(_cloudModlistViewModel.SelectedCloudModlist);
     }
 
     private async void LoadModlistFromCloudMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -10994,23 +10988,8 @@ public partial class MainWindow : Window
 
     private async void LoadModlistMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_viewModel is null) return;
-
-        var modListDirectory = EnsureModListDirectory();
-        var dialog = new OpenFileDialog
-        {
-            Title = "Load Modlist",
-            Filter =
-                "Modlist files (*.json;*.pdf)|*.json;*.pdf|JSON files (*.json)|*.json|PDF files (*.pdf)|*.pdf|All files (*.*)|*.*",
-            DefaultExt = ".json",
-            InitialDirectory = modListDirectory,
-            Multiselect = false
-        };
-
-        var dialogResult = dialog.ShowDialog(this);
-        if (dialogResult != true) return;
-
-        await LoadModlistFromFileAsync(dialog.FileName).ConfigureAwait(true);
+        if (_presetManagementViewModel is null) return;
+        await _presetManagementViewModel.LoadPresetCommand.ExecuteAsync(null);
     }
 
     private async Task LoadModlistFromFileAsync(string filePath)
@@ -12212,6 +12191,8 @@ public partial class MainWindow : Window
     private void SetCloudModlistSelection(CloudModlistListEntry? entry)
     {
         _selectedCloudModlist = entry;
+        if (_cloudModlistViewModel is not null)
+            _cloudModlistViewModel.SelectedCloudModlist = entry;
 
         if (SelectedModlistTitle is not null) SelectedModlistTitle.Text = entry?.DisplayName ?? string.Empty;
 
@@ -13426,284 +13407,65 @@ public partial class MainWindow : Window
 
     private void HandleModRowSelection(ModListItemViewModel mod)
     {
-        if (_isApplyingPreset) return;
+        if (_modSelectionViewModel is null) return;
 
         var isShiftPressed = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
         var isCtrlPressed = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
 
-        if (isShiftPressed)
-        {
-            if (_selectionAnchor is not { } anchor)
-            {
-                if (!isCtrlPressed) ClearSelection();
-
-                AddToSelection(mod);
-                _selectionAnchor = mod;
-                return;
-            }
-
-            var anchorApplied = ApplyRangeSelection(anchor, mod, isCtrlPressed);
-            if (!anchorApplied) _selectionAnchor = mod;
-
-            return;
-        }
-
-        if (isCtrlPressed)
-        {
-            if (_selectedMods.Contains(mod))
-            {
-                RemoveFromSelection(mod);
-                _selectionAnchor = mod;
-            }
-            else
-            {
-                AddToSelection(mod);
-                _selectionAnchor = mod;
-            }
-
-            return;
-        }
-
-        ClearSelection();
-        AddToSelection(mod);
-        _selectionAnchor = mod;
+        _modSelectionViewModel.HandleModRowSelection(mod, isShiftPressed, isCtrlPressed, _uiStateViewModel?.IsApplyingPreset ?? false);
     }
 
     private void SelectAllModsInCurrentView()
     {
-        if (_isApplyingPreset) return;
-
-        var mods = GetModsInViewOrder();
-        ClearSelection(true);
-
-        if (mods.Count == 0) return;
-
-        foreach (var mod in mods) AddToSelection(mod);
-
-        _selectionAnchor = mods[mods.Count - 1];
+        _modSelectionViewModel?.SelectAllModsCommand.Execute(_uiStateViewModel?.IsApplyingPreset ?? false);
     }
 
-    private bool ApplyRangeSelection(ModListItemViewModel start, ModListItemViewModel end, bool preserveExisting)
-    {
-        var mods = GetModsInViewOrder();
-        var startIndex = mods.IndexOf(start);
-        var endIndex = mods.IndexOf(end);
-
-        if (startIndex < 0 || endIndex < 0)
-        {
-            if (!preserveExisting) ClearSelection();
-
-            AddToSelection(end);
-            return false;
-        }
-
-        if (!preserveExisting) ClearSelection();
-
-        if (startIndex > endIndex) (startIndex, endIndex) = (endIndex, startIndex);
-
-        for (var i = startIndex; i <= endIndex; i++) AddToSelection(mods[i]);
-
-        return true;
-    }
-
-    private List<ModListItemViewModel> GetModsInViewOrder()
-    {
-        var view = _viewModel?.CurrentModsView;
-        if (view == null) return new List<ModListItemViewModel>();
-
-        return view.Cast<ModListItemViewModel>().ToList();
-    }
+    // Legacy selection methods - now delegating to ViewModel
 
     private void AddToSelection(ModListItemViewModel mod)
     {
-        if (_selectedMods.Contains(mod)) return;
-
-        _selectedMods.Add(mod);
-        SubscribeToSelectedMod(mod);
-        mod.IsSelected = true;
-        UpdateSelectedModButtons();
+        _modSelectionViewModel?.AddToSelection(mod);
     }
 
     private void RemoveFromSelection(ModListItemViewModel mod)
     {
-        if (!_selectedMods.Remove(mod)) return;
-
-        mod.IsSelected = false;
-        UnsubscribeFromSelectedMod(mod);
-        UpdateSelectedModButtons();
+        _modSelectionViewModel?.RemoveFromSelection(mod);
     }
 
     private void ClearSelection(bool resetAnchor = false)
     {
-        if (_selectedMods.Count > 0)
-        {
-            foreach (var mod in _selectedMods)
-            {
-                mod.IsSelected = false;
-                UnsubscribeFromSelectedMod(mod);
-            }
-
-            _selectedMods.Clear();
-        }
-
-        if (resetAnchor) _selectionAnchor = null;
-
-        UpdateSelectedModButtons();
+        _modSelectionViewModel?.ClearSelectionCommand.Execute(resetAnchor);
     }
 
     private void ClearModDatabaseSelections()
     {
-        if (_selectedMods.Count > 0)
-        {
-            var removedAny = false;
-
-            for (var i = _selectedMods.Count - 1; i >= 0; i--)
-            {
-                var mod = _selectedMods[i];
-                if (!mod.IsModDatabaseEntry) continue;
-
-                _selectedMods.RemoveAt(i);
-                mod.IsSelected = false;
-                UnsubscribeFromSelectedMod(mod);
-                removedAny = true;
-            }
-
-            if (removedAny)
-            {
-                if (_selectionAnchor is { } anchor && anchor.IsModDatabaseEntry) _selectionAnchor = null;
-                UpdateSelectedModButtons();
-            }
-        }
+        _modSelectionViewModel?.ClearModDatabaseSelections();
     }
 
     private void RestoreSelectionFromSourcePaths(IReadOnlyList<string> sourcePaths, string? anchorSourcePath)
     {
-        if (_viewModel is null) return;
-
-        var resolved = new List<ModListItemViewModel>(sourcePaths.Count);
-        foreach (var path in sourcePaths)
-        {
-            if (string.IsNullOrWhiteSpace(path)) continue;
-
-            var current = _viewModel.FindModBySourcePath(path);
-            if (current != null && !resolved.Contains(current)) resolved.Add(current);
-        }
-
-        var selectionChanged = resolved.Count != _selectedMods.Count;
-        if (!selectionChanged)
-            for (var i = 0; i < resolved.Count; i++)
-                if (!ReferenceEquals(resolved[i], _selectedMods[i]))
-                {
-                    selectionChanged = true;
-                    break;
-                }
-
-        if (!selectionChanged)
-        {
-            UpdateSelectionAnchorAfterRestore(resolved, anchorSourcePath);
-            return;
-        }
-
-        foreach (var mod in _selectedMods)
-        {
-            mod.IsSelected = false;
-            UnsubscribeFromSelectedMod(mod);
-        }
-
-        _selectedMods.Clear();
-
-        foreach (var mod in resolved)
-        {
-            _selectedMods.Add(mod);
-            mod.IsSelected = true;
-            SubscribeToSelectedMod(mod);
-        }
-
-        UpdateSelectionAnchorAfterRestore(resolved, anchorSourcePath);
-        UpdateSelectedModButtons();
+        _modSelectionViewModel?.RestoreSelectionFromSourcePaths(sourcePaths, anchorSourcePath);
     }
 
-    private void UpdateSelectionAnchorAfterRestore(IReadOnlyList<ModListItemViewModel> selection,
-        string? anchorSourcePath)
-    {
-        if (selection.Count == 0)
-        {
-            _selectionAnchor = null;
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(anchorSourcePath))
-            foreach (var mod in selection)
-                if (string.Equals(mod.SourcePath, anchorSourcePath, StringComparison.OrdinalIgnoreCase))
-                {
-                    _selectionAnchor = mod;
-                    return;
-                }
-
-        _selectionAnchor = selection[selection.Count - 1];
-    }
-
-    private void SubscribeToSelectedMod(ModListItemViewModel mod)
-    {
-        if (_selectedModPropertyHandlers.ContainsKey(mod)) return;
-
-        PropertyChangedEventHandler handler = (_, args) =>
-        {
-            var shouldRefreshFixButton = string.IsNullOrEmpty(args.PropertyName)
-                                         || args.PropertyName == nameof(ModListItemViewModel.CanFixDependencyIssues)
-                                         || args.PropertyName == nameof(ModListItemViewModel.HasDependencyIssues)
-                                         || args.PropertyName == nameof(ModListItemViewModel.MissingDependencies)
-                                         || args.PropertyName == nameof(ModListItemViewModel.DependencyHasErrors);
-
-            var shouldRefreshCopyButton = string.IsNullOrEmpty(args.PropertyName)
-                                          || args.PropertyName == nameof(ModListItemViewModel.Version);
-
-            if (!shouldRefreshFixButton && !shouldRefreshCopyButton) return;
-
-            void RefreshButtons()
-            {
-                if (shouldRefreshFixButton) RefreshSelectedModFixButton(mod);
-
-                if (shouldRefreshCopyButton) RefreshSelectedModCopyForServerButton(mod);
-            }
-
-            if (Dispatcher.CheckAccess())
-                RefreshButtons();
-            else
-                Dispatcher.Invoke(RefreshButtons);
-        };
-
-        mod.PropertyChanged += handler;
-        _selectedModPropertyHandlers[mod] = handler;
-    }
-
-    private void UnsubscribeFromSelectedMod(ModListItemViewModel mod)
-    {
-        if (_selectedModPropertyHandlers.TryGetValue(mod, out var handler))
-        {
-            mod.PropertyChanged -= handler;
-            _selectedModPropertyHandlers.Remove(mod);
-        }
-    }
+    // Property subscription now handled by ModSelectionViewModel
 
     private void RefreshSelectedModFixButton(ModListItemViewModel mod)
     {
-
-        if (_selectedMods.Count == 1 && ReferenceEquals(_selectedMods[0], mod)) UpdateSelectedModFixButton(mod);
+        if (_modSelectionViewModel?.SingleSelection is { } single && ReferenceEquals(single, mod))
+            UpdateSelectedModFixButton(mod);
     }
 
     private void RefreshSelectedModCopyForServerButton(ModListItemViewModel mod)
     {
-
-        if (_selectedMods.Count == 1 && ReferenceEquals(_selectedMods[0], mod))
+        if (_modSelectionViewModel?.SingleSelection is { } single && ReferenceEquals(single, mod))
             UpdateSelectedModCopyForServerButton(mod);
     }
 
     private void UpdateSelectedModButtons()
     {
-        var selectionCount = _selectedMods.Count;
-        var singleSelection = selectionCount == 1 ? _selectedMods[0] : null;
-        var hasMultipleSelection = selectionCount > 1;
+        var selectionCount = _modSelectionViewModel?.SelectedMods.Count ?? 0;
+        var singleSelection = _modSelectionViewModel?.SingleSelection;
+        var hasMultipleSelection = _modSelectionViewModel?.HasMultipleSelection ?? false;
 
         if (hasMultipleSelection)
         {
@@ -13745,7 +13507,7 @@ public partial class MainWindow : Window
         if (ServerOptionsSeparator1 is not null) ServerOptionsSeparator1.Visibility = visibility;
         if (ServerOptionsSeparator2 is not null) ServerOptionsSeparator2.Visibility = visibility;
 
-        var singleSelection = _selectedMods.Count == 1 ? _selectedMods[0] : null;
+        var singleSelection = _modSelectionViewModel?.SingleSelection;
         UpdateSelectedModCopyForServerButton(isEnabled ? singleSelection : null);
     }
 
@@ -14237,15 +13999,17 @@ public partial class MainWindow : Window
 
         if (sender is not ToggleSwitch { DataContext: ModListItemViewModel mod }) return;
 
-        if (!_selectedMods.Contains(mod) || _selectedMods.Count <= 1) return;
+        var selectedMods = _modSelectionViewModel?.SelectedMods;
+        if (selectedMods is null || !selectedMods.Contains(mod) || selectedMods.Count <= 1) return;
 
         var desiredState = mod.IsActive;
 
         try
         {
-            _isApplyingMultiToggle = true;
+            if (_uiStateViewModel is not null)
+                _uiStateViewModel.IsApplyingMultiToggle = true;
 
-            foreach (var selected in _selectedMods)
+            foreach (var selected in selectedMods)
             {
                 if (ReferenceEquals(selected, mod)) continue;
 
@@ -14256,7 +14020,8 @@ public partial class MainWindow : Window
         }
         finally
         {
-            _isApplyingMultiToggle = false;
+            if (_uiStateViewModel is not null)
+                _uiStateViewModel.IsApplyingMultiToggle = false;
         }
     }
 

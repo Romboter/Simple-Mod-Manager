@@ -22,7 +22,7 @@ namespace VintageStoryModManager.ViewModels;
 /// <summary>
 ///     Main view model that coordinates mod discovery and activation.
 /// </summary>
-public sealed class MainViewModel : ObservableObject, IDisposable
+public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private const string InternetAccessDisabledStatusMessage = "Enable Internet Access in the File menu to use.";
     private const string TagsColumnName = "Tags";
@@ -43,7 +43,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private const int IncrementalRefreshDelayMs = 300;  // Delay before refreshing after incremental updates
 
     private readonly object _busyStateLock = new();
-    private readonly RelayCommand _clearSearchCommand;
     private readonly ClientSettingsWatcher _clientSettingsWatcher;
     private readonly ObservableCollection<CloudModlistListEntry> _cloudModlists = new();
     private readonly ObservableCollection<LocalModlistListEntry> _localModlists = new();
@@ -73,9 +72,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly HashSet<ModListItemViewModel> _searchResultSubscriptions = new();
     // Tag filtering is now handled by _tagFilterService
     private readonly ClientSettingsStore _settingsStore;
-    private readonly RelayCommand _showModlistTabCommand;
-    private readonly RelayCommand _showMainTabCommand;
-    private readonly RelayCommand _showDatabaseTabCommand;
     private readonly ObservableCollection<SortOption> _sortOptions;
     private readonly HashSet<string> _suppressedTagEntries = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _userReportEtags = new(StringComparer.OrdinalIgnoreCase);
@@ -97,7 +93,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private const int DatabaseInfoBatchSize = 20; // Apply up to 20 updates per batch
 
     private List<string>? _cachedBasePaths;
+
+    [ObservableProperty]
     private int _activeMods;
+
     private int _activeUserReportOperations;
     private bool _allowModDetailsRefresh = true;
     private bool _areUserReportsVisible = true;
@@ -111,47 +110,95 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _hasActiveBusyScope;
     private bool _hasEnabledUserReportFetching;
     private bool _hasFetchedUserReportsThisSession;
+
+    [ObservableProperty]
     private bool _hasMultipleSelectedMods;
+
     private volatile bool _hasPendingFastCheck;
+
+    [ObservableProperty]
     private bool _hasSelectedMods;
+
+    [ObservableProperty]
     private bool _hasSelectedTags;
     private bool _hasShownModDetailsLoadingStatus;
     private bool _isAutoRefreshDisabled;
+    [ObservableProperty]
     private bool _isBusy;
+
+    [ObservableProperty]
     private bool _isCompactView;
+
+    [ObservableProperty]
     private bool _isErrorStatus;
+
+    [ObservableProperty]
     private bool _isFastCheckInProgress;
+
     private int _isFastCheckRunning;
     private bool _isInstalledTagRefreshPending;
+
+    [ObservableProperty]
     private bool _isLoadingModDetails;
+
+    [ObservableProperty]
     private bool _isLoadingMods;
+
+    [ObservableProperty]
     private bool _isModDetailsProgressVisible;
+
+    [ObservableProperty]
     private double _modDetailsProgress;
+
     private int _modDetailsRefreshCompletedWork;
     private int _modDetailsRefreshTotalWork;
     private string _modDetailsProgressStage = string.Empty;
+
+    [ObservableProperty]
     private string _modDetailsStatusText = string.Empty;
+
+    [ObservableProperty]
     private double _loadingProgress;
+
+    [ObservableProperty]
     private string _loadingStatusText = string.Empty;
     private bool _isModDetailsRefreshForced;
     private bool _isModDetailsStatusActive;
     private Task? _databaseRefreshTask;
     private CancellationTokenSource? _databaseRefreshCts;
+
+    [ObservableProperty]
     private bool _isModInfoExpanded = true;
+
     private bool _isTagsColumnVisible = true;
+
+    [ObservableProperty]
     private bool _useModDbDesignView;
     private IDisposable? _modDetailsBusyScope;
     private string? _modsStateFingerprint;
     private int _pendingModDetailsRefreshCount;
+
+    [ObservableProperty]
     private string _searchText = string.Empty;
+
     private string[] _searchTokens = Array.Empty<string>();
+
+    [ObservableProperty]
     private ModListItemViewModel? _selectedMod;
 
+    [ObservableProperty]
     private SortOption? _selectedSortOption;
+
+    [ObservableProperty]
     private string _statusMessage = string.Empty;
     private bool _suppressInstalledTagFilterSelectionChanges;
+
+    [ObservableProperty]
     private int _totalMods;
+
+    [ObservableProperty]
     private int _updatableModsCount;
+
     private ViewSection _viewSection = ViewSection.MainTab;
 
     public event EventHandler<ModUserReportChangedEventArgs>? UserReportVoteSubmitted;
@@ -194,21 +241,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _isAutoRefreshDisabled = configuration.DisableAutoRefresh;
         _allowModDetailsRefresh = !_isAutoRefreshDisabled;
 
-        _clearSearchCommand = new RelayCommand(() => SearchText = string.Empty, () => HasSearchText);
-        ClearSearchCommand = _clearSearchCommand;
-
-        _showMainTabCommand = new RelayCommand(() => SetViewSection(ViewSection.MainTab));
-        _showDatabaseTabCommand = new RelayCommand(
-            () => SetViewSection(ViewSection.DatabaseTab),
-            () => !InternetAccessManager.IsInternetAccessDisabled);
-        _showModlistTabCommand = new RelayCommand(
-            () => SetViewSection(ViewSection.ModlistTab),
-            () => !InternetAccessManager.IsInternetAccessDisabled);
-        ShowMainTabCommand = _showMainTabCommand;
-        ShowDatabaseTabCommand = _showDatabaseTabCommand;
-        ShowModlistTabCommand = _showModlistTabCommand;
-
-        RefreshCommand = new AsyncRelayCommand(LoadModsAsync);
         SetStatus("Ready.", false);
 
         InternetAccessManager.InternetAccessChanged += OnInternetAccessChanged;
@@ -247,151 +279,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public ReadOnlyObservableCollection<SortOption> SortOptions { get; }
 
-    public SortOption? SelectedSortOption
-    {
-        get => _selectedSortOption;
-        set
-        {
-            if (SetProperty(ref _selectedSortOption, value)) value?.Apply(ModsView);
-        }
-    }
 
-    public bool IsBusy
-    {
-        get => _isBusy;
-        private set => SetProperty(ref _isBusy, value);
-    }
-
-    public bool IsLoadingMods
-    {
-        get => _isLoadingMods;
-        private set
-        {
-            if (SetProperty(ref _isLoadingMods, value)) RecalculateIsBusy();
-        }
-    }
-
-    public double LoadingProgress
-    {
-        get => _loadingProgress;
-        private set => SetProperty(ref _loadingProgress, value);
-    }
-
-    public string LoadingStatusText
-    {
-        get => _loadingStatusText;
-        private set => SetProperty(ref _loadingStatusText, value);
-    }
-
-    public bool IsLoadingModDetails
-    {
-        get => _isLoadingModDetails;
-        private set
-        {
-            if (SetProperty(ref _isLoadingModDetails, value))
-            {
-                RecalculateIsBusy();
-                UpdateModDetailsProgressVisibility();
-            }
-        }
-    }
-
-    public bool IsModDetailsProgressVisible
-    {
-        get => _isModDetailsProgressVisible;
-        private set => SetProperty(ref _isModDetailsProgressVisible, value);
-    }
-
-    public bool IsFastCheckInProgress
-    {
-        get => _isFastCheckInProgress;
-        private set
-        {
-            if (SetProperty(ref _isFastCheckInProgress, value)) UpdateModDetailsProgressVisibility();
-        }
-    }
-
-    public double ModDetailsProgress
-    {
-        get => _modDetailsProgress;
-        private set => SetProperty(ref _modDetailsProgress, value);
-    }
-
-    public string ModDetailsStatusText
-    {
-        get => _modDetailsStatusText;
-        private set => SetProperty(ref _modDetailsStatusText, value);
-    }
-
-    public bool IsCompactView
-    {
-        get => _isCompactView;
-        set => SetProperty(ref _isCompactView, value);
-    }
-
-    public bool HasSelectedTags
-    {
-        get => _hasSelectedTags;
-        private set
-        {
-            if (SetProperty(ref _hasSelectedTags, value)) OnPropertyChanged(nameof(TagsColumnHeader));
-        }
-    }
 
     public string TagsColumnHeader => HasSelectedTags ? "Tags (*)" : "Tags";
 
-
-    public bool IsModInfoExpanded
-    {
-        get => _isModInfoExpanded;
-        set => SetProperty(ref _isModInfoExpanded, value);
-    }
-
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        private set
-        {
-            if (SetProperty(ref _statusMessage, value)) OnPropertyChanged(nameof(HasStatusMessage));
-        }
-    }
-
     public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
-    public ModListItemViewModel? SelectedMod
-    {
-        get => _selectedMod;
-        private set
-        {
-            if (SetProperty(ref _selectedMod, value)) OnPropertyChanged(nameof(HasSelectedMod));
-        }
-    }
-
     public bool HasSelectedMod => SelectedMod != null;
-
-    public bool HasSelectedMods
-    {
-        get => _hasSelectedMods;
-        private set => SetProperty(ref _hasSelectedMods, value);
-    }
-
-    public bool HasMultipleSelectedMods
-    {
-        get => _hasMultipleSelectedMods;
-        private set => SetProperty(ref _hasMultipleSelectedMods, value);
-    }
-
-    public bool IsErrorStatus
-    {
-        get => _isErrorStatus;
-        private set => SetProperty(ref _isErrorStatus, value);
-    }
-
-    public IRelayCommand ShowMainTabCommand { get; }
-
-    public IRelayCommand ShowDatabaseTabCommand { get; }
-
-    public IRelayCommand ShowModlistTabCommand { get; }
 
     public bool IsViewingModlistTab => _viewSection == ViewSection.ModlistTab;
 
@@ -399,72 +293,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public bool SearchModDatabase => _viewSection == ViewSection.DatabaseTab;
 
-    public bool UseModDbDesignView
-    {
-        get => _useModDbDesignView;
-        set => SetProperty(ref _useModDbDesignView, value);
-    }
-
     public bool HasCloudModlists => _cloudModlists.Count > 0;
 
     public bool HasLocalModlists => _localModlists.Count > 0;
 
-    public string SearchText
-    {
-        get => _searchText;
-        set
-        {
-            var newValue = value ?? string.Empty;
-            if (!SetProperty(ref _searchText, newValue)) return;
-
-            var hadSearchTokens = _searchTokens.Length > 0;
-            _searchTokens = CreateSearchTokens(newValue);
-            var hasSearchTokens = _searchTokens.Length > 0;
-
-            OnPropertyChanged(nameof(HasSearchText));
-            _clearSearchCommand.NotifyCanExecuteChanged();
-
-            // Only refresh if the search filter state actually changed.
-            // This avoids unnecessary refreshes when clearing an already-empty search
-            // or during tab switches where the search text is cleared.
-            if (hadSearchTokens || hasSearchTokens)
-                TriggerDebouncedInstalledModsSearch();
-
-        }
-    }
-
     public bool HasSearchText => _searchTokens.Length > 0;
-
-    public int TotalMods
-    {
-        get => _totalMods;
-        private set
-        {
-            if (SetProperty(ref _totalMods, value)) OnPropertyChanged(nameof(SummaryText));
-        }
-    }
-
-    public int ActiveMods
-    {
-        get => _activeMods;
-        private set
-        {
-            if (SetProperty(ref _activeMods, value)) OnPropertyChanged(nameof(SummaryText));
-        }
-    }
-
-    public int UpdatableModsCount
-    {
-        get => _updatableModsCount;
-        private set
-        {
-            if (SetProperty(ref _updatableModsCount, value))
-            {
-                OnPropertyChanged(nameof(UpdateAllButtonLabel));
-                OnPropertyChanged(nameof(UpdateAllModsMenuHeader));
-            }
-        }
-    }
 
     public string SummaryText => TotalMods == 0
         ? "No mods found."
@@ -480,10 +313,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public string NoModsFoundMessage =>
         $"No mods found. If this is unexpected, verify that your VintageStoryData folder is correctly set: {DataDirectory}. You can change it in the File Menu.";
-
-    public IRelayCommand ClearSearchCommand { get; }
-
-    public IAsyncRelayCommand RefreshCommand { get; }
 
     public string? InstalledGameVersion { get; }
 
@@ -568,6 +397,117 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             SetUserReportsColumnVisibility(isVisible);
     }
 
+    #region MVVM Toolkit Property Changed Handlers
+
+    partial void OnSelectedSortOptionChanged(SortOption? value)
+    {
+        value?.Apply(ModsView);
+    }
+
+    partial void OnIsLoadingModsChanged(bool value)
+    {
+        RecalculateIsBusy();
+    }
+
+    partial void OnIsLoadingModDetailsChanged(bool value)
+    {
+        RecalculateIsBusy();
+        UpdateModDetailsProgressVisibility();
+    }
+
+    partial void OnIsFastCheckInProgressChanged(bool value)
+    {
+        UpdateModDetailsProgressVisibility();
+    }
+
+    partial void OnHasSelectedTagsChanged(bool value)
+    {
+        OnPropertyChanged(nameof(TagsColumnHeader));
+    }
+
+    partial void OnStatusMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasStatusMessage));
+    }
+
+    partial void OnSelectedModChanged(ModListItemViewModel? value)
+    {
+        OnPropertyChanged(nameof(HasSelectedMod));
+    }
+
+    partial void OnTotalModsChanged(int value)
+    {
+        OnPropertyChanged(nameof(SummaryText));
+    }
+
+    partial void OnActiveModsChanged(int value)
+    {
+        OnPropertyChanged(nameof(SummaryText));
+    }
+
+    partial void OnUpdatableModsCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(UpdateAllButtonLabel));
+        OnPropertyChanged(nameof(UpdateAllModsMenuHeader));
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        var newValue = value ?? string.Empty;
+
+        var hadSearchTokens = _searchTokens.Length > 0;
+        _searchTokens = CreateSearchTokens(newValue);
+        var hasSearchTokens = _searchTokens.Length > 0;
+
+        OnPropertyChanged(nameof(HasSearchText));
+
+        // Only refresh if the search filter state actually changed.
+        // This avoids unnecessary refreshes when clearing an already-empty search
+        // or during tab switches where the search text is cleared.
+        if (hadSearchTokens || hasSearchTokens)
+            TriggerDebouncedInstalledModsSearch();
+    }
+
+    #endregion
+
+    #region MVVM Toolkit Commands
+
+    [RelayCommand(CanExecute = nameof(HasSearchText))]
+    private void ClearSearch()
+    {
+        SearchText = string.Empty;
+    }
+
+    [RelayCommand]
+    private void ShowMainTab()
+    {
+        SetViewSection(ViewSection.MainTab);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanShowDatabaseTab))]
+    private void ShowDatabaseTab()
+    {
+        SetViewSection(ViewSection.DatabaseTab);
+    }
+
+    private bool CanShowDatabaseTab() => !InternetAccessManager.IsInternetAccessDisabled;
+
+    [RelayCommand(CanExecute = nameof(CanShowModlistTab))]
+    private void ShowModlistTab()
+    {
+        SetViewSection(ViewSection.ModlistTab);
+    }
+
+    private bool CanShowModlistTab() => !InternetAccessManager.IsInternetAccessDisabled;
+
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        await LoadModsAsync();
+    }
+
+    #endregion
+
     private void SetViewSection(ViewSection section)
     {
         if (_viewSection == section) return;
@@ -587,7 +527,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         _viewSection = section;
 
-        if (!string.IsNullOrEmpty(_searchText)) SearchText = string.Empty;
+        if (!string.IsNullOrEmpty(SearchText)) SearchText = string.Empty;
 
         switch (section)
         {
@@ -2749,7 +2689,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private void RecalculateIsBusy()
     {
-        var isBusy = _hasActiveBusyScope || _isLoadingMods || _isLoadingModDetails;
+        var isBusy = _hasActiveBusyScope || IsLoadingMods || IsLoadingModDetails;
 
         if (Application.Current?.Dispatcher is Dispatcher dispatcher)
         {
@@ -2781,7 +2721,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private void UpdateModDetailsProgressVisibility()
     {
-        IsModDetailsProgressVisible = _isLoadingModDetails && !_isFastCheckInProgress;
+        IsModDetailsProgressVisible = IsLoadingModDetails && !IsFastCheckInProgress;
     }
 
 
@@ -4419,8 +4359,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         foreach (var mod in _searchResults) mod.RefreshInternetAccessDependentState();
 
-        _showDatabaseTabCommand.NotifyCanExecuteChanged();
-        _showModlistTabCommand.NotifyCanExecuteChanged();
+        ShowDatabaseTabCommand.NotifyCanExecuteChanged();
+        ShowModlistTabCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(CanAccessCloudModlists));
 
         if (InternetAccessManager.IsInternetAccessDisabled && _viewSection == ViewSection.DatabaseTab)
