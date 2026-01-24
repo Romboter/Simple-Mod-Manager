@@ -4,6 +4,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Button = System.Windows.Controls.Button;
+using Clipboard = System.Windows.Clipboard;
 
 namespace VintageStoryModManager.Views.Dialogs;
 
@@ -134,6 +135,11 @@ public partial class MessageDialogWindow : Window
             IconImage.Source = source;
             IconImage.Visibility = Visibility.Visible;
         }
+
+        // Show copy button for error and warning dialogs
+        CopyButton.Visibility = icon is MessageBoxImage.Error or MessageBoxImage.Warning
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private static ImageSource? ConvertIcon(Icon icon)
@@ -155,6 +161,19 @@ public partial class MessageDialogWindow : Window
             Result = result;
             _resultSet = true;
             DialogResult = true;
+        }
+    }
+
+    private void OnCopyButtonClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var textToCopy = $"{Title}\n\n{MessageTextBlock.Text}";
+            Clipboard.SetText(textToCopy);
+        }
+        catch
+        {
+            // Ignore clipboard errors
         }
     }
 

@@ -1,3 +1,4 @@
+
 using CommunityToolkit.Mvvm.Input;
 using ModernWpf.Controls;
 using QuestPDF;
@@ -89,6 +90,22 @@ public partial class MainWindow : Window
     #endregion
 
     #region Static Configuration
+
+    /// <summary>
+    /// Wrapper for host key verification that stores trusted fingerprints (TOFU) everywhere SFTP is used.
+    /// </summary>
+    private Func<ServerTarget, Func<string, HostKeyVerificationResult, Task<bool>>, Func<string, HostKeyVerificationResult, Task<bool>>> CreateHostKeyVerifierWithStorage()
+    {
+        return (serverTarget, baseVerifier) => async (fingerprint, result) =>
+        {
+            var trusted = await baseVerifier(fingerprint, result).ConfigureAwait(false);
+            if (trusted && result == HostKeyVerificationResult.NewKey && !string.IsNullOrEmpty(serverTarget.Id))
+            {
+                _serverTargetService.TryUpdateHostKeyFingerprint(serverTarget.Id, fingerprint, out _);
+            }
+            return trusted;
+        };
+    }
 
     // URLs
     private const string DiscordInviteUrl = "https://discord.gg/Zhm3QnD2s9";
@@ -320,6 +337,8 @@ public partial class MainWindow : Window
     private DataBackupService _dataBackupService;
     private readonly ModActivityLoggingService _modActivityLoggingService;
     private readonly UserConfigurationService _userConfiguration;
+    private readonly ServerTargetService _serverTargetService;
+    private readonly SyncEngine _syncEngine = new();
     private ModManagerTraceListener? _traceListener;
 
     // Selection tracking
@@ -400,6 +419,7 @@ public partial class MainWindow : Window
             _userConfiguration.GetConfigurationDirectory(),
             _userConfiguration.CustomDataBackupLocation);
         _modActivityLoggingService = new ModActivityLoggingService(_userConfiguration);
+        _serverTargetService = new ServerTargetService(_userConfiguration.GetConfigurationDirectory());
 
         InitializeComponent();
 
@@ -451,6 +471,7 @@ public partial class MainWindow : Window
         RefreshDeveloperProfilesMenuEntries();
         UpdateGameProfileMenuChecks();
         UpdateActiveGameProfileDisplay();
+        UpdateSyncToServerMenuState();
 
         UpdateGameVersionMenuItem(VintageStoryVersionLocator.GetInstalledVersion(_gameDirectory));
 
@@ -7555,6 +7576,7 @@ public partial class MainWindow : Window
         UpdateGameVersionMenuItem(VintageStoryVersionLocator.GetInstalledVersion(_gameDirectory));
         await ReloadViewModelAsync();
         UpdateActiveGameProfileDisplay();
+        UpdateSyncToServerMenuState();
     }
 
     private void GameProfilesMenuItem_OnSubmenuOpened(object sender, RoutedEventArgs e)
@@ -7579,7 +7601,12 @@ public partial class MainWindow : Window
             _userConfiguration.SetGameProfileCreationWarningAcknowledged(true);
         }
 
-        var dialog = new GameProfileDialog(this);
+        var dialog = new GameProfileDialog(
+            this,
+            _serverTargetService,
+            TestServerConnectionAsync,
+            ShowHostKeyVerificationAsync,
+            _userConfiguration.EnableServerOptions);
         var result = dialog.ShowDialog();
         if (result != true) return;
 
@@ -7593,11 +7620,53 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (normalizedName is not null) _userConfiguration.TrySetActiveGameProfile(normalizedName);
+        if (normalizedName is not null)
+        {
+            _userConfiguration.TrySetActiveGameProfile(normalizedName);
+
+            // Set profile type and server target if this is a server profile
+            _userConfiguration.SetActiveProfileType(dialog.SelectedProfileType);
+            if (dialog.SelectedProfileType == ProfileType.Server && dialog.SelectedServerTargetId != null)
+            {
+                _userConfiguration.SetActiveServerTargetId(dialog.SelectedServerTargetId);
+            }
+        }
 
         await OnActiveGameProfileChangedAsync().ConfigureAwait(true);
         RefreshGameProfileMenuItems();
         UpdateGameProfileMenuChecks();
+    }
+
+    private void EditGameProfileMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        var profileName = _userConfiguration.ActiveGameProfileName;
+        if (string.IsNullOrEmpty(profileName))
+        {
+            WpfMessageBox.Show("No active profile to edit.", "Simple VS Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var currentProfileType = _userConfiguration.GetActiveProfileType();
+        var currentServerTargetId = _userConfiguration.GetActiveServerTargetId();
+
+        var dialog = new EditGameProfileDialog(
+            this,
+            profileName,
+            currentProfileType,
+            currentServerTargetId,
+            _serverTargetService,
+            TestServerConnectionAsync,
+            ShowHostKeyVerificationAsync,
+            _userConfiguration.EnableServerOptions);
+
+        var result = dialog.ShowDialog();
+        if (result != true) return;
+
+        // Update profile type and server target
+        _userConfiguration.SetActiveProfileType(dialog.SelectedProfileType);
+        _userConfiguration.SetActiveServerTargetId(dialog.SelectedServerTargetId);
+
+        UpdateSyncToServerMenuState();
     }
 
     private async void DeleteGameProfileMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -7731,6 +7800,8 @@ public partial class MainWindow : Window
         GameProfilesMenuItem.Items.Clear();
         GameProfilesMenuItem.Items.Add(CreateGameProfileMenuItem);
 
+        if (EditGameProfileMenuItem is not null) GameProfilesMenuItem.Items.Add(EditGameProfileMenuItem);
+
         if (DeleteGameProfileMenuItem is not null) GameProfilesMenuItem.Items.Add(DeleteGameProfileMenuItem);
 
         var profiles = _userConfiguration.GetGameProfileNames();
@@ -7859,6 +7930,111 @@ public partial class MainWindow : Window
     private void ExitMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void ManageServerTargetsMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new ManageServerTargetsDialog(
+            _serverTargetService,
+            TestServerConnectionAsync,
+            ShowHostKeyVerificationAsync)
+        {
+            Owner = this
+        };
+        dialog.ShowDialog();
+        UpdateSyncToServerMenuState();
+    }
+
+    private void SyncToServerMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!_userConfiguration.IsActiveProfileServerProfile())
+        {
+            WpfMessageBox.Show("This feature is only available for Server profiles.\n\nTo use this feature, create a new profile and set its type to 'Server'.",
+                "Sync to Server", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var serverTargetId = _userConfiguration.GetActiveServerTargetId();
+        if (string.IsNullOrEmpty(serverTargetId))
+        {
+            WpfMessageBox.Show("No server target is configured for this profile.",
+                "Sync to Server", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var target = _serverTargetService.GetTarget(serverTargetId);
+        if (target == null)
+        {
+            WpfMessageBox.Show("The configured server target was not found. It may have been deleted.",
+                "Sync to Server", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_dataDirectory))
+        {
+            WpfMessageBox.Show("No data directory is configured for this profile.",
+                "Sync to Server", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        // Wrap the host key verifier to store trusted fingerprints
+        var wrappedHostKeyVerifier = CreateHostKeyVerifierWithStorage()(target, ShowHostKeyVerificationAsync);
+
+        var viewModel = new SyncToServerDialogViewModel(
+            target,
+            _dataDirectory,
+            _serverTargetService,
+            _syncEngine,
+            CreateSftpClientWrapper,
+            wrappedHostKeyVerifier);
+
+        var dialog = new SyncToServerDialog(viewModel)
+        {
+            Owner = this
+        };
+        dialog.ShowDialog();
+    }
+
+    private ISftpClientWrapper CreateSftpClientWrapper(
+        ServerTarget target,
+        string? password,
+        Func<string, HostKeyVerificationResult, Task<bool>> hostKeyVerifier)
+    {
+        return new SftpClientWrapper();
+    }
+
+    private async Task<bool> TestServerConnectionAsync(
+        ServerTarget target,
+        string? password,
+        Func<string, HostKeyVerificationResult, Task<bool>> hostKeyVerifier)
+    {
+        // Wrap the hostKeyVerifier to store fingerprints
+        var wrappedVerifier = CreateHostKeyVerifierWithStorage()(target, hostKeyVerifier);
+        using var sftp = new SftpClientWrapper();
+        await sftp.ConnectAsync(target, password, wrappedVerifier, CancellationToken.None).ConfigureAwait(false);
+        return sftp.IsConnected;
+    }
+
+    private async Task<bool> ShowHostKeyVerificationAsync(string fingerprint, HostKeyVerificationResult verificationResult)
+    {
+        // Ensure we're on the UI thread
+        if (!Dispatcher.CheckAccess())
+        {
+            return await Dispatcher.InvokeAsync(async () =>
+                await ShowHostKeyVerificationAsync(fingerprint, verificationResult)).Result.ConfigureAwait(false);
+        }
+
+        var target = _serverTargetService.GetAllTargets().FirstOrDefault();
+        var host = target?.Host ?? "Unknown host";
+
+        return await HostKeyConfirmationDialog.ShowAsync(this, host, fingerprint, verificationResult).ConfigureAwait(false);
+    }
+
+    private void UpdateSyncToServerMenuState()
+    {
+        var isServerProfile = _userConfiguration.IsActiveProfileServerProfile();
+        var hasServerTarget = !string.IsNullOrEmpty(_userConfiguration.GetActiveServerTargetId());
+        SyncToServerMenuItem.IsEnabled = isServerProfile && hasServerTarget;
     }
 
     private async Task<bool> TryEnsureDataBackupBeforeLaunchAsync()
@@ -13561,6 +13737,13 @@ public partial class MainWindow : Window
     private void UpdateServerOptionsState(bool isEnabled)
     {
         if (EnableServerOptionsMenuItem is not null) EnableServerOptionsMenuItem.IsChecked = isEnabled;
+
+        // Control visibility of server-related menu items
+        var visibility = isEnabled ? Visibility.Visible : Visibility.Collapsed;
+        if (ManageServerTargetsMenuItem is not null) ManageServerTargetsMenuItem.Visibility = visibility;
+        if (SyncToServerMenuItem is not null) SyncToServerMenuItem.Visibility = visibility;
+        if (ServerOptionsSeparator1 is not null) ServerOptionsSeparator1.Visibility = visibility;
+        if (ServerOptionsSeparator2 is not null) ServerOptionsSeparator2.Visibility = visibility;
 
         var singleSelection = _selectedMods.Count == 1 ? _selectedMods[0] : null;
         UpdateSelectedModCopyForServerButton(isEnabled ? singleSelection : null);

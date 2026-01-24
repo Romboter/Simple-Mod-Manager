@@ -1,0 +1,89 @@
+<Window x:Class="VintageStoryModManager.Views.Dialogs.ManageServerTargetsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Manage Server Targets"
+        Width="550"
+        Height="400"
+        MinWidth="450"
+        MinHeight="300"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        WindowStyle="SingleBorderWindow"
+        ShowInTaskbar="False"
+        Background="{DynamicResource Brush.Window.Shell.Background.Solid}">
+
+    <Grid Margin="20"
+          Background="{DynamicResource Brush.Panel.Primary.Background.Solid}"
+          TextElement.Foreground="{DynamicResource Brush.Text.Primary}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0"
+                   Text="Configure SFTP server targets for mod synchronization."
+                   Margin="0,0,0,12"
+                   TextWrapping="Wrap" />
+
+        <!-- Server targets list -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource Brush.Panel.Secondary.Background.Solid}"
+                BorderBrush="{DynamicResource Brush.Panel.Secondary.Background.Solid}">
+            <ListBox x:Name="TargetsList"
+                     ItemsSource="{Binding Targets}"
+                     SelectedItem="{Binding SelectedTarget}"
+                     HorizontalContentAlignment="Stretch"
+                     Background="Transparent"
+                     BorderThickness="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       FontWeight="SemiBold" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Text="{Binding HostDisplay}"
+                                       Foreground="{DynamicResource Brush.Text.Primary}"
+                                       FontSize="12" />
+
+                            <TextBlock Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+                                       Text="{Binding LastConnectedDisplay}"
+                                       Foreground="{DynamicResource Brush.Text.Primary}"
+                                       FontSize="11"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <Button Content="Add" Click="AddButton_Click" Padding="16,8" Margin="0,0,8,0" />
+                <Button Content="Edit" Click="EditButton_Click" Padding="16,8" Margin="0,0,8,0" IsEnabled="{Binding HasSelection}" />
+                <Button Content="Delete" Click="DeleteButton_Click" Padding="16,8" IsEnabled="{Binding HasSelection}" />
+            </StackPanel>
+
+            <Button Grid.Column="1" Content="Close" Click="CloseButton_Click" IsDefault="True" Padding="16,8" />
+        </Grid>
+    </Grid>
+</Window>

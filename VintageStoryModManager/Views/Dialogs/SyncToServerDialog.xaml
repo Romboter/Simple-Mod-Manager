@@ -1,0 +1,508 @@
+<Window x:Class="VintageStoryModManager.Views.Dialogs.SyncToServerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:viewModels="clr-namespace:VintageStoryModManager.ViewModels"
+        xmlns:local="clr-namespace:VintageStoryModManager.Views.Dialogs"
+        Title="Sync to Server"
+        Width="750"
+        Height="600"
+        MinWidth="650"
+        MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        WindowStyle="SingleBorderWindow"
+        ShowInTaskbar="False"
+        Background="{DynamicResource Brush.Window.Shell.Background.Solid}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+
+        <!-- Style for step indicators -->
+        <Style x:Key="StepHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,20" />
+        </Style>
+
+        <!-- Style for section headers -->
+        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        </Style>
+
+        <!-- Style for info text -->
+        <Style x:Key="InfoTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{DynamicResource Brush.Panel.Primary.Background.Solid}"
+            Margin="0"
+            BorderThickness="0">
+        <Grid TextElement.Foreground="{DynamicResource Brush.Text.Primary}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Header Section with better visual design -->
+            <Border Grid.Row="0"
+                    Background="{DynamicResource Brush.Panel.Secondary.Background.Solid}"
+                    BorderBrush="{DynamicResource Brush.Border.Primary}"
+                    BorderThickness="0,0,0,1"
+                    Padding="24,20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Title -->
+                    <TextBlock Grid.Row="0"
+                               Text="{Binding TargetName}"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,12" />
+
+                    <!-- Server Info -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="Remote Address:"
+                                   Style="{StaticResource InfoTextStyle}"
+                                   Margin="0,0,8,4"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding TargetHost}"
+                                   Style="{StaticResource InfoTextStyle}"
+                                   Margin="0,0,0,4" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="Remote Path:"
+                                   Style="{StaticResource InfoTextStyle}"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding RemoteDataPath}"
+                                   Style="{StaticResource InfoTextStyle}"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding RemoteDataPath}" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Main Content Area -->
+            <Grid Grid.Row="1" Margin="24,20">
+
+                <!-- Options Step -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              Visibility="{Binding IsOptionsStep, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Configure Sync Options"
+                                   Style="{StaticResource StepHeaderStyle}" />
+
+                        <!-- Options with better visual separation -->
+                        <Border Background="{DynamicResource Brush.Panel.Secondary.Background.Solid}"
+                                BorderBrush="{DynamicResource Brush.Border.Primary}"
+                                BorderThickness="1"
+                                Padding="16"
+                                CornerRadius="6"
+                                Margin="0,0,0,16">
+                            <StackPanel>
+                                <CheckBox Content="Include ModConfig folder"
+                                          IsChecked="{Binding IncludeModConfig}"
+                                          Margin="0,0,0,12"
+                                          FontSize="13" />
+
+                                <CheckBox Content="Mirror deletes (remove server files not present locally)"
+                                          IsChecked="{Binding MirrorDeletes}"
+                                          FontSize="13" />
+
+                                <TextBlock Text="Files on the server that don't exist in your local profile will be flagged as orphans. Enable this option to review and delete them."
+                                           Style="{StaticResource InfoTextStyle}"
+                                           TextWrapping="Wrap"
+                                           Margin="24,8,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Danger Warning with modern styling -->
+                        <Border Visibility="{Binding IsDangerousPath, Converter={StaticResource BoolToVis}}"
+                                Background="#22FF6B6B"
+                                BorderBrush="#FF6B6B"
+                                BorderThickness="2"
+                                Padding="16"
+                                CornerRadius="6">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="⚠"
+                                               FontSize="18"
+                                               Foreground="#FF6B6B"
+                                               Margin="0,0,8,0"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="Potentially Dangerous Path Detected"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               Foreground="#FF6B6B"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="The remote data path appears to point to a system directory or root path. Please verify this is correct before proceeding with the sync operation."
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource Brush.Text.Primary}"
+                                           FontSize="12" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Preview Step -->
+                <Grid Visibility="{Binding IsPreviewStep, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="Review Sync Preview"
+                               Style="{StaticResource StepHeaderStyle}" />
+
+                    <!-- Summary Stats with modern card design -->
+                    <Border Grid.Row="1"
+                            Background="{DynamicResource Brush.Panel.Secondary.Background.Solid}"
+                            BorderBrush="{DynamicResource Brush.Border.Primary}"
+                            BorderThickness="1"
+                            Padding="16"
+                            CornerRadius="6"
+                            Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Upload Count -->
+                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding UploadCount}"
+                                           FontSize="28"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#4CAF50" />
+                                <TextBlock Text="To Upload"
+                                           Style="{StaticResource InfoTextStyle}"
+                                           HorizontalAlignment="Center"
+                                           FontSize="11" />
+                            </StackPanel>
+
+                            <!-- Skip Count -->
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding SkipCount}"
+                                           FontSize="28"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Text.Primary}" />
+                                <TextBlock Text="Unchanged"
+                                           Style="{StaticResource InfoTextStyle}"
+                                           HorizontalAlignment="Center"
+                                           FontSize="11" />
+                            </StackPanel>
+
+                            <!-- Orphan Count -->
+                            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding OrphanCount}"
+                                           FontSize="28"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#FF9800" />
+                                <TextBlock Text="Orphans"
+                                           Style="{StaticResource InfoTextStyle}"
+                                           HorizontalAlignment="Center"
+                                           FontSize="11" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File List with improved styling -->
+                    <Border Grid.Row="2"
+                            BorderBrush="{DynamicResource Brush.Border.Primary}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Background="{DynamicResource Brush.Panel.Secondary.Background.Solid}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      Padding="8">
+                            <ItemsControl ItemsSource="{Binding PreviewItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type viewModels:SyncPreviewItemViewModel}">
+                                        <Border Margin="4"
+                                                Padding="12,10"
+                                                Background="{DynamicResource Brush.Panel.Primary.Background.Solid}"
+                                                BorderBrush="{DynamicResource Brush.Border.Primary}"
+                                                BorderThickness="1"
+                                                CornerRadius="4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="90" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox Grid.Column="0"
+                                                          IsChecked="{Binding IsConfirmedForDeletion}"
+                                                          Visibility="{Binding IsOrphan, Converter={StaticResource BoolToVis}}"
+                                                          Margin="0,0,12,0"
+                                                          VerticalAlignment="Center" />
+
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding RelativePath}"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding RelativePath}"
+                                                           FontSize="12" />
+
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding LocalSizeDisplay}"
+                                                           Foreground="{DynamicResource Brush.Text.Primary}"
+                                                           VerticalAlignment="Center"
+                                                           Margin="12,0"
+                                                           FontSize="11"
+                                                           TextAlignment="Right"
+                                                           Width="70" />
+
+                                                <Border Grid.Column="3"
+                                                        Background="{Binding Action, Converter={StaticResource ActionToColorConverter}}"
+                                                        Padding="8,4"
+                                                        CornerRadius="4"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding ActionDisplay}"
+                                                               HorizontalAlignment="Center"
+                                                               FontSize="10"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="White" />
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Orphan Controls -->
+                    <StackPanel Grid.Row="3"
+                                Orientation="Horizontal"
+                                Margin="0,12,0,0"
+                                Visibility="{Binding HasOrphans, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Orphan Actions:"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,12,0" />
+                        <Button Content="Select All"
+                                Command="{Binding SelectAllOrphansCommand}"
+                                Padding="12,6"
+                                Margin="0,0,8,0" />
+                        <Button Content="Deselect All"
+                                Command="{Binding DeselectAllOrphansCommand}"
+                                Padding="12,6" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Executing Step with modern progress -->
+                <StackPanel Visibility="{Binding IsExecutingStep, Converter={StaticResource BoolToVis}}"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            MaxWidth="500">
+
+                    <TextBlock Text="Syncing Files..."
+                               Style="{StaticResource StepHeaderStyle}"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,32" />
+
+                    <!-- Current File Info -->
+                    <Border Background="{DynamicResource Brush.Panel.Secondary.Background.Solid}"
+                            BorderBrush="{DynamicResource Brush.Border.Primary}"
+                            BorderThickness="1"
+                            Padding="20"
+                            CornerRadius="8"
+                            Margin="0,0,0,24">
+                        <StackPanel>
+                            <TextBlock Text="Current File"
+                                       Style="{StaticResource InfoTextStyle}"
+                                       Margin="0,0,0,8"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding CurrentFileName}"
+                                       TextTrimming="CharacterEllipsis"
+                                       FontSize="13"
+                                       Margin="0,0,0,16"
+                                       ToolTip="{Binding CurrentFileName}" />
+
+                            <ProgressBar Value="{Binding CurrentFileProgress}"
+                                         Maximum="100"
+                                         Height="6"
+                                         Margin="0,0,0,8" />
+
+                            <TextBlock HorizontalAlignment="Right"
+                                       Style="{StaticResource InfoTextStyle}"
+                                       FontSize="11">
+                                <Run Text="{Binding CurrentFileProgress, StringFormat={}{0:F0}}" />
+                                <Run Text="%" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Overall Progress -->
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,12">
+                            <TextBlock Text="Overall Progress: "
+                                       Style="{StaticResource InfoTextStyle}"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding CompletedFiles}"
+                                       Style="{StaticResource InfoTextStyle}" />
+                            <TextBlock Text=" / "
+                                       Style="{StaticResource InfoTextStyle}" />
+                            <TextBlock Text="{Binding TotalFiles}"
+                                       Style="{StaticResource InfoTextStyle}" />
+                            <TextBlock Text=" files"
+                                       Style="{StaticResource InfoTextStyle}" />
+                        </StackPanel>
+
+                        <ProgressBar Value="{Binding OverallProgress}"
+                                     Maximum="100"
+                                     Height="8"
+                                     Width="400"
+                                     Margin="0,0,0,8" />
+
+                        <TextBlock HorizontalAlignment="Center"
+                                   Style="{StaticResource InfoTextStyle}"
+                                   FontSize="11">
+                            <Run Text="{Binding OverallProgress, StringFormat={}{0:F0}}" />
+                            <Run Text="%" />
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Complete Step with result summary -->
+                <Border Visibility="{Binding IsCompleteStep, Converter={StaticResource BoolToVis}}"
+                        Background="{DynamicResource Brush.Panel.Secondary.Background.Solid}"
+                        BorderBrush="{DynamicResource Brush.Border.Primary}"
+                        BorderThickness="1"
+                        Padding="32"
+                        CornerRadius="8"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        MaxWidth="500">
+                    <StackPanel HorizontalAlignment="Center">
+                        <!-- Success Icon (shown when no errors) -->
+                        <TextBlock x:Name="SuccessIcon"
+                                   Text="✓"
+                                   FontSize="48"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,16"
+                                   Foreground="#4CAF50"
+                                   Visibility="{Binding HasErrors, Converter={StaticResource InverseBoolToVis}}" />
+
+                        <!-- Warning Icon (shown when errors occurred) -->
+                        <TextBlock x:Name="WarningIcon"
+                                   Text="⚠"
+                                   FontSize="48"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,16"
+                                   Foreground="#FF9800"
+                                   Visibility="{Binding HasErrors, Converter={StaticResource BoolToVis}}" />
+
+                        <TextBlock Text="{Binding ResultSummary}"
+                                   FontSize="16"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center"
+                                   Margin="0,0,0,16"
+                                   FontWeight="SemiBold" />
+
+                        <TextBlock Text="Some files encountered errors during sync. Review the details above."
+                                   Visibility="{Binding HasErrors, Converter={StaticResource BoolToVis}}"
+                                   Foreground="#FF6B6B"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   FontSize="12" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Footer Section -->
+            <Border Grid.Row="2"
+                    Background="{DynamicResource Brush.Panel.Secondary.Background.Solid}"
+                    BorderBrush="{DynamicResource Brush.Border.Primary}"
+                    BorderThickness="0,1,0,0"
+                    Padding="24,16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Status Text -->
+                    <TextBlock Grid.Row="0"
+                               Text="{Binding StatusText}"
+                               Style="{StaticResource InfoTextStyle}"
+                               TextTrimming="CharacterEllipsis"
+                               Margin="0,0,0,12" />
+
+                    <!-- Action Buttons -->
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                        <Button Content="← Back"
+                                Command="{Binding BackToOptionsCommand}"
+                                Visibility="{Binding IsPreviewStep, Converter={StaticResource BoolToVis}}"
+                                Padding="20,10"
+                                Margin="0,0,8,0"
+                                MinWidth="110" />
+
+                        <Button Content="Connect &amp; Preview →"
+                                Command="{Binding GeneratePreviewCommand}"
+                                Visibility="{Binding IsOptionsStep, Converter={StaticResource BoolToVis}}"
+                                Padding="20,10"
+                                Margin="0,0,8,0"
+                                MinWidth="160"
+                                FontWeight="SemiBold" />
+
+                        <Button Content="Execute Sync"
+                                Command="{Binding ExecuteSyncCommand}"
+                                Visibility="{Binding IsPreviewStep, Converter={StaticResource BoolToVis}}"
+                                Padding="20,10"
+                                Margin="0,0,8,0"
+                                MinWidth="130"
+                                FontWeight="SemiBold" />
+
+                        <Button Content="Cancel"
+                                Command="{Binding CancelCommand}"
+                                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"
+                                Padding="20,10"
+                                Margin="0,0,8,0"
+                                MinWidth="110" />
+
+                        <Button Content="Close"
+                                Click="CloseButton_Click"
+                                IsDefault="True"
+                                Padding="20,10"
+                                MinWidth="110" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

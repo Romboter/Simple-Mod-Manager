@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
+using VintageStoryModManager.Models;
 using VintageStoryModManager.ViewModels;
 
 namespace VintageStoryModManager.Services;
@@ -476,6 +477,88 @@ public sealed class UserConfigurationService
         return BuildBackupDirectoryName(ActiveProfile.Name);
     }
 
+    /// <summary>
+    ///     Gets the profile type for the active profile.
+    /// </summary>
+    public ProfileType GetActiveProfileType()
+    {
+        return ActiveProfile.ProfileType;
+    }
+
+    /// <summary>
+    ///     Gets the profile type for a specific profile.
+    /// </summary>
+    public ProfileType GetProfileType(string? profileName)
+    {
+        if (string.IsNullOrWhiteSpace(profileName))
+            return ProfileType.Local;
+
+        var normalized = NormalizeGameProfileName(profileName);
+        if (normalized is null || !_gameProfiles.TryGetValue(normalized, out var profile))
+            return ProfileType.Local;
+
+        return profile.ProfileType;
+    }
+
+    /// <summary>
+    ///     Sets the profile type for the active profile.
+    /// </summary>
+    public void SetActiveProfileType(ProfileType profileType)
+    {
+        ActiveProfile.ProfileType = profileType;
+        Save();
+    }
+
+    /// <summary>
+    ///     Gets the server target ID for the active profile.
+    /// </summary>
+    public string? GetActiveServerTargetId()
+    {
+        return ActiveProfile.ServerTargetId;
+    }
+
+    /// <summary>
+    ///     Gets the server target ID for a specific profile.
+    /// </summary>
+    public string? GetServerTargetId(string? profileName)
+    {
+        if (string.IsNullOrWhiteSpace(profileName))
+            return null;
+
+        var normalized = NormalizeGameProfileName(profileName);
+        if (normalized is null || !_gameProfiles.TryGetValue(normalized, out var profile))
+            return null;
+
+        return profile.ServerTargetId;
+    }
+
+    /// <summary>
+    ///     Sets the server target ID for the active profile.
+    /// </summary>
+    public void SetActiveServerTargetId(string? serverTargetId)
+    {
+        ActiveProfile.ServerTargetId = serverTargetId;
+        Save();
+    }
+
+    /// <summary>
+    ///     Sets both profile type and server target ID for the active profile.
+    /// </summary>
+    public void SetActiveProfileServerSettings(ProfileType profileType, string? serverTargetId)
+    {
+        ActiveProfile.ProfileType = profileType;
+        ActiveProfile.ServerTargetId = serverTargetId;
+        Save();
+    }
+
+    /// <summary>
+    ///     Checks if the active profile is a server profile.
+    /// </summary>
+    public bool IsActiveProfileServerProfile()
+    {
+        return ActiveProfile.ProfileType == ProfileType.Server;
+    }
+
     private void DeleteProfileBackupDirectories(IEnumerable<string> profileNames)
     {
         if (profileNames is null) return;
@@ -561,6 +644,15 @@ public sealed class UserConfigurationService
         LoadBulkUpdateModExclusions(obj["bulkUpdateModExclusions"], profile.BulkUpdateModExclusions);
         LoadSkippedModVersions(obj["skippedModVersions"], profile.SkippedModVersions);
         LoadModUsageTracking(obj["modUsageTracking"], profile);
+
+        // Load profile type and server target
+        var profileTypeStr = GetOptionalString(obj["profileType"]);
+        if (Enum.TryParse<ProfileType>(profileTypeStr, true, out var profileType))
+            profile.ProfileType = profileType;
+
+        var serverTargetId = GetOptionalString(obj["serverTargetId"]);
+        if (!string.IsNullOrWhiteSpace(serverTargetId))
+            profile.ServerTargetId = serverTargetId;
     }
 
     private void ApplyLegacyProfileData(JsonObject root, GameProfileState profile)
@@ -2352,6 +2444,13 @@ public sealed class UserConfigurationService
 
             if (profile.RequiresGameDirectorySelection) profileObject["requiresGameDirectorySelection"] = true;
 
+            // Serialize profile type and server target
+            if (profile.ProfileType != ProfileType.Local)
+                profileObject["profileType"] = profile.ProfileType.ToString();
+
+            if (!string.IsNullOrWhiteSpace(profile.ServerTargetId))
+                profileObject["serverTargetId"] = profile.ServerTargetId;
+
             result[profile.Name] = profileObject;
         }
 
@@ -3608,6 +3707,16 @@ public sealed class UserConfigurationService
         public int LongRunningSessionCount { get; set; }
 
         public bool HasPendingModUsagePrompt { get; set; }
+
+        /// <summary>
+        ///     Profile type: Local (default) or Server.
+        /// </summary>
+        public ProfileType ProfileType { get; set; } = ProfileType.Local;
+
+        /// <summary>
+        ///     Associated server target ID for Server profiles.
+        /// </summary>
+        public string? ServerTargetId { get; set; }
     }
 
     private sealed class ModConfigPathEntry

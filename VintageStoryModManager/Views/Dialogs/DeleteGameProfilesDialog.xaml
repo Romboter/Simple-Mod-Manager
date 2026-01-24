@@ -24,11 +24,11 @@
                    TextWrapping="Wrap"
                    Foreground="{DynamicResource Brush.Text.Primary}" />
 
-        <TextBlock Grid.Row="1"
-                   Margin="0,8,0,0"
-                   Text="The Default profile cannot be deleted."
-                   TextWrapping="Wrap"
-                   Foreground="{DynamicResource Brush.Text.Secondary}" />
+         <TextBlock Grid.Row="1"
+             Margin="0,8,0,0"
+             Text="The Default profile cannot be deleted."
+             TextWrapping="Wrap"
+             Foreground="{DynamicResource Brush.InstalledMod.Error}" />
 
         <Border Grid.Row="2"
                 Margin="0,16,0,0"
@@ -52,11 +52,11 @@
                                         <TextBlock Text="{Binding Name}" />
                                         <TextBlock Text=" (Active)"
                                                    Margin="6,0,0,0"
-                                                   Foreground="{DynamicResource Brush.Text.Secondary}"
+                                                   Foreground="{DynamicResource Brush.Text.Primary}"
                                                    Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                         <TextBlock Text=" (Default)"
                                                    Margin="6,0,0,0"
-                                                   Foreground="{DynamicResource Brush.Text.Secondary}"
+                                                   Foreground="{DynamicResource Brush.Text.Primary}"
                                                    Visibility="{Binding IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                     </StackPanel>
                                 </CheckBox>

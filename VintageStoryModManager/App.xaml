@@ -24,6 +24,9 @@
             <converters:ScaledDoubleConverter x:Key="IMM.ScaledDoubleConverter" />
             <converters:CompactViewWidthConverter x:Key="IMM.CompactViewWidthConverter" />
 
+            <!-- Global SyncActionToColorConverter resource -->
+            <converters:SyncActionToColorConverter x:Key="ActionToColorConverter" />
+
             <ControlTemplate x:Key="IMM.SunkenListControlTemplate" TargetType="{x:Type ListBox}">
                 <Border
                     x:Name="TopAndLeft"

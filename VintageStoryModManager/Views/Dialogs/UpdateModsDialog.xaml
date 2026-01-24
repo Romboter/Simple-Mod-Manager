@@ -61,7 +61,7 @@
                                                            FontWeight="SemiBold" />
                                                 <TextBlock Text="{Binding VersionSummary}"
                                                            Margin="8,2,0,0"
-                                                           Foreground="{DynamicResource Brush.Text.Secondary}" />
+                                                           Foreground="{DynamicResource Brush.Text.Primary}" />
                                             </StackPanel>
                                         </CheckBox.Content>
                                     </CheckBox>

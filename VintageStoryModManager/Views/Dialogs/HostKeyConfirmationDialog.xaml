@@ -1,0 +1,69 @@
+<Window x:Class="VintageStoryModManager.Views.Dialogs.HostKeyConfirmationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Host Key Verification"
+        Width="500"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="SingleBorderWindow"
+        ShowInTaskbar="False"
+        Background="{DynamicResource Brush.Window.Shell.Background.Solid}">
+
+    <Grid Margin="20"
+          Background="{DynamicResource Brush.Panel.Primary.Background.Solid}"
+          TextElement.Foreground="{DynamicResource Brush.Text.Primary}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Warning icon and header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <TextBlock Text="⚠" FontSize="24" Foreground="#FFA500" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <TextBlock x:Name="HeaderText" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Explanation -->
+        <TextBlock Grid.Row="1" x:Name="ExplanationText" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+        <!-- Fingerprint display -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource Brush.Panel.Secondary.Background.Solid}"
+                Padding="12"
+                Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="Host:" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="12" />
+                <TextBlock x:Name="HostText" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+                <TextBlock Text="Fingerprint:" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="12" />
+                <TextBlock x:Name="FingerprintText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <!-- Warning for mismatch -->
+        <Border Grid.Row="3"
+                x:Name="MismatchWarning"
+                Background="#44FF6B6B"
+                BorderBrush="#FF6B6B"
+                BorderThickness="1"
+                Padding="12"
+                Margin="0,0,0,16"
+                CornerRadius="4"
+                Visibility="Collapsed">
+            <TextBlock TextWrapping="Wrap" Foreground="#FFCCCC">
+                <Run FontWeight="SemiBold">Warning:</Run>
+                <Run>The host key has changed since your last connection. This could indicate a security issue (man-in-the-middle attack) or that the server was reinstalled. Only proceed if you trust this is legitimate.</Run>
+            </TextBlock>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Trust" Click="TrustButton_Click" Padding="16,8" Margin="0,0,8,0" />
+            <Button Content="Cancel" Click="CancelButton_Click" IsCancel="True" IsDefault="True" Padding="16,8" />
+        </StackPanel>
+    </Grid>
+</Window>

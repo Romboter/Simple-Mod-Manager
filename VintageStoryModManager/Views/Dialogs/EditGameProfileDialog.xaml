@@ -1,7 +1,7 @@
-<Window x:Class="VintageStoryModManager.Views.Dialogs.GameProfileDialog"
+<Window x:Class="VintageStoryModManager.Views.Dialogs.EditGameProfileDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Create Game Profile"
+        Title="Edit Game Profile"
         Width="420"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -14,25 +14,22 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Enter a name for the new game profile."
-                   TextWrapping="Wrap"
-                   Foreground="{DynamicResource Brush.Text.Primary}" />
-
-        <TextBox x:Name="NameTextBox"
-                 Grid.Row="1"
-                 Margin="0,12,0,0"
-                 Background="{DynamicResource Brush.Dialog.TextBox.Background}"
-                 BorderBrush="{DynamicResource Brush.Dialog.TextBox.Border}"
-                 SelectionBrush="{DynamicResource Brush.Dialog.TextBox.SelectionBackground}"
-                 SelectionTextBrush="{DynamicResource Brush.Dialog.TextBox.SelectionForeground}"
-                 CaretBrush="{DynamicResource Brush.Dialog.TextBox.Caret}"
-                 TextChanged="NameTextBox_OnTextChanged" />
+        <!-- Profile name (read-only) -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Profile Name"
+                       Foreground="{DynamicResource Brush.Text.Primary}"
+                       FontSize="12"
+                       Margin="0,0,0,4" />
+            <TextBlock x:Name="ProfileNameText"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource Brush.Text.Primary}" />
+        </StackPanel>
 
         <!-- Profile Type (hidden when server options disabled) -->
-        <StackPanel x:Name="ProfileTypeSection" Grid.Row="2" Margin="0,16,0,0">
+        <StackPanel x:Name="ProfileTypeSection" Grid.Row="1" Margin="0,16,0,0">
             <TextBlock Text="Profile Type"
                        Foreground="{DynamicResource Brush.Text.Primary}"
                        Margin="0,0,0,8" />
@@ -52,7 +49,7 @@
 
         <!-- Server Target Selection (only visible for Server profiles) -->
         <StackPanel x:Name="ServerTargetPanel"
-                    Grid.Row="3"
+                    Grid.Row="2"
                     Margin="0,16,0,0"
                     Visibility="Collapsed">
             <TextBlock Text="Server Target"
@@ -81,16 +78,16 @@
                        Visibility="Collapsed" />
         </StackPanel>
 
-        <StackPanel Grid.Row="4"
+        <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0,24,0,0">
-            <Button x:Name="ConfirmButton"
+            <Button x:Name="SaveButton"
                     Width="90"
                     Margin="0,0,8,0"
-                    Content="Create"
+                    Content="Save"
                     IsDefault="True"
-                    Click="ConfirmButton_OnClick" />
+                    Click="SaveButton_OnClick" />
             <Button Width="90"
                     Content="Cancel"
                     IsCancel="True" />

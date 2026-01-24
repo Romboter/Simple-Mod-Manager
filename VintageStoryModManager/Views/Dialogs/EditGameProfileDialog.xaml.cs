@@ -5,33 +5,50 @@ using VintageStoryModManager.Services;
 
 namespace VintageStoryModManager.Views.Dialogs;
 
-public partial class GameProfileDialog : Window
+public partial class EditGameProfileDialog : Window
 {
-    private readonly ServerTargetService? _serverTargetService;
-    private readonly Func<ServerTarget, string?, Func<string, HostKeyVerificationResult, Task<bool>>, Task<bool>>? _testConnection;
-    private readonly Func<string, HostKeyVerificationResult, Task<bool>>? _hostKeyVerifier;
+    private readonly ServerTargetService _serverTargetService;
+    private readonly Func<ServerTarget, string?, Func<string, HostKeyVerificationResult, Task<bool>>, Task<bool>> _testConnection;
+    private readonly Func<string, HostKeyVerificationResult, Task<bool>> _hostKeyVerifier;
+    private readonly string? _currentServerTargetId;
     private readonly bool _serverOptionsEnabled;
 
-    public GameProfileDialog(
+    public EditGameProfileDialog(
         Window owner,
-        ServerTargetService? serverTargetService = null,
-        Func<ServerTarget, string?, Func<string, HostKeyVerificationResult, Task<bool>>, Task<bool>>? testConnection = null,
-        Func<string, HostKeyVerificationResult, Task<bool>>? hostKeyVerifier = null,
+        string profileName,
+        ProfileType currentProfileType,
+        string? currentServerTargetId,
+        ServerTargetService serverTargetService,
+        Func<ServerTarget, string?, Func<string, HostKeyVerificationResult, Task<bool>>, Task<bool>> testConnection,
+        Func<string, HostKeyVerificationResult, Task<bool>> hostKeyVerifier,
         bool serverOptionsEnabled = true)
     {
         InitializeComponent();
 
         Owner = owner;
-        _serverTargetService = serverTargetService;
-        _testConnection = testConnection;
-        _hostKeyVerifier = hostKeyVerifier;
+        _serverTargetService = serverTargetService ?? throw new ArgumentNullException(nameof(serverTargetService));
+        _testConnection = testConnection ?? throw new ArgumentNullException(nameof(testConnection));
+        _hostKeyVerifier = hostKeyVerifier ?? throw new ArgumentNullException(nameof(hostKeyVerifier));
+        _currentServerTargetId = currentServerTargetId;
         _serverOptionsEnabled = serverOptionsEnabled;
 
-        UpdateConfirmButtonState();
-        RefreshServerTargets();
-    }
+        ProfileNameText.Text = profileName;
 
-    public string ProfileName => NameTextBox.Text.Trim();
+        // Set initial profile type
+        if (currentProfileType == ProfileType.Server)
+        {
+            ServerRadio.IsChecked = true;
+            ServerTargetPanel.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            LocalRadio.IsChecked = true;
+            ServerTargetPanel.Visibility = Visibility.Collapsed;
+        }
+
+        RefreshServerTargets();
+        UpdateSaveButtonState();
+    }
 
     public ProfileType SelectedProfileType =>
         ServerRadio.IsChecked == true ? ProfileType.Server : ProfileType.Local;
@@ -41,10 +58,8 @@ public partial class GameProfileDialog : Window
             ? (ServerTargetCombo.SelectedItem as ServerTarget)?.Id
             : null;
 
-    private void ConfirmButton_OnClick(object sender, RoutedEventArgs e)
+    private void SaveButton_OnClick(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(ProfileName)) return;
-
         // Validate server target selection for server profiles
         if (SelectedProfileType == ProfileType.Server && string.IsNullOrEmpty(SelectedServerTargetId))
         {
@@ -60,11 +75,6 @@ public partial class GameProfileDialog : Window
         DialogResult = true;
     }
 
-    private void NameTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
-    {
-        UpdateConfirmButtonState();
-    }
-
     private void ProfileType_Changed(object sender, RoutedEventArgs e)
     {
         if (ServerTargetPanel is null) return;
@@ -73,19 +83,16 @@ public partial class GameProfileDialog : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        UpdateConfirmButtonState();
+        UpdateSaveButtonState();
     }
 
     private void ServerTargetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateConfirmButtonState();
+        UpdateSaveButtonState();
     }
 
     private void ManageTargets_Click(object sender, RoutedEventArgs e)
     {
-        if (_serverTargetService == null || _testConnection == null || _hostKeyVerifier == null)
-            return;
-
         var dialog = new ManageServerTargetsDialog(_serverTargetService, _testConnection, _hostKeyVerifier)
         {
             Owner = this
@@ -97,18 +104,16 @@ public partial class GameProfileDialog : Window
 
     private void RefreshServerTargets()
     {
-        if (_serverTargetService == null || ServerTargetCombo == null)
+        if (ServerTargetCombo == null)
             return;
 
-        var previousSelection = ServerTargetCombo.SelectedItem as ServerTarget;
         var targets = _serverTargetService.GetAllTargets();
-
         ServerTargetCombo.ItemsSource = targets;
 
-        // Restore selection if still exists
-        if (previousSelection != null)
+        // Try to select the current server target
+        if (!string.IsNullOrEmpty(_currentServerTargetId))
         {
-            ServerTargetCombo.SelectedItem = targets.FirstOrDefault(t => t.Id == previousSelection.Id);
+            ServerTargetCombo.SelectedItem = targets.FirstOrDefault(t => t.Id == _currentServerTargetId);
         }
 
         // Select first if nothing selected
@@ -125,18 +130,17 @@ public partial class GameProfileDialog : Window
                 : Visibility.Collapsed;
         }
 
-        UpdateConfirmButtonState();
+        UpdateSaveButtonState();
     }
 
-    private void UpdateConfirmButtonState()
+    private void UpdateSaveButtonState()
     {
-        if (ConfirmButton is null) return;
+        if (SaveButton is null) return;
 
-        var hasName = !string.IsNullOrWhiteSpace(NameTextBox.Text);
         var isServerValid = SelectedProfileType != ProfileType.Server ||
                             ServerTargetCombo?.SelectedItem != null;
 
-        ConfirmButton.IsEnabled = hasName && isServerValid;
+        SaveButton.IsEnabled = isServerValid;
     }
 
     private void Window_OnLoaded(object sender, RoutedEventArgs e)
@@ -151,9 +155,10 @@ public partial class GameProfileDialog : Window
         if (!_serverOptionsEnabled && LocalRadio != null)
         {
             LocalRadio.IsChecked = true;
+            ServerTargetPanel.Visibility = Visibility.Collapsed;
         }
 
-        NameTextBox.Focus();
-        NameTextBox.SelectAll();
+        // Focus the save button
+        SaveButton.Focus();
     }
 }

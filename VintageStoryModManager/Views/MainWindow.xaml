@@ -129,6 +129,11 @@
                                 Click="CreateGameProfileMenuItem_OnClick"
                                 Header="Create new..." />
                             <MenuItem
+                                x:Name="EditGameProfileMenuItem"
+                                Height="35"
+                                Click="EditGameProfileMenuItem_OnClick"
+                                Header="Edit current..." />
+                            <MenuItem
                                 x:Name="DeleteGameProfileMenuItem"
                                 Height="35"
                                 Padding="12,6"
@@ -157,7 +162,19 @@
                             Header="Automatically back up VintagestoryData before launch"
                             IsCheckable="True"
                             Style="{StaticResource ToggleMenuItemStyle}" />
-                        <Separator />
+                        <Separator x:Name="ServerOptionsSeparator1" />
+                        <MenuItem
+                            x:Name="ManageServerTargetsMenuItem"
+                            Height="35"
+                            Click="ManageServerTargetsMenuItem_OnClick"
+                            Header="Server Targets..." />
+                        <MenuItem
+                            x:Name="SyncToServerMenuItem"
+                            Height="35"
+                            Click="SyncToServerMenuItem_OnClick"
+                            Header="Sync to Server..."
+                            IsEnabled="False" />
+                        <Separator x:Name="ServerOptionsSeparator2" />
                         <MenuItem
                             Height="35"
                             Click="ExitMenuItem_OnClick"
