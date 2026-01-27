@@ -126,14 +126,7 @@
                                           Margin="0,0,0,12"
                                           FontSize="13" />
 
-                                <CheckBox Content="Mirror deletes (remove server files not present locally)"
-                                          IsChecked="{Binding MirrorDeletes}"
-                                          FontSize="13" />
-
-                                <TextBlock Text="Files on the server that don't exist in your local profile will be flagged as orphans. Enable this option to review and delete them."
-                                           Style="{StaticResource InfoTextStyle}"
-                                           TextWrapping="Wrap"
-                                           Margin="24,8,0,0" />
+                                <!-- Mirror deletes option removed -->
                             </StackPanel>
                         </Border>
 

@@ -31,6 +31,7 @@ public sealed partial class SyncToServerDialogViewModel : ObservableObject
     private readonly SyncEngine _syncEngine;
     private readonly Func<string, HostKeyVerificationResult, Task<bool>> _hostKeyVerifier;
     private readonly Dispatcher _dispatcher;
+    private readonly IConfirmationService _confirmationService;
 
     private ISftpClientWrapper? _sftp;
     private SyncPreview? _currentPreview;
@@ -42,8 +43,6 @@ public sealed partial class SyncToServerDialogViewModel : ObservableObject
     [ObservableProperty]
     private bool _includeModConfig;
 
-    [ObservableProperty]
-    private bool _mirrorDeletes;
 
     [ObservableProperty]
     private bool _isConnecting;
@@ -81,27 +80,7 @@ public sealed partial class SyncToServerDialogViewModel : ObservableObject
     [ObservableProperty]
     private bool _wasCancelled;
 
-    public SyncToServerDialogViewModel(
-        ServerTarget target,
-        string localDataPath,
-        ServerTargetService targetService,
-        SyncEngine syncEngine,
-        Func<ServerTarget, string?, Func<string, HostKeyVerificationResult, Task<bool>>, ISftpClientWrapper> sftpFactory,
-        Func<string, HostKeyVerificationResult, Task<bool>> hostKeyVerifier,
-        bool defaultMirrorDeletes = false,
-        bool defaultIncludeModConfig = false)
-    {
-        _target = target ?? throw new ArgumentNullException(nameof(target));
-        _localDataPath = localDataPath ?? throw new ArgumentNullException(nameof(localDataPath));
-        _targetService = targetService ?? throw new ArgumentNullException(nameof(targetService));
-        _syncEngine = syncEngine ?? throw new ArgumentNullException(nameof(syncEngine));
-        _sftpFactory = sftpFactory ?? throw new ArgumentNullException(nameof(sftpFactory));
-        _hostKeyVerifier = hostKeyVerifier ?? throw new ArgumentNullException(nameof(hostKeyVerifier));
-        _dispatcher = System.Windows.Application.Current.Dispatcher;
-
-        _mirrorDeletes = defaultMirrorDeletes;
-        _includeModConfig = defaultIncludeModConfig;
-    }
+    // ...existing code...
 
     /// <summary>
     ///     Server target display name.
@@ -127,6 +106,56 @@ public sealed partial class SyncToServerDialogViewModel : ObservableObject
     ///     All preview items.
     /// </summary>
     public ObservableCollection<SyncPreviewItemViewModel> PreviewItems { get; } = new();
+
+    public SyncToServerDialogViewModel(
+        ServerTarget target,
+        string localDataPath,
+        ServerTargetService targetService,
+        SyncEngine syncEngine,
+        Func<ServerTarget, string?, Func<string, HostKeyVerificationResult, Task<bool>>, ISftpClientWrapper> sftpFactory,
+        Func<string, HostKeyVerificationResult, Task<bool>> hostKeyVerifier,
+        IConfirmationService confirmationService,
+        bool defaultIncludeModConfig = false)
+    {
+        _target = target ?? throw new ArgumentNullException(nameof(target));
+        _localDataPath = localDataPath ?? throw new ArgumentNullException(nameof(localDataPath));
+        _targetService = targetService ?? throw new ArgumentNullException(nameof(targetService));
+        _syncEngine = syncEngine ?? throw new ArgumentNullException(nameof(syncEngine));
+        _sftpFactory = sftpFactory ?? throw new ArgumentNullException(nameof(sftpFactory));
+        _hostKeyVerifier = hostKeyVerifier ?? throw new ArgumentNullException(nameof(hostKeyVerifier));
+        _dispatcher = System.Windows.Application.Current.Dispatcher;
+        _confirmationService = confirmationService ?? throw new ArgumentNullException(nameof(confirmationService));
+        _includeModConfig = defaultIncludeModConfig;
+
+        PreviewItems.CollectionChanged += PreviewItems_CollectionChanged;
+    }
+
+    private void PreviewItems_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems != null)
+        {
+            foreach (var item in e.NewItems.OfType<SyncPreviewItemViewModel>())
+            {
+                item.PropertyChanged += PreviewItem_PropertyChanged;
+            }
+        }
+        if (e.OldItems != null)
+        {
+            foreach (var item in e.OldItems.OfType<SyncPreviewItemViewModel>())
+            {
+                item.PropertyChanged -= PreviewItem_PropertyChanged;
+            }
+        }
+    }
+
+    private void PreviewItem_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SyncPreviewItemViewModel.IsConfirmedForDeletion))
+        {
+            OnPropertyChanged(nameof(CanExecuteSync));
+            ExecuteSyncCommand?.NotifyCanExecuteChanged();
+        }
+    }
 
     /// <summary>
     ///     Items to be uploaded.
@@ -181,7 +210,10 @@ public sealed partial class SyncToServerDialogViewModel : ObservableObject
     /// <summary>
     ///     Whether we can execute the sync.
     /// </summary>
-    public bool CanExecuteSync => !IsBusy && CurrentStep == SyncDialogStep.Preview && UploadCount > 0;
+    public bool CanExecuteSync =>
+        !IsBusy
+        && CurrentStep == SyncDialogStep.Preview
+        && (UploadCount > 0 || OrphanItems.Any(o => o.IsConfirmedForDeletion));
 
     /// <summary>
     ///     Whether we can cancel.
@@ -340,17 +372,28 @@ public sealed partial class SyncToServerDialogViewModel : ObservableObject
         _operationCts = new CancellationTokenSource();
         var ct = _operationCts.Token;
 
+        // Get confirmed deletions
+        var confirmedDeletions = OrphanItems.Where(o => o.IsConfirmedForDeletion).Select(o => o.Item).ToList();
+
+        // If there are deletions, confirm with the user
+        if (confirmedDeletions.Count > 0)
+        {
+            var confirmed = await _confirmationService.ConfirmAsync(
+                "You are about to delete files or folders from the server. This action cannot be undone.\n\nDo you want to proceed?",
+                "Confirm Deletions");
+            if (!confirmed)
+            {
+                StatusText = "Sync cancelled by user (deletion not confirmed).";
+                return;
+            }
+        }
+
         try
         {
             IsExecuting = true;
             CurrentStep = SyncDialogStep.Executing;
             StatusText = "Syncing...";
             UpdateCommandStates();
-
-            // Get confirmed deletions
-            var confirmedDeletions = MirrorDeletes
-                ? OrphanItems.Where(o => o.IsConfirmedForDeletion).Select(o => o.Item).ToList()
-                : new List<SyncPreviewItem>();
 
             var progress = new Progress<SyncProgress>(p =>
             {

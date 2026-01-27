@@ -7986,7 +7986,8 @@ public partial class MainWindow : Window
             _serverTargetService,
             _syncEngine,
             CreateSftpClientWrapper,
-            wrappedHostKeyVerifier);
+            wrappedHostKeyVerifier,
+            new ConfirmationService());
 
         var dialog = new SyncToServerDialog(viewModel)
         {
