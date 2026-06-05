@@ -134,28 +134,13 @@ public partial class MainWindow
         {
             if (bytesPerSecond.HasValue && bytesPerSecond.Value > 0)
             {
-                ModlistDownloadSpeed = FormatDownloadSpeed(bytesPerSecond.Value);
+                ModlistDownloadSpeed = ProgressDisplayFormatter.FormatDownloadSpeed(bytesPerSecond.Value);
                 HasModlistDownloadSpeed = true;
                 return;
             }
 
             ModlistDownloadSpeed = string.Empty;
             HasModlistDownloadSpeed = false;
-        }
-
-    private static string FormatDownloadSpeed(double bytesPerSecond)
-        {
-            const double kb = 1024d;
-            const double mb = kb * 1024d;
-            const double gb = mb * 1024d;
-
-            return bytesPerSecond switch
-            {
-                < kb => $"{bytesPerSecond:0} B/s",
-                < mb => $"{bytesPerSecond / kb:0.0} KB/s",
-                < gb => $"{bytesPerSecond / mb:0.0} MB/s",
-                _ => $"{bytesPerSecond / gb:0.0} GB/s"
-            };
         }
 
     private IProgress<ModUpdateProgress> CreateModlistInstallProgressReporter(string modDisplayName)
