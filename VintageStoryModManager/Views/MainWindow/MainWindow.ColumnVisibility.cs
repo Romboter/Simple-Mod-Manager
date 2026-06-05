@@ -159,20 +159,4 @@ public partial class MainWindow
             foreach (var pair in _installedColumnVisibilityPreferences)
                 NotifyViewModelOfInstalledColumnVisibility(pair.Key, pair.Value);
         }
-
-    private enum InstalledModsColumn
-        {
-            Active,
-            Icon,
-            Name,
-            Installed,
-            Version,
-            LatestVersion,
-            Downloads,
-            Authors,
-            Tags,
-            UserReports,
-            Status,
-            Side
-        }
 }

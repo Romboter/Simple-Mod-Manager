@@ -401,14 +401,7 @@ public partial class MainWindow
                 icon = failureCount > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information;
             WpfMessageBox.Show(builder.ToString(), "Simple VS Manager", MessageBoxButton.OK, icon);
         }
-
-    private enum ModUpdateReleasePreference
-        {
-            Latest,
-            LatestCompatible
-        }
-
-    private readonly record struct ModUpdateOperationResult(
+private readonly record struct ModUpdateOperationResult(
             ModListItemViewModel Mod,
             bool Success,
             bool Skipped,
