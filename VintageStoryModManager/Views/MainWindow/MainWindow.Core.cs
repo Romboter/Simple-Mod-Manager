@@ -511,7 +511,5 @@ public partial class MainWindow : Window
 
     public IAsyncRelayCommand RefreshModsUiCommand { get; }
 
-    private readonly record struct InstalledModLogIdentifier(string SearchValue, string DisplayLabel);
-
     private delegate bool PathValidator(string? path, out string? normalizedPath, out string? errorMessage);
 }

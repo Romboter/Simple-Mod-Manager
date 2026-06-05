@@ -1564,17 +1564,4 @@ public partial class MainWindow
             return false;
         }
 
-    private readonly record struct PresetLoadOptions(bool ApplyModStatus, bool ApplyModVersions, bool ForceExclusive);
-
-    private enum ModlistLoadMode
-        {
-            Replace,
-            Add
-        }
-
-    private readonly record struct PresetModInstallResult(
-            bool Success,
-            bool ModMissing,
-            bool VersionMissing,
-            string? ErrorMessage);
 }

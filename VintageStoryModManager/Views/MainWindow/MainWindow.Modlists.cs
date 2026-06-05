@@ -1357,8 +1357,6 @@ public partial class MainWindow
             return ExtractModlistMetadata(json).Name;
         }
 
-    private readonly record struct ManagerDeletionResult(List<string> DeletedPaths, List<string> FailedPaths);
-
     private sealed class ModlistMetadata
         {
             public static readonly ModlistMetadata Empty = new(null, null, null, null, Array.Empty<string>(), null);
