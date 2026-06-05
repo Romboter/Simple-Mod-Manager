@@ -395,47 +395,12 @@ public partial class MainWindow
 
     private static string ResolveExperimentalCompReviewIdentifier(ModListItemViewModel selectedMod)
         {
-            var fromUrl = TryExtractModSlug(selectedMod.ModDatabasePageUrl);
+            var fromUrl = ModDatabaseSlugParser.TryExtractModSlug(selectedMod.ModDatabasePageUrl);
             if (!string.IsNullOrWhiteSpace(fromUrl)) return fromUrl!;
 
             if (!string.IsNullOrWhiteSpace(selectedMod.ModDatabaseAssetId)) return selectedMod.ModDatabaseAssetId!;
 
             return selectedMod.ModId;
-        }
-
-    private static string? TryExtractModSlug(string? modDatabasePageUrl)
-        {
-            if (string.IsNullOrWhiteSpace(modDatabasePageUrl)) return null;
-
-            if (Uri.TryCreate(modDatabasePageUrl, UriKind.Absolute, out var uri))
-            {
-                var fromUri = ExtractSlugFromPath(uri.AbsolutePath);
-                if (!string.IsNullOrWhiteSpace(fromUri)) return fromUri;
-            }
-
-            return ExtractSlugFromPath(modDatabasePageUrl);
-
-            static string? ExtractSlugFromPath(string? path)
-            {
-                if (string.IsNullOrWhiteSpace(path)) return null;
-
-                var trimmed = path.Trim();
-
-                var fragmentIndex = trimmed.IndexOf('#');
-                if (fragmentIndex >= 0) trimmed = trimmed[..fragmentIndex];
-
-                var queryIndex = trimmed.IndexOf('?');
-                if (queryIndex >= 0) trimmed = trimmed[..queryIndex];
-
-                trimmed = trimmed.Trim('/');
-
-                if (string.IsNullOrWhiteSpace(trimmed)) return null;
-
-                var lastSlash = trimmed.LastIndexOf('/');
-                if (lastSlash >= 0) trimmed = trimmed[(lastSlash + 1)..];
-
-                return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
-            }
         }
 
 }
