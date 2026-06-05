@@ -1,0 +1,12 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  MainWindowSplitter -> C:\sc\games\Simple-Mod-Manager-Refactor\tools\MainWindowSplitter\bin\Release\net8.0\MainWindowSplitter.dll
+  SplitPlanPreview -> C:\sc\games\Simple-Mod-Manager-Refactor\tools\SplitPlanPreview\bin\Release\net8.0\SplitPlanPreview.dll
+  SplitPlanValidator -> C:\sc\games\Simple-Mod-Manager-Refactor\tools\SplitPlanValidator\bin\Release\net8.0\SplitPlanValidator.dll
+  VintageStoryModManager -> C:\sc\games\Simple-Mod-Manager-Refactor\VintageStoryModManager\bin\Release\net8.0-windows\win-x64\Simple VS Manager.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.17
