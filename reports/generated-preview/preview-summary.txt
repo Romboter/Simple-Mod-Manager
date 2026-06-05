@@ -1,0 +1,47 @@
+MAINWINDOW SPLIT PREVIEW
+========================
+
+Source: C:\sc\games\Simple-Mod-Manager-Refactor\VintageStoryModManager\Views\MainWindow.xaml.cs
+Plan:   C:\sc\games\Simple-Mod-Manager-Refactor\reports\MainWindow-split-plan.csv
+Output: C:\sc\games\Simple-Mod-Manager-Refactor\reports\generated-preview
+
+Members written: 612
+Partial files:   33
+
+FILES
+-----
+MainWindow.Presets.cs                        31 members   1465 approximate source lines
+MainWindow.Modlists.cs                       40 members   1265 approximate source lines
+MainWindow.ModGrid.cs                        64 members    980 approximate source lines
+MainWindow.ManagerData.cs                    27 members    975 approximate source lines
+MainWindow.Paths.cs                          44 members    955 approximate source lines
+MainWindow.ModOperations.cs                  21 members    826 approximate source lines
+MainWindow.Backups.cs                        18 members    694 approximate source lines
+MainWindow.CloudModlists.cs                  26 members    650 approximate source lines
+MainWindow.Debugging.cs                      19 members    567 approximate source lines
+MainWindow.ModConfiguration.cs               11 members    379 approximate source lines
+MainWindow.ModBrowser.cs                     13 members    374 approximate source lines
+MainWindow.Compatibility.cs                  11 members    373 approximate source lines
+MainWindow.Updates.cs                         7 members    349 approximate source lines
+MainWindow.Profiles.cs                       16 members    347 approximate source lines
+MainWindow.Pdf.cs                             9 members    345 approximate source lines
+MainWindow.Core.cs                          114 members    319 approximate source lines
+MainWindow.ModUsage.cs                        5 members    284 approximate source lines
+MainWindow.Startup.cs                         8 members    284 approximate source lines
+MainWindow.Sorting.cs                        17 members    275 approximate source lines
+MainWindow.ServerSync.cs                      8 members    262 approximate source lines
+MainWindow.ViewModel.cs                      12 members    257 approximate source lines
+MainWindow.GameLaunch.cs                      3 members    196 approximate source lines
+MainWindow.Help.cs                            7 members    195 approximate source lines
+MainWindow.Navigation.cs                      7 members    155 approximate source lines
+MainWindow.ModInfoPanel.cs                   12 members    153 approximate source lines
+MainWindow.Appearance.cs                      7 members    152 approximate source lines
+MainWindow.CloudAuth.cs                       8 members    125 approximate source lines
+MainWindow.Settings.cs                        9 members    123 approximate source lines
+MainWindow.Progress.cs                        9 members     91 approximate source lines
+MainWindow.ColumnVisibility.cs                8 members     86 approximate source lines
+MainWindow.Logging.cs                         9 members     86 approximate source lines
+MainWindow.Identity.cs                        7 members     71 approximate source lines
+MainWindow.WindowState.cs                     5 members     59 approximate source lines
+
+The original source file was not modified.
