@@ -43,23 +43,25 @@ SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(
 
 SyntaxNode root = await syntaxTree.GetRootAsync();
 
-IEnumerable<Diagnostic> parseErrors = syntaxTree
+List<Diagnostic> parseErrors = syntaxTree
     .GetDiagnostics()
     .Where(diagnostic =>
-        diagnostic.Severity == DiagnosticSeverity.Error);
+        diagnostic.Severity == DiagnosticSeverity.Error)
+    .ToList();
 
-bool hasParseErrors = false;
-
-foreach (Diagnostic diagnostic in parseErrors)
-{
-    hasParseErrors = true;
-    Console.Error.WriteLine(diagnostic);
-}
-
-if (hasParseErrors)
+if (parseErrors.Count > 0)
 {
     Console.Error.WriteLine(
-        "Roslyn found syntax errors. No inventory was generated.");
+        $"Roslyn found {parseErrors.Count} syntax error(s):");
+
+    foreach (Diagnostic diagnostic in parseErrors)
+    {
+        Console.Error.WriteLine(diagnostic);
+    }
+
+    Console.Error.WriteLine();
+    Console.Error.WriteLine(
+        "No inventory was generated because the source could not be parsed safely.");
 
     return 1;
 }
@@ -78,51 +80,58 @@ if (mainWindowClass is null)
     return 1;
 }
 
-List<MemberInventoryItem> inventory = [];
+List<MemberInventoryItem> inventory =
+    BuildMemberInventory(
+        syntaxTree,
+        mainWindowClass);
 
-foreach (MemberDeclarationSyntax member in mainWindowClass.Members)
-{
-    FileLinePositionSpan location =
-        syntaxTree.GetLineSpan(member.FullSpan);
+List<MethodCallInventoryItem> methodCalls =
+    BuildMethodCallInventory(
+        syntaxTree,
+        mainWindowClass);
 
-    int startLine = location.StartLinePosition.Line + 1;
-    int endLine = location.EndLinePosition.Line + 1;
-
-    inventory.Add(
-        new MemberInventoryItem(
-            Type: GetMemberType(member),
-            Name: GetMemberName(member),
-            StartLine: startLine,
-            EndLine: endLine,
-            LineCount: endLine - startLine + 1,
-            Modifiers: GetModifiers(member),
-            ReturnType: GetReturnType(member),
-            Parameters: GetParameters(member)));
-}
-
-PrintInventory(sourceFilePath, mainWindowClass, inventory);
+PrintInventory(
+    sourceFilePath,
+    syntaxTree,
+    mainWindowClass,
+    inventory);
 
 if (outputFilePath is not null)
 {
     try
     {
-        string? outputDirectory =
-            Path.GetDirectoryName(outputFilePath);
+        string outputDirectory =
+            Path.GetDirectoryName(outputFilePath)
+            ?? Directory.GetCurrentDirectory();
 
-        if (!string.IsNullOrWhiteSpace(outputDirectory))
-        {
-            Directory.CreateDirectory(outputDirectory);
-        }
+        Directory.CreateDirectory(outputDirectory);
 
-        await WriteCsvAsync(outputFilePath, inventory);
+        await WriteMemberInventoryCsvAsync(
+            outputFilePath,
+            inventory);
+
+        string outputName =
+            Path.GetFileNameWithoutExtension(outputFilePath);
+
+        string methodCallsPath = Path.Combine(
+            outputDirectory,
+            $"{outputName}-calls.csv");
+
+        await WriteMethodCallsCsvAsync(
+            methodCallsPath,
+            methodCalls);
 
         Console.WriteLine();
-        Console.WriteLine($"CSV written to: {outputFilePath}");
+        Console.WriteLine(
+            $"Member inventory CSV written to: {outputFilePath}");
+
+        Console.WriteLine(
+            $"Method call CSV written to:     {methodCallsPath}");
     }
     catch (Exception exception)
     {
         Console.Error.WriteLine(
-            $"Unable to write CSV '{outputFilePath}': {exception.Message}");
+            $"Unable to write output files: {exception.Message}");
 
         return 1;
     }
@@ -130,37 +139,145 @@ if (outputFilePath is not null)
 
 return 0;
 
+static List<MemberInventoryItem> BuildMemberInventory(
+    SyntaxTree syntaxTree,
+    ClassDeclarationSyntax mainWindowClass)
+{
+    List<MemberInventoryItem> inventory = [];
+
+    foreach (MemberDeclarationSyntax member in mainWindowClass.Members)
+    {
+        FileLinePositionSpan location =
+            syntaxTree.GetLineSpan(member.Span);
+
+        int startLine =
+            location.StartLinePosition.Line + 1;
+
+        int endLine =
+            location.EndLinePosition.Line + 1;
+
+        inventory.Add(
+            new MemberInventoryItem(
+                Type: GetMemberType(member),
+                Name: GetMemberName(member),
+                StartLine: startLine,
+                EndLine: endLine,
+                LineCount: endLine - startLine + 1,
+                Modifiers: GetModifiers(member),
+                ReturnType: GetReturnType(member),
+                Parameters: GetParameters(member)));
+    }
+
+    return inventory;
+}
+
+static List<MethodCallInventoryItem> BuildMethodCallInventory(
+    SyntaxTree syntaxTree,
+    ClassDeclarationSyntax mainWindowClass)
+{
+    List<MethodDeclarationSyntax> methods = mainWindowClass
+        .Members
+        .OfType<MethodDeclarationSyntax>()
+        .ToList();
+
+    HashSet<string> mainWindowMethodNames = methods
+        .Select(method =>
+            method.Identifier.ValueText)
+        .ToHashSet(StringComparer.Ordinal);
+
+    List<MethodCallInventoryItem> methodCalls = [];
+
+    foreach (MethodDeclarationSyntax method in methods)
+    {
+        FileLinePositionSpan location =
+            syntaxTree.GetLineSpan(method.Span);
+
+        int startLine =
+            location.StartLinePosition.Line + 1;
+
+        int endLine =
+            location.EndLinePosition.Line + 1;
+
+        List<string> calledMethods = method
+            .DescendantNodes()
+            .OfType<InvocationExpressionSyntax>()
+            .Select(GetInvokedMethodName)
+            .Where(name =>
+                name is not null &&
+                mainWindowMethodNames.Contains(name))
+            .Select(name => name!)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(
+                name => name,
+                StringComparer.Ordinal)
+            .ToList();
+
+        methodCalls.Add(
+            new MethodCallInventoryItem(
+                Name: method.Identifier.ValueText,
+                StartLine: startLine,
+                EndLine: endLine,
+                LineCount: endLine - startLine + 1,
+                Calls: calledMethods));
+    }
+
+    return methodCalls;
+}
+
 static void PrintInventory(
     string sourceFilePath,
+    SyntaxTree syntaxTree,
     ClassDeclarationSyntax classDeclaration,
     IReadOnlyCollection<MemberInventoryItem> inventory)
 {
+    FileLinePositionSpan classLocation =
+        syntaxTree.GetLineSpan(classDeclaration.Span);
+
+    int classStartLine =
+        classLocation.StartLinePosition.Line + 1;
+
+    int classEndLine =
+        classLocation.EndLinePosition.Line + 1;
+
     Console.WriteLine($"Source:  {sourceFilePath}");
-    Console.WriteLine($"Class:   {classDeclaration.Identifier.ValueText}");
+    Console.WriteLine(
+        $"Class:   {classDeclaration.Identifier.ValueText}");
+
+    Console.WriteLine(
+        $"Lines:   {classStartLine}-{classEndLine}");
+
     Console.WriteLine($"Members: {inventory.Count}");
     Console.WriteLine();
 
     Console.WriteLine(
-        $"{"Type",-20} {"Name",-50} {"Start",8} {"End",8} {"Lines",8}");
+        $"{"Type",-20} " +
+        $"{"Name",-50} " +
+        $"{"Start",8} " +
+        $"{"End",8} " +
+        $"{"Lines",8}");
 
     Console.WriteLine(new string('-', 100));
 
     foreach (MemberInventoryItem item in inventory)
     {
         Console.WriteLine(
-            $"{item.Type,-20} {Truncate(item.Name, 50),-50} " +
-            $"{item.StartLine,8} {item.EndLine,8} {item.LineCount,8}");
+            $"{item.Type,-20} " +
+            $"{Truncate(item.Name, 50),-50} " +
+            $"{item.StartLine,8} " +
+            $"{item.EndLine,8} " +
+            $"{item.LineCount,8}");
     }
 }
 
-static async Task WriteCsvAsync(
+static async Task WriteMemberInventoryCsvAsync(
     string outputFilePath,
     IEnumerable<MemberInventoryItem> inventory)
 {
     StringBuilder csv = new();
 
     csv.AppendLine(
-        "Type,Name,StartLine,EndLine,LineCount,Modifiers,ReturnType,Parameters");
+        "Type,Name,StartLine,EndLine,LineCount," +
+        "Modifiers,ReturnType,Parameters");
 
     foreach (MemberInventoryItem item in inventory)
     {
@@ -180,33 +297,100 @@ static async Task WriteCsvAsync(
     await File.WriteAllTextAsync(
         outputFilePath,
         csv.ToString(),
-        new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        new UTF8Encoding(
+            encoderShouldEmitUTF8Identifier: false));
 }
 
-static string GetMemberType(MemberDeclarationSyntax member)
+static async Task WriteMethodCallsCsvAsync(
+    string outputFilePath,
+    IEnumerable<MethodCallInventoryItem> methodCalls)
+{
+    StringBuilder csv = new();
+
+    csv.AppendLine(
+        "Name,StartLine,EndLine,LineCount,Calls,CallCount");
+
+    foreach (MethodCallInventoryItem method in methodCalls)
+    {
+        string calls = string.Join(
+            ";",
+            method.Calls);
+
+        csv.AppendLine(
+            string.Join(
+                ",",
+                EscapeCsv(method.Name),
+                method.StartLine,
+                method.EndLine,
+                method.LineCount,
+                EscapeCsv(calls),
+                method.Calls.Count));
+    }
+
+    await File.WriteAllTextAsync(
+        outputFilePath,
+        csv.ToString(),
+        new UTF8Encoding(
+            encoderShouldEmitUTF8Identifier: false));
+}
+
+static string GetMemberType(
+    MemberDeclarationSyntax member)
 {
     return member switch
     {
-        FieldDeclarationSyntax => "Field",
-        PropertyDeclarationSyntax => "Property",
-        ConstructorDeclarationSyntax => "Constructor",
-        MethodDeclarationSyntax => "Method",
-        EventFieldDeclarationSyntax => "Event",
-        EventDeclarationSyntax => "Event",
-        ClassDeclarationSyntax => "Nested class",
-        StructDeclarationSyntax => "Nested struct",
-        RecordDeclarationSyntax => "Nested record",
-        EnumDeclarationSyntax => "Nested enum",
-        DelegateDeclarationSyntax => "Delegate",
-        IndexerDeclarationSyntax => "Indexer",
-        OperatorDeclarationSyntax => "Operator",
-        ConversionOperatorDeclarationSyntax => "Conversion operator",
-        DestructorDeclarationSyntax => "Destructor",
-        _ => member.Kind().ToString()
+        FieldDeclarationSyntax =>
+            "Field",
+
+        PropertyDeclarationSyntax =>
+            "Property",
+
+        ConstructorDeclarationSyntax =>
+            "Constructor",
+
+        MethodDeclarationSyntax =>
+            "Method",
+
+        EventFieldDeclarationSyntax =>
+            "Event",
+
+        EventDeclarationSyntax =>
+            "Event",
+
+        ClassDeclarationSyntax =>
+            "Nested class",
+
+        StructDeclarationSyntax =>
+            "Nested struct",
+
+        RecordDeclarationSyntax =>
+            "Nested record",
+
+        EnumDeclarationSyntax =>
+            "Nested enum",
+
+        DelegateDeclarationSyntax =>
+            "Delegate",
+
+        IndexerDeclarationSyntax =>
+            "Indexer",
+
+        OperatorDeclarationSyntax =>
+            "Operator",
+
+        ConversionOperatorDeclarationSyntax =>
+            "Conversion operator",
+
+        DestructorDeclarationSyntax =>
+            "Destructor",
+
+        _ =>
+            member.Kind().ToString()
     };
 }
 
-static string GetMemberName(MemberDeclarationSyntax member)
+static string GetMemberName(
+    MemberDeclarationSyntax member)
 {
     return member switch
     {
@@ -214,7 +398,8 @@ static string GetMemberName(MemberDeclarationSyntax member)
             string.Join(
                 ", ",
                 field.Declaration.Variables.Select(
-                    variable => variable.Identifier.ValueText)),
+                    variable =>
+                        variable.Identifier.ValueText)),
 
         PropertyDeclarationSyntax property =>
             property.Identifier.ValueText,
@@ -229,7 +414,8 @@ static string GetMemberName(MemberDeclarationSyntax member)
             string.Join(
                 ", ",
                 eventField.Declaration.Variables.Select(
-                    variable => variable.Identifier.ValueText)),
+                    variable =>
+                        variable.Identifier.ValueText)),
 
         EventDeclarationSyntax eventDeclaration =>
             eventDeclaration.Identifier.ValueText,
@@ -253,19 +439,23 @@ static string GetMemberName(MemberDeclarationSyntax member)
             "this[]",
 
         OperatorDeclarationSyntax operatorDeclaration =>
-            $"operator {operatorDeclaration.OperatorToken.ValueText}",
+            $"operator " +
+            $"{operatorDeclaration.OperatorToken.ValueText}",
 
         ConversionOperatorDeclarationSyntax conversionOperator =>
-            $"{conversionOperator.ImplicitOrExplicitKeyword.ValueText} operator",
+            $"{conversionOperator.ImplicitOrExplicitKeyword.ValueText} " +
+            "operator",
 
         DestructorDeclarationSyntax destructor =>
             $"~{destructor.Identifier.ValueText}",
 
-        _ => "(unknown)"
+        _ =>
+            "(unknown)"
     };
 }
 
-static string GetModifiers(MemberDeclarationSyntax member)
+static string GetModifiers(
+    MemberDeclarationSyntax member)
 {
     return member switch
     {
@@ -284,11 +474,13 @@ static string GetModifiers(MemberDeclarationSyntax member)
         DelegateDeclarationSyntax delegateDeclaration =>
             delegateDeclaration.Modifiers.ToString(),
 
-        _ => string.Empty
+        _ =>
+            string.Empty
     };
 }
 
-static string GetReturnType(MemberDeclarationSyntax member)
+static string GetReturnType(
+    MemberDeclarationSyntax member)
 {
     return member switch
     {
@@ -313,11 +505,13 @@ static string GetReturnType(MemberDeclarationSyntax member)
         ConversionOperatorDeclarationSyntax conversionOperator =>
             conversionOperator.Type.ToString(),
 
-        _ => string.Empty
+        _ =>
+            string.Empty
     };
 }
 
-static string GetParameters(MemberDeclarationSyntax member)
+static string GetParameters(
+    MemberDeclarationSyntax member)
 {
     ParameterListSyntax? parameterList = member switch
     {
@@ -339,7 +533,8 @@ static string GetParameters(MemberDeclarationSyntax member)
         DestructorDeclarationSyntax destructor =>
             destructor.ParameterList,
 
-        _ => null
+        _ =>
+            null
     };
 
     if (parameterList is null)
@@ -351,16 +546,71 @@ static string GetParameters(MemberDeclarationSyntax member)
         ", ",
         parameterList.Parameters.Select(parameter =>
         {
+            string modifiers = parameter.Modifiers.ToString();
             string type = parameter.Type?.ToString() ?? string.Empty;
             string name = parameter.Identifier.ValueText;
 
-            return string.IsNullOrWhiteSpace(type)
-                ? name
-                : $"{type} {name}";
+            string parameterText = string.Join(
+                " ",
+                new[]
+                {
+                    modifiers,
+                    type,
+                    name
+                }
+                .Where(value =>
+                    !string.IsNullOrWhiteSpace(value)));
+
+            if (parameter.Default is not null)
+            {
+                parameterText +=
+                    $" = {parameter.Default.Value}";
+            }
+
+            return parameterText;
         }));
 }
 
-static string EscapeCsv(string value)
+static string? GetInvokedMethodName(
+    InvocationExpressionSyntax invocation)
+{
+    return invocation.Expression switch
+    {
+        IdentifierNameSyntax identifier =>
+            identifier.Identifier.ValueText,
+
+        GenericNameSyntax genericName =>
+            genericName.Identifier.ValueText,
+
+        MemberAccessExpressionSyntax memberAccess =>
+            GetSimpleName(memberAccess.Name),
+
+        MemberBindingExpressionSyntax memberBinding =>
+            GetSimpleName(memberBinding.Name),
+
+        _ =>
+            null
+    };
+}
+
+static string? GetSimpleName(
+    SimpleNameSyntax name)
+{
+    return name switch
+    {
+        IdentifierNameSyntax identifier =>
+            identifier.Identifier.ValueText,
+
+        GenericNameSyntax genericName =>
+            genericName.Identifier.ValueText,
+
+        _ =>
+            null
+    };
+}
+
+static string EscapeCsv(
+    string value)
 {
     if (!value.Contains(',') &&
         !value.Contains('"') &&
@@ -373,7 +623,9 @@ static string EscapeCsv(string value)
     return $"\"{value.Replace("\"", "\"\"")}\"";
 }
 
-static string Truncate(string value, int maximumLength)
+static string Truncate(
+    string value,
+    int maximumLength)
 {
     if (value.Length <= maximumLength)
     {
@@ -392,3 +644,10 @@ internal sealed record MemberInventoryItem(
     string Modifiers,
     string ReturnType,
     string Parameters);
+
+internal sealed record MethodCallInventoryItem(
+    string Name,
+    int StartLine,
+    int EndLine,
+    int LineCount,
+    IReadOnlyList<string> Calls);

@@ -1,613 +1,613 @@
 Type,Name,StartLine,EndLine,LineCount,Modifiers,ReturnType,Parameters
-Field,SummaryKeyPatchModPrefix,82,86,5,private const,string,
-Field,SummaryKeyLinePrefix,86,87,2,private const,string,
-Field,MaxDataBackupsMenuItems,87,88,2,private const,int,
-Field,WindowPositionScreenMargin,88,89,2,private const,int,
-Method,CreateHostKeyVerifierWithStorage,89,109,21,private,"Func<ServerTarget, Func<string, HostKeyVerificationResult, Task<bool>>, Func<string, HostKeyVerificationResult, Task<bool>>>",
-Field,DiscordInviteUrl,109,112,4,private const,string,
-Field,ManagerModDatabaseUrl,112,113,2,private static readonly,string,
-Field,ManagerModDatabaseModId,113,114,2,private static readonly,string,
-Field,ModDatabaseUnavailableMessage,114,115,2,private static readonly,string,
-Field,ModListScrollMultiplier,115,118,4,private static readonly,double,
-Field,ModDbDesignScrollMultiplier,118,119,2,private static readonly,double,
-Field,LoadMoreScrollThreshold,119,120,2,private static readonly,double,
-Field,HoverOverlayOpacity,120,121,2,private static readonly,double,
-Field,SelectionOverlayOpacity,121,122,2,private static readonly,double,
-Field,ModInfoPanelHorizontalOverhang,122,125,4,private static readonly,double,
-Field,DefaultModInfoPanelLeft,125,126,2,private static readonly,double,
-Field,DefaultModInfoPanelTop,126,127,2,private static readonly,double,
-Field,DefaultModInfoPanelRightMargin,127,128,2,private static readonly,double,
-Field,PresetDirectoryName,128,131,4,private static readonly,string,
-Field,ModListDirectoryName,131,132,2,private static readonly,string,
-Field,CloudModListCacheDirectoryName,132,133,2,private static readonly,string,
-Field,RebuiltModListDirectoryName,133,134,2,private static readonly,string,
-Field,AutomaticConfigMaxWordDistance,134,135,2,private static readonly,int,
-Field,ConnectivityTestHttpClient,135,140,6,private static readonly,HttpClient,
-Field,ExperimentalModDebugLogPrefixes,140,148,9,private static readonly,string[],
-Field,ExperimentalModDebugLogExtensions,148,154,7,private static readonly,string[],
-Field,ExperimentalModDebugIgnoredLinePhrases,154,164,11,private static readonly,string[],
-Field,SupportedConfigExtensions,164,171,8,private static readonly,string[],
-Field,SummarizableLinePrefixes,171,184,14,private static readonly,string[],
-Field,_isQuestPdfLicenseInitialized,184,186,3,private static,bool,
-Field,PatchAssetMissingRegex,186,190,5,private static readonly,Regex,
-Field,StandardPresetLoadOptions,190,192,3,private static readonly,PresetLoadOptions,
-Field,ModListLoadOptions,192,193,2,private static readonly,PresetLoadOptions,
-Field,BoundModProperty,193,203,11,private static readonly,DependencyProperty,
-Field,BoundModHandlerProperty,203,209,7,private static readonly,DependencyProperty,
-Field,RowIsHoveredProperty,209,215,7,private static readonly,DependencyProperty,
-Field,IsDataBackupInProgressProperty,215,222,8,public static readonly,DependencyProperty,
-Field,DataBackupProgressProperty,222,229,8,public static readonly,DependencyProperty,
-Field,DataBackupStatusMessageProperty,229,236,8,public static readonly,DependencyProperty,
-Field,IsModlistInstallInProgressProperty,236,243,8,public static readonly,DependencyProperty,
-Field,ModlistInstallProgressProperty,243,250,8,public static readonly,DependencyProperty,
-Field,ModlistInstallStatusMessageProperty,250,257,8,public static readonly,DependencyProperty,
-Field,ModlistDownloadSpeedProperty,257,264,8,public static readonly,DependencyProperty,
-Field,HasModlistDownloadSpeedProperty,264,271,8,public static readonly,DependencyProperty,
-Property,IsDataBackupInProgress,271,277,7,public,bool,
-Property,DataBackupProgress,277,283,7,public,double,
-Property,DataBackupStatusMessage,283,289,7,public,string,
-Property,IsModlistInstallInProgress,289,295,7,public,bool,
-Property,ModlistInstallProgress,295,301,7,public,double,
-Property,ModlistInstallStatusMessage,301,307,7,public,string,
-Property,ModlistDownloadSpeed,307,313,7,public,string,
-Property,HasModlistDownloadSpeed,313,319,7,public,bool,
-Field,_backupSemaphore,319,326,8,private readonly,SemaphoreSlim,
-Field,_cloudStoreLock,326,327,2,private readonly,SemaphoreSlim,
-Field,_developerProfileMenuItems,327,330,4,private readonly,List<MenuItem>,
-Field,_gameProfileMenuItems,330,331,2,private readonly,List<MenuItem>,
-Field,_installedColumnVisibilityPreferences,331,332,2,private readonly,"Dictionary<InstalledModsColumn, bool>",
-Field,_modCompatibilityCommentsService,332,335,4,private readonly,ModCompatibilityCommentsService,
-Field,_modDatabaseService,335,336,2,private readonly,ModDatabaseService,
-Field,_modUpdateService,336,337,2,private readonly,ModUpdateService,
-Field,_dataBackupService,337,338,2,private,DataBackupService,
-Field,_modActivityLoggingService,338,339,2,private readonly,ModActivityLoggingService,
-Field,_userConfiguration,339,340,2,private readonly,UserConfigurationService,
-Field,_serverTargetService,340,341,2,private readonly,ServerTargetService,
-Field,_syncEngine,341,342,2,private readonly,SyncEngine,
-Field,_traceListener,342,343,2,private,ModManagerTraceListener?,
-Field,_selectedModPropertyHandlers,343,346,4,private readonly,"Dictionary<ModListItemViewModel, PropertyChangedEventHandler>",
-Field,_selectedMods,346,347,2,private readonly,List<ModListItemViewModel>,
-Field,_selectedLocalModlists,347,348,2,private readonly,List<LocalModlistListEntry>,
-Field,_selectedCloudModlist,348,349,2,private,CloudModlistListEntry?,
-Field,_selectionAnchor,349,350,2,private,ModListItemViewModel?,
-Field,_cloudModlistsLoaded,350,353,4,private,bool,
-Field,_firebaseMigrationAttempted,353,354,2,private,bool,
-Field,_cloudModlistStore,354,355,2,private,FirebaseModlistStore?,
-Field,_currentModsView,355,358,4,private,ICollectionView?,
-Field,_modsScrollViewer,358,359,2,private,ScrollViewer?,
-Field,_modsScrollViewerSource,359,360,2,private,DataGrid?,
-Field,_modsCollection,360,361,2,private,INotifyCollectionChanged?,
-Field,_customShortcutPath,361,364,4,private,string?,
-Field,_dataDirectory,364,365,2,private,string?,
-Field,_gameDirectory,365,366,2,private,string?,
-Field,_gameSessionMonitor,366,369,4,private,GameSessionMonitor?,
-Field,_modsWatcherTimer,369,370,2,private,DispatcherTimer?,
-Field,_modUsagePromptData,370,371,2,private,ModUsagePromptData?,
-Field,_votesCacheWatcher,371,372,2,private,VotesCacheWatcher?,
-Field,_hasAppliedInitialModInfoPanelPosition,372,375,4,private,bool,
-Field,_isApplyingMultiToggle,375,376,2,private,bool,
-Field,_isApplyingPreset,376,377,2,private,bool,
-Field,_isAutomaticRefreshRunning,377,378,2,private,bool,
-Field,_isCloudModlistRefreshInProgress,378,379,2,private,bool,
-Field,_isDependencyResolutionRefreshPending,379,380,2,private,bool,
-Field,_isDraggingModInfoPanel,380,381,2,private,bool,
-Field,_isInitializing,381,382,2,private,bool,
-Field,_isUpdatingModlistsTabSelection,382,383,2,private,bool,
-Field,_isUpdatingMiddleTabSelection,383,384,2,private,bool,
-Field,_isModUpdateInProgress,384,385,2,private,bool,
-Field,_isModUsageDialogOpen,385,386,2,private,bool,
-Field,_isRefreshingAfterModlistLoad,386,387,2,private,bool,
-Field,_isWindowActive,387,388,2,private,bool,
-Field,_refreshAfterModlistLoadPending,388,389,2,private,bool,
-Field,_localModlistsLoaded,389,390,2,private,bool,
-Field,_suppressSortPreferenceSave,390,391,2,private,bool,
-Field,_isModBrowserWatcherSubscribed,391,392,2,private,bool,
-Field,_modInfoDragOffset,392,395,4,private,Point,
-Field,_recentLocalModBackupDirectory,395,398,4,private,string?,
-Field,_recentLocalModBackupModNames,398,399,2,private,List<string>?,
-Field,_modlistInstallCompletedSteps,399,400,2,private,int,
-Field,_modlistInstallTotalSteps,400,401,2,private,int,
-Field,_viewModel,401,404,4,private,MainViewModel?,
-Field,_modBrowserViewModel,404,405,2,private,ModBrowserViewModel?,
-Field,_customThemeMenuItems,405,406,2,private readonly,List<MenuItem>,
-Constructor,MainWindow,406,495,90,public,,
-Property,RefreshModsUiCommand,495,501,7,public,IAsyncRelayCommand,
-Method,ReportStatus,501,506,6,public,void,"string message, bool isError"
-Method,InitializeColumnVisibilityMenu,506,524,19,private,void,
-Method,RegisterColumnMenuItem,524,538,15,private,void,"MenuItem? menuItem, InstalledModsColumn column"
-Method,InstalledModsColumnMenuItem_OnChecked,538,548,11,private,void,"object sender, RoutedEventArgs e"
-Method,ApplyInstalledColumnVisibility,548,570,23,private,void,"InstalledModsColumn columnKey, bool isVisible"
-Method,NotifyViewModelOfInstalledColumnVisibility,570,575,6,private,void,"InstalledModsColumn column, bool isVisible"
-Method,ApplyColumnVisibilityPreferencesToViewModel,575,583,9,private,void,
-Method,MainWindow_Loaded,583,622,40,private async,void,"object sender, RoutedEventArgs e"
-Method,MigrateLegacyRebuiltModlistsIfNeeded,622,670,49,private,void,
-Method,PromptCacheRefreshIfNeededAsync,670,692,23,private async,Task,
-Method,ClearManagerCachesForVersionUpdateAsync,692,718,27,private async,Task,
-Method,CheckAndPromptMigrationAsync,718,752,35,private async,Task,
-Method,PerformMigrationAsync,752,817,66,private,Task,
-Method,TryShowModUsagePromptAsync,817,864,48,private,Task,
-Method,PrepareModUsagePromptData,864,954,91,private,ModUsagePromptData?,
-Method,UpdateModUsagePromptIndicator,954,961,8,private,void,bool isVisible
-Method,ShowModUsagePromptDialogAsync,961,1087,127,private async,Task,
-Method,EnsureInstalledModsCachedAsync,1087,1106,20,private,Task,"MainViewModel viewModel, bool ignoreUserSetting"
-Method,MainWindow_OnClosing,1106,1151,46,private,void,"object? sender, CancelEventArgs e"
-Method,RootGrid_OnSizeChanged,1151,1158,8,private,void,"object sender, SizeChangedEventArgs e"
-Method,ModInfoBorder_OnMouseLeftButtonDown,1158,1174,17,private,void,"object sender, MouseButtonEventArgs e"
-Method,ModInfoBorder_OnMouseMove,1174,1186,13,private,void,"object sender, MouseEventArgs e"
-Method,ModInfoBorder_OnMouseLeftButtonUp,1186,1196,11,private,void,"object sender, MouseButtonEventArgs e"
-Method,ModInfoBorder_OnLostMouseCapture,1196,1204,9,private,void,"object sender, MouseEventArgs e"
-Method,ApplyStoredModInfoPanelPosition,1204,1216,13,private,void,
-Method,EnsureModInfoPanelWithinBounds,1216,1230,15,private,void,bool persist
-Method,SetModInfoPanelPosition,1230,1261,32,private,void,"double left, double top, bool persist"
-Method,ComputeDefaultModInfoPanelLeft,1261,1285,25,private,double,
-Method,GetModInfoPanelWidth,1285,1295,11,private,double,
-Method,GetModInfoPanelHeight,1295,1305,11,private,double,
-Method,IsModInfoDragInitiationBlocked,1305,1320,16,private static,bool,DependencyObject? source
-Method,DisableAutoRefreshMenuItem_OnClick,1320,1356,37,private,void,"object sender, RoutedEventArgs e"
-Method,AutomaticDataBackupsMenuItem_OnClick,1356,1391,36,private,void,"object sender, RoutedEventArgs e"
-Method,DisableInternetAccessMenuItem_OnClick,1391,1402,12,private,void,"object sender, RoutedEventArgs e"
-Method,ThemeMenuItem_OnClick,1402,1436,35,private,void,"object sender, RoutedEventArgs e"
-Method,EditThemeMenuItem_OnClick,1436,1441,6,private,void,"object sender, RoutedEventArgs e"
-Method,UpdateThemeMenuSelection,1441,1460,20,private,void,"ColorTheme theme, string? themeName"
-Method,GenerateSurprisePalette,1460,1470,11,private static,"IReadOnlyDictionary<string, string>",
-Method,GenerateRandomColor,1470,1487,18,private static,string,string baseColor
-Method,RefreshCustomThemeMenuItems,1487,1537,51,private,void,
-Method,ShowCustomThemeEditor,1537,1561,25,private,void,
-Method,AlwaysClearModlistsMenuItem_OnClick,1561,1569,9,private,void,"object sender, RoutedEventArgs e"
-Method,AlwaysAddModlistsMenuItem_OnClick,1569,1577,9,private,void,"object sender, RoutedEventArgs e"
-Method,HandleModlistAutoLoadMenuClick,1577,1586,10,private,void,"object sender, ModlistAutoLoadBehavior enabledBehavior, ModlistAutoLoadBehavior disabledBehavior"
-Method,SetModlistAutoLoadBehavior,1586,1592,7,private,void,ModlistAutoLoadBehavior behavior
-Method,UpdateModlistAutoLoadMenu,1592,1601,10,private,void,ModlistAutoLoadBehavior behavior
-Method,UpdateGameVersionMenuItem,1601,1615,15,private,void,string? gameVersion
-Method,ApplyStoredWindowDimensions,1615,1638,24,private,void,
-Method,IsWindowPositionOnScreen,1638,1653,16,private static,bool,"double left, double top"
-Method,SaveWindowDimensions,1653,1665,13,private,void,
-Method,SetUsernameDisplay,1665,1672,8,private,void,string? name
-Method,ResolveUploaderName,1672,1700,29,private,string,string? fallbackUserId
-Method,ApplyPlayerIdentityToUiAndCloudStore,1700,1707,8,private,void,
-Method,ApplyPlayerIdentityToCloudStore,1707,1714,8,private,void,FirebaseModlistStore? store
-Method,SaveUploaderName,1714,1722,9,private,void,
-Method,EnableServerOptionsMenuItem_OnClick,1722,1731,10,private,void,"object sender, RoutedEventArgs e"
-Method,UseFasterThumbnailsMenuItem_OnClick,1731,1739,9,private,void,"object sender, RoutedEventArgs e"
-Method,DisableHoverEffectsMenuItem_OnClick,1739,1752,14,private,void,"object sender, RoutedEventArgs e"
-Method,LogModUpdateMenuItem_OnClick,1752,1760,9,private,void,"object sender, RoutedEventArgs e"
-Method,LogModInstallMenuItem_OnClick,1760,1768,9,private,void,"object sender, RoutedEventArgs e"
-Method,LogModDeletionMenuItem_OnClick,1768,1776,9,private,void,"object sender, RoutedEventArgs e"
-Method,LogAppLifecycleMenuItem_OnClick,1776,1784,9,private,void,"object sender, RoutedEventArgs e"
-Method,LogErrorsAndExceptionsMenuItem_OnClick,1784,1793,10,private,void,"object sender, RoutedEventArgs e"
-Method,InitializeTraceListener,1793,1812,20,private,void,
-Method,UpdateLoggingMenuState,1812,1826,15,private,void,
-Method,GenerateServerInstallMacroMenuItem_OnClick,1826,1977,152,private,void,"object sender, RoutedEventArgs e"
-Method,CacheAllVersionsMenuItem_OnClick,1977,1985,9,private,void,"object sender, RoutedEventArgs e"
-Method,RequireExactVsVersionMenuItem_OnClick,1985,1993,9,private,void,"object sender, RoutedEventArgs e"
-Method,ExperimentalModDebuggingMenuItem_OnClick,1993,2061,69,private async,void,"object sender, RoutedEventArgs e"
-Method,ExperimentalAllModsDebuggingMenuItem_OnClick,2061,2156,96,private async,void,"object sender, RoutedEventArgs e"
-Method,CollectExperimentalModDebugLines,2156,2166,11,private static,List<ExperimentalModDebugLogLine>,"string logsDirectory, string modId"
-Method,CollectInstalledModDebugLines,2166,2179,14,private static,List<ExperimentalModDebugLogLine>,"string logsDirectory, IReadOnlyList<InstalledModLogIdentifier> modIdentifiers"
-Method,GetExperimentalModDebugFilePaths,2179,2212,34,private static,List<string>,string logsDirectory
-Method,AppendExperimentalModDebugLines,2212,2240,29,private static,void,"List<ExperimentalModDebugLogLine> logLines, string filePath, string modId"
-Method,AppendInstalledModDebugLines,2240,2273,34,private static,void,"List<ExperimentalModDebugLogLine> logLines, string filePath, IReadOnlyList<InstalledModLogIdentifier> modIdentifiers"
-Method,AppendExperimentalModDebugFileSection,2273,2287,15,private static,void,"List<ExperimentalModDebugLogLine> logLines, string fileName, List<string> matchedLines"
-Method,AppendExperimentalModDebugFileSectionWithModId,2287,2305,19,private static,void,"List<ExperimentalModDebugLogLine> logLines, string filePath, string fileName, List<(string Line, int LineNumber)> matchedLines, string modId"
-Method,AppendExperimentalModDebugFileSectionWithMods,2305,2322,18,private static,void,"List<ExperimentalModDebugLogLine> logLines, string filePath, string fileName, List<(string Line, string ModName, int LineNumber)> matchedLines"
-Method,ShouldIgnoreExperimentalModDebugLine,2322,2331,10,private static,bool,string line
-Method,SummarizePatchMissingLines,2331,2387,57,private static,List<string>,List<string> matchedLines
-Method,SummarizePatchMissingLinesWithLineNumbers,2387,2447,61,private static,"List<(string Line, int LineNumber)>","List<(string Line, int LineNumber)> matchedLines"
-Method,AddOrIncrementSummary,2447,2464,18,private static,void,"List<string> summarized, Dictionary<string, (int Index, int HiddenCount)> summaries, string line, string summaryKey"
-Method,AddOrIncrementSummaryWithLineNumber,2464,2482,19,private static,void,"List<(string Line, int LineNumber)> summarized, Dictionary<string, (int Index, int HiddenCount)> summaries, string line, int lineNumber, string summaryKey"
-Method,SummarizePatchMissingLinesWithModAndLineNumbers,2482,2544,63,private static,"List<(string Line, string ModName, int LineNumber)>","List<(string Line, string ModName, int LineNumber)> matchedLines"
-Method,AddOrIncrementSummaryWithModAndLineNumber,2544,2563,20,private static,void,"List<(string Line, string ModName, int LineNumber)> summarized, Dictionary<string, (int Index, int HiddenCount)> summaries, string line, string modName, int lineNumber, string summaryKey"
-Method,InitializeViewModel,2563,2594,32,private,void,
-Method,InitializeModBrowserView,2594,2621,28,private,void,
-Method,InitializeVotesCacheWatcher,2621,2637,17,private,void,
-Method,OnVotesCacheChanged,2637,2658,22,private,void,"object? sender, EventArgs e"
-Method,SubscribeModBrowserToDirectoryWatcher,2658,2666,9,private,void,
-Method,UnsubscribeModBrowserFromDirectoryWatcher,2666,2674,9,private,void,
-Method,ModsWatcherOnChangesDetected,2674,2692,19,private,void,"object? sender, EventArgs e"
-Method,SyncInstalledModsToModBrowser,2692,2715,24,private,void,
-Method,AddModToInstalledAndRemoveFromSearch,2715,2735,21,private,void,int modId
-Method,InstallModFromBrowserAsync,2735,2843,109,private async,Task,DownloadableMod mod
-Method,ConvertToModListItemViewModel,2843,2915,73,private,ModListItemViewModel,DownloadableMod mod
-Method,ConvertToModReleaseInfo,2915,2945,31,private,ModReleaseInfo?,DownloadableModRelease release
-Method,OnUserReportVoteSubmitted,2945,2962,18,private,void,"object? sender, ModUserReportChangedEventArgs e"
-Method,ViewModelOnPropertyChanged,2962,3045,84,private,void,"object? sender, PropertyChangedEventArgs e"
-Method,UpdateSearchColumnVisibility,3045,3050,6,private,void,bool isSearchingModDatabase
-Method,HandleModlistsVisibilityChanged,3050,3074,25,private,void,bool isVisible
-Method,MiddleTabControl_OnSelectionChanged,3074,3114,41,private async,void,"object sender, SelectionChangedEventArgs e"
-Method,UpdateModBrowserTabVisibilityState,3114,3130,17,private,void,bool isSelected
-Method,SyncMiddleTabControlToViewModel,3130,3158,29,private,void,
-Method,ModlistsTabControl_OnSelectionChanged,3158,3195,38,private,void,"object sender, SelectionChangedEventArgs e"
-Method,ModlistsTabControl_OnLoaded,3195,3200,6,private,void,"object sender, RoutedEventArgs e"
-Method,ApplyPreferredModlistsTabSelection,3200,3212,13,private,void,
-Method,InternetAccessManager_OnInternetAccessChanged,3212,3226,15,private,void,"object? sender, EventArgs e"
-Method,EnsureCloudModlistsConsent,3226,3239,14,private,bool,
-Method,EnsureFirebaseAuthConsent,3239,3266,28,private,bool,string message
-Method,HasFirebaseAuthStateFile,3266,3272,7,private static,bool,
-Method,EnsureUserReportVotingConsent,3272,3283,12,private,bool,
-Method,EnsureFirebaseAuthBackedUpIfAvailable,3283,3317,35,private,void,
-Method,DeleteFirebaseAuthFiles,3317,3330,14,private,void,
-Method,TryDeleteFirebaseAuthFile,3330,3345,16,private static,void,string path
-Method,UpdateSearchSortingBehavior,3345,3352,8,private,void,bool isSearchingModDatabase
-Method,ShouldRefreshAfterDependencyResolution,3352,3358,7,private static,bool,string? statusMessage
-Method,RefreshModsAfterDependencyResolutionAsync,3358,3384,27,private async,Task,
-Method,ScheduleRefreshAfterModlistLoadIfReady,3384,3417,34,private,void,
-Method,RestoreSortPreference,3417,3430,14,private,void,
-Method,ApplyModListSort,3430,3449,20,private,void,"string sortMemberPath, ListSortDirection direction, bool persistPreference"
-Method,ApplySortOption,3449,3475,27,private,void,"SortOption option, bool persistPreference"
-Method,IsActiveSortMember,3475,3484,10,private static,bool,string? sortMemberPath
-Method,NormalizeSortMemberPath,3484,3498,15,private static,string,string sortMemberPath
-Method,SortMemberMatches,3498,3508,11,private static,bool,"string? columnSortMemberPath, string sortMemberPath"
-Method,FindMatchingSortOption,3508,3525,18,private,SortOption?,"string sortMemberPath, ListSortDirection direction"
-Method,SortOptionMatches,3525,3547,23,private static,bool,"SortOption option, string sortMemberPath, ListSortDirection direction"
-Method,BuildSortDescriptions,3547,3574,28,private static,"(string Property, ListSortDirection Direction)[]","string sortMemberPath, ListSortDirection direction"
-Method,BuildSortDisplayName,3574,3595,22,private static,string,"string sortMemberPath, ListSortDirection direction"
-Method,UpdateSortPreferenceFromSelectedOption,3595,3619,25,private,void,bool persistPreference
-Method,UpdateColumnSortVisuals,3619,3630,12,private,void,"string sortMemberPath, ListSortDirection direction"
-Method,ClearColumnSortIndicators,3630,3637,8,private,void,
-Method,InitializeViewModelAsync,3637,3668,32,private async,Task,MainViewModel viewModel
-Method,DisposeCurrentViewModel,3668,3679,12,private,void,
-Method,DisposeViewModel,3679,3688,10,private,void,MainViewModel? viewModel
-Method,StartModsWatcher,3688,3702,15,private,void,
-Method,StartGameSessionMonitor,3702,3733,32,private,void,
-Method,StopGameSessionMonitor,3733,3742,10,private,void,
-Method,GameSessionMonitor_OnPromptRequired,3742,3747,6,private,void,"object? sender, EventArgs e"
-Method,ScanForModConfigFilesAsync,3747,3753,7,private,"Task<IReadOnlyList<(string ModId, string DisplayName, string ConfigPath)>>",MainViewModel viewModel
-Method,ScanForModConfigFilesAsync,3753,3789,37,private async,"Task<IReadOnlyList<(string ModId, string DisplayName, string ConfigPath)>>","MainViewModel viewModel, IReadOnlyCollection<string>? modIds"
-Method,ScanForModConfigFilesAsync,3789,3867,79,private async,"Task<IReadOnlyList<(string ModId, string DisplayName, string ConfigPath)>>","MainViewModel viewModel, IReadOnlyList<ModListItemViewModel> candidateMods"
-Method,FindConfigMatches,3867,3944,78,private static,"List<(string ModId, string ConfigPath)>","IReadOnlyList<(string ModId, string DisplayName)> mods, IReadOnlyList<string> configPaths"
-Method,TryCalculateMatchScore,3944,3977,34,private static,bool,"IReadOnlyList<string> words, IReadOnlyList<string> candidateTokens, int score"
-Method,CalculateBestDistance,3977,3987,11,private static,int,"string token, string word, int maxDistance"
-Method,CalculateLevenshteinDistance,3987,4026,40,private static,int,"ReadOnlySpan<char> source, ReadOnlySpan<char> target, int maxDistance"
-Method,BuildModSearchTokenSets,4026,4063,38,private static,List<IReadOnlyList<string>>,"string? modId, string? displayName"
-Method,AreTokenListsEqual,4063,4074,12,private static,bool,"IReadOnlyList<string> first, IReadOnlyList<string> second"
-Method,BuildSearchTokens,4074,4088,15,private static,List<string>,"string value, bool includeCombinedToken"
-Method,ExtractWords,4088,4137,50,private static,List<string>,string value
-Method,StopModsWatcher,4137,4147,11,private,void,
-Method,ModsWatcherTimerOnTick,4147,4174,28,private async,void,"object? sender, EventArgs e"
-Method,RefreshModsAsync,4174,4208,35,private async,Task,bool allowModDetailsRefresh
-Method,RefreshModDetailsOnly,4208,4216,9,private,void,
-Method,TryInitializePaths,4216,4233,18,private,bool,
-Method,TryResolveDataDirectory,4233,4272,40,private,bool,
-Method,TryResolveGameDirectory,4272,4314,43,private,bool,
-Method,TryResolveCustomShortcut,4314,4339,26,private,void,
-Method,HandleViewModelInitializationFailure,4339,4357,19,private,void,Exception exception
-Method,ReloadViewModelAsync,4357,4421,65,private async,Task,
-Method,PromptForDirectory,4421,4463,43,private,string?,"string description, string? initialPath, PathValidator validator, bool allowCancel"
-Method,PromptForConfigFile,4463,4494,32,private,string?,"ModListItemViewModel mod, string? previousPath"
-Method,GetInitialConfigDirectory,4494,4518,25,private,string?,string? previousPath
-Method,TryValidateDataDirectory,4518,4558,41,private static,bool,"string? path, string? normalizedPath, string? errorMessage"
-Method,TryValidateGameDirectory,4558,4609,52,private static,bool,"string? path, string? normalizedPath, string? errorMessage"
-Method,ModsDataGrid_OnSorting,4609,4633,25,private,void,"object sender, DataGridSortingEventArgs e"
-Method,ModsDataGrid_OnSelectionChanged,4633,4647,15,private,void,"object sender, SelectionChangedEventArgs e"
-Method,ModsDataGrid_OnPreviewKeyDown,4647,4652,6,private async,void,"object sender, KeyEventArgs e"
-Method,MainWindow_OnPreviewKeyDown,4652,4657,6,private async,void,"object sender, KeyEventArgs e"
-Method,UserReportsButton_OnClick,4657,4723,67,private async,void,"object sender, RoutedEventArgs e"
-Method,TryHandleModListKeyDownAsync,4723,4756,34,private async,Task<bool>,KeyEventArgs e
-Method,ModsDataGrid_OnPreviewMouseLeftButtonDown,4756,4780,25,private,void,"object sender, MouseButtonEventArgs e"
-Method,ModsDataGridRow_OnPreviewMouseLeftButtonDown,4780,4797,18,private,void,"object sender, MouseButtonEventArgs e"
-Method,ModDatabaseCard_OnPreviewMouseLeftButtonDown,4797,4814,18,private,void,"object sender, MouseButtonEventArgs e"
-Method,ModsDataGridRow_OnLoaded,4814,4829,16,private,void,"object sender, RoutedEventArgs e"
-Method,ModsDataGridRow_OnDataContextChanged,4829,4840,12,private,void,"object sender, DependencyPropertyChangedEventArgs e"
-Method,ModsDataGridRow_OnUnloaded,4840,4852,13,private,void,"object sender, RoutedEventArgs e"
-Method,ModsDataGridRow_OnMouseEnter,4852,4864,13,private,void,"object sender, MouseEventArgs e"
-Method,ModsDataGridRow_OnMouseLeave,4864,4876,13,private,void,"object sender, MouseEventArgs e"
-Method,ResetRowOverlays,4876,4914,39,private static,void,DataGridRow row
-Method,AreHoverOverlaysSuppressed,4914,4919,6,private,bool,
-Method,AreHoverOverlaysSuppressed,4919,4924,6,private static,bool,DataGridRow row
-Method,AreHoverEffectsDisabled,4924,4929,6,private static,bool,DependencyObject dependencyObject
-Method,ClearRowOverlayValues,4929,4941,13,private static,void,DataGridRow row
-Method,RefreshHoverOverlayState,4941,4947,7,private,void,
-Method,RefreshRowHoverOverlays,4947,4957,11,private static,void,DataGrid? dataGrid
-Method,UpdateRowModSubscription,4957,4989,33,private static,void,"DataGridRow row, ModListItemViewModel? newMod"
-Method,SetBoundMod,4989,4994,6,private static,void,"DataGridRow row, ModListItemViewModel? mod"
-Method,GetBoundMod,4994,4999,6,private static,ModListItemViewModel?,DataGridRow row
-Method,SetBoundModHandler,4999,5004,6,private static,void,"DataGridRow row, PropertyChangedEventHandler? handler"
-Method,GetBoundModHandler,5004,5009,6,private static,PropertyChangedEventHandler?,DataGridRow row
-Method,SetRowIsHovered,5009,5014,6,private static,void,"DataGridRow row, bool value"
-Method,GetRowIsHovered,5014,5019,6,private static,bool,DataGridRow row
-Method,ModDatabasePageButton_OnClick,5019,5029,11,private,void,"object sender, RoutedEventArgs e"
-Method,SelectedModCopyForServerButton_OnClick,5029,5056,28,private,void,"object sender, RoutedEventArgs e"
-Method,EditConfigButton_OnClick,5056,5143,88,private,void,"object sender, RoutedEventArgs e"
-Method,DeleteModButton_OnClick,5143,5160,18,private async,void,"object sender, RoutedEventArgs e"
-Method,CloseModInfoButton_OnClick,5160,5166,7,private,void,"object sender, RoutedEventArgs e"
-Method,DeleteSelectedModsAsync,5166,5180,15,private async,Task,
-Method,DeleteSingleModAsync,5180,5221,42,private async,Task,ModListItemViewModel mod
-Method,DeleteMultipleModsAsync,5221,5294,74,private async,Task,IReadOnlyList<ModListItemViewModel> mods
-Method,TryDeleteModAtPath,5294,5334,41,private,bool,"ModListItemViewModel mod, string modPath"
-Method,FixModButton_OnClick,5334,5454,121,private async,void,"object sender, RoutedEventArgs e"
-Method,InstallModButton_OnClick,5454,5558,105,private async,void,"object sender, RoutedEventArgs e"
-Method,InstallOrUpdateDependencyAsync,5558,5656,99,private async,"Task<(bool Success, string Message)>","ModDependencyInfo dependency, ModListItemViewModel? installedMod"
-Method,SelectReleaseForDependency,5656,5697,42,private static,ModReleaseInfo?,"ModDependencyInfo dependency, ModDatabaseInfo info"
-Method,SelectReleaseForInstall,5697,5706,10,private static,ModReleaseInfo?,ModListItemViewModel mod
-Method,UpdateModButton_OnClick,5706,5724,19,private async,void,"object sender, RoutedEventArgs e"
-Method,SelectedModVersionComboBox_OnSelectionChanged,5724,5750,27,private async,void,"object sender, SelectionChangedEventArgs e"
-Method,SelectedModVersionComboBox_OnDropDownOpened,5750,5772,23,private,void,"object sender, EventArgs e"
-Method,UpdateAllModsMenuItem_OnClick,5772,5823,52,private async,void,"object sender, RoutedEventArgs e"
-Method,CheckModsCompatibilityMenuItem_OnClick,5823,5929,107,private async,void,"object sender, RoutedEventArgs e"
-Method,EvaluateCompatibility,5929,6006,78,private static,CompatibilityEvaluation,"ModListItemViewModel mod, string targetVersion, string displayName, bool requireExactMatch"
-Method,ReleaseSupportsVersion,6006,6020,15,private static,bool,"ModReleaseInfo release, string targetVersion, bool requireExactMatch"
-Method,ModsMenuItem_OnSubmenuOpened,6020,6025,6,private async,void,"object sender, RoutedEventArgs e"
-Method,DeleteCachedModsMenuItem_OnClick,6025,6080,56,private async,void,"object sender, RoutedEventArgs e"
-Method,SaveInstalledModsPdfMenuItem_OnClick,6080,6140,61,private,void,"object sender, RoutedEventArgs e"
-Method,TrySaveInstalledModsPdf,6140,6267,128,private,bool,"string listName, string? version, string? description, string uploaderName, IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations, string? gameVersion, IReadOnlyList<ModListItemViewModel>? preFetchedMods"
-Method,ManagerDataFolderMenuItem_OnClick,6267,6297,31,private,void,"object sender, RoutedEventArgs e"
-Method,ManagerModDbPageMenuItem_OnClick,6297,6302,6,private,void,"object sender, RoutedEventArgs e"
-Method,ChangeManagerFolderMenuItem_OnClick,6302,6425,124,private,void,"object sender, RoutedEventArgs e"
-Method,MoveDirectoryContents,6425,6489,65,private static,void,"string sourceDir, string targetDir"
-Method,HandleResetManagerFolder,6489,6585,97,private,void,string currentFolder
-Method,RestartApplication,6585,6616,32,private static,void,
-Method,HelpMenuItem_OnClick,6616,6629,14,private,void,"object sender, RoutedEventArgs e"
-Method,GuideMenuItem_OnClick,6629,6643,15,private,void,"object sender, RoutedEventArgs e"
-Method,ScanForModConfigsMenuItem_OnClick,6643,6740,98,private async,void,"object sender, RoutedEventArgs e"
-Method,ManagerUpdateLink_OnRequestNavigate,6740,6746,7,private,void,"object sender, RequestNavigateEventArgs e"
-Method,DiscordButton_OnClick,6746,6781,36,private,void,"object sender, RoutedEventArgs e"
-Method,ModUsagePromptLink_OnClick,6781,6788,8,private async,void,"object sender, RoutedEventArgs e"
-Method,OpenManagerModDatabasePage,6788,6818,31,private,void,
-Method,ExperimentalCompReviewMenuItem_OnClick,6818,6880,63,private async,void,"object sender, RoutedEventArgs e"
-Method,BuildExperimentalCompReviewMessage,6880,6902,23,private static,string,ModCompatibilityCommentsService.ExperimentalCompReviewResult result
-Method,FormatExperimentalCompReviewScore,6902,6908,7,private static,string,double score
-Method,DeleteCloudAuthMenuItem_OnClick,6908,6927,20,private async,void,"object sender, RoutedEventArgs e"
-Method,ResolveExperimentalCompReviewIdentifier,6927,6937,11,private static,string,ModListItemViewModel selectedMod
-Method,TryExtractModSlug,6937,6972,36,private static,string?,string? modDatabasePageUrl
-Method,ClearAllCachesMenuItem_OnClick,6972,7089,118,private,void,"object sender, RoutedEventArgs e"
-Method,RestoreFirebaseAuthBackupMenuItem_OnClick,7089,7167,79,private,void,"object sender, RoutedEventArgs e"
-Method,DeleteAllManagerFilesMenuItem_OnClick,7167,7240,74,private async,void,"object sender, RoutedEventArgs e"
-Method,SwitchToInstalledModsTab,7240,7246,7,private,void,
-Method,PrepareForModlistLoad,7246,7252,7,private,void,
-Method,UpdateModlistLoadingUiState,7252,7273,22,private,void,
-Method,RefreshDeleteCachedModsMenuHeaderAsync,7273,7293,21,private async,Task,
-Method,CalculateDirectorySize,7293,7354,62,private static,long,string rootDirectory
-Method,GetCachedModsDirectory,7354,7359,6,private static,string?,
-Method,GetManagerDataDirectory,7359,7364,6,private static,string?,
-Method,DeleteAllManagerFiles,7364,7428,65,private static,ManagerDeletionResult,string? dataDirectory
-Method,AddCandidateDirectory,7428,7436,9,private static,void,"ISet<string> directories, string? path"
-Method,AddCandidateFile,7436,7444,9,private static,void,"ISet<string> files, string? path"
-Method,TryCombineSpecialFolder,7444,7460,17,private static,string?,"Environment.SpecialFolder folder, string relativePath"
-Method,TryGetSpecialFolderPath,7460,7476,17,private static,string?,Environment.SpecialFolder folder
-Method,TryNormalizePath,7476,7491,16,private static,string?,string? path
-Method,RefreshModsWithErrorHandlingAsync,7491,7517,27,private async,Task,
-Method,ClearManagerCaches,7517,7545,29,private static,void,bool preserveModCache
-Method,ClearCachedModsDirectory,7545,7552,8,private static,void,string cachedModsDirectory
-Method,BuildCacheClearErrorMessage,7552,7571,20,private static,string,"string context, Exception ex"
-Method,OnActiveGameProfileChangedAsync,7571,7581,11,private async,Task,
-Method,GameProfilesMenuItem_OnSubmenuOpened,7581,7587,7,private,void,"object sender, RoutedEventArgs e"
-Method,CreateGameProfileMenuItem_OnClick,7587,7639,53,private async,void,"object sender, RoutedEventArgs e"
-Method,EditGameProfileMenuItem_OnClick,7639,7671,33,private,void,"object sender, RoutedEventArgs e"
-Method,DeleteGameProfileMenuItem_OnClick,7671,7699,29,private async,void,"object sender, RoutedEventArgs e"
-Method,GameProfileMenuItem_OnClick,7699,7715,17,private async,void,"object sender, RoutedEventArgs e"
-Method,SelectDataFolderMenuItem_OnClick,7715,7734,20,private async,void,"object sender, RoutedEventArgs e"
-Method,SelectGameFolderMenuItem_OnClick,7734,7751,18,private,void,"object sender, RoutedEventArgs e"
-Method,RefreshDeveloperProfilesMenuEntries,7751,7791,41,private,void,
-Method,RefreshGameProfileMenuItems,7791,7833,43,private,void,
-Method,UpdateGameProfileMenuChecks,7833,7842,10,private,void,
-Method,UpdateActiveGameProfileDisplay,7842,7861,20,private,void,
-Method,UpdateDeveloperProfileMenuChecks,7861,7881,21,private,void,
-Method,DeveloperProfileMenuItem_OnClick,7881,7913,33,private async,void,"object sender, RoutedEventArgs e"
-Method,DeveloperProfileManager_OnCurrentProfileChanged,7913,7929,17,private,void,"object? sender, DeveloperProfileChangedEventArgs e"
-Method,ExitMenuItem_OnClick,7929,7934,6,private,void,"object sender, RoutedEventArgs e"
-Method,ManageServerTargetsMenuItem_OnClick,7934,7947,14,private,void,"object sender, RoutedEventArgs e"
-Method,SyncToServerMenuItem_OnClick,7947,7998,52,private,void,"object sender, RoutedEventArgs e"
-Method,CreateSftpClientWrapper,7998,8006,9,private,ISftpClientWrapper,"ServerTarget target, string? password, Func<string, HostKeyVerificationResult, Task<bool>> hostKeyVerifier"
-Method,TestServerConnectionAsync,8006,8018,13,private async,Task<bool>,"ServerTarget target, string? password, Func<string, HostKeyVerificationResult, Task<bool>> hostKeyVerifier"
-Method,ShowHostKeyVerificationAsync,8018,8033,16,private async,Task<bool>,"string fingerprint, HostKeyVerificationResult verificationResult"
-Method,UpdateSyncToServerMenuState,8033,8040,8,private,void,
-Method,TryEnsureDataBackupBeforeLaunchAsync,8040,8081,42,private async,Task<bool>,
-Method,LaunchGameButton_OnClick,8081,8163,83,private async,void,"object sender, RoutedEventArgs e"
-Method,SetCustomShortcutMenuItem_OnClick,8163,8239,77,private,void,"object sender, RoutedEventArgs e"
-Method,RestoreDataFolderMenuItem_OnSubmenuOpened,8239,8348,110,private,void,"object sender, RoutedEventArgs e"
-Method,RestoreDataFolderMenuItem_OnBackupClick,8348,8373,26,private async,void,"object sender, RoutedEventArgs e"
-Method,OpenDataBackupDirectoryMenuItem_OnClick,8373,8413,41,private,void,"object? sender, RoutedEventArgs e"
-Method,ChangeBackupLocationMenuItem_OnClick,8413,8457,45,private,void,"object? sender, RoutedEventArgs e"
-Method,DeleteDataFolderBackupsMenuItem_OnClick,8457,8527,71,private,void,"object? sender, RoutedEventArgs e"
-Method,RestoreBackupMenuItem_OnSubmenuOpened,8527,8601,75,private,void,"object sender, RoutedEventArgs e"
-Method,RestoreBackupMenuItem_OnBackupClick,8601,8616,16,private async,void,"object sender, RoutedEventArgs e"
-Method,RestoreBackupAsync,8616,8652,37,private async,Task,"string backupPath, bool restoreConfigurations"
-Method,RestoreDataBackupAsync,8652,8712,61,private async,Task,DataFolderBackupSummary summary
-Method,CreateDataBackupProgressReporter,8712,8724,13,private,IProgress<DataFolderBackupProgress>,string fallbackMessage
-Method,ShowDataBackupOverlay,8724,8731,8,private,void,string message
-Method,HideDataBackupOverlay,8731,8738,8,private,void,
-Method,BeginModlistInstallUi,8738,8748,11,private,void,"int totalSteps, string message"
-Method,UpdateModlistInstallUi,8748,8760,13,private,void,"string status, double? stepPercent, double? bytesPerSecond"
-Method,CompleteModlistInstallStep,8760,8770,11,private,void,string status
-Method,EndModlistInstallUi,8770,8780,11,private,void,
-Method,ClampPercent,8780,8786,7,private static,double,double? value
-Method,UpdateModlistDownloadSpeed,8786,8799,14,private,void,double? bytesPerSecond
-Method,FormatDownloadSpeed,8799,8814,16,private static,string,double bytesPerSecond
-Method,CreateModlistInstallProgressReporter,8814,8826,13,private,IProgress<ModUpdateProgress>,string modDisplayName
-Method,CreateModUpdateProgressReporter,8826,8838,13,private,IProgress<ModUpdateProgress>,"string modDisplayName, IProgress<ModUpdateProgress>? additionalProgress"
-Method,OpenModFolderButton_OnClick,8838,8843,6,private,void,"object sender, RoutedEventArgs e"
-Method,OpenConfigFolderButton_OnClick,8843,8848,6,private,void,"object sender, RoutedEventArgs e"
-Method,OpenLogsFolderButton_OnClick,8848,8853,6,private,void,"object sender, RoutedEventArgs e"
-Method,OpenFolder,8853,8888,36,private static,void,"string? path, string description"
-Method,OpenFolderWithShell,8888,8909,22,private static,void,string path
-Method,TryGetManagedModPath,8909,8949,41,private,bool,"ModListItemViewModel mod, string fullPath, string? errorMessage"
-Method,TryGetDependencyInstallTargetPath,8949,8990,42,private,bool,"string modId, ModReleaseInfo release, string fullPath, string? errorMessage"
-Method,TryGetInstallTargetPath,8990,9031,42,private,bool,"ModListItemViewModel mod, ModReleaseInfo release, string fullPath, string? errorMessage"
-Method,TryGetUpdateTargetPath,9031,9078,48,private,bool,"ModListItemViewModel mod, ModReleaseInfo release, string existingPath, string fullPath, string? errorMessage"
-Method,IsPathWithinManagedMods,9078,9087,10,private,bool,string fullPath
-Method,IsPathUnderDirectory,9087,9113,27,private static,bool,"string path, string? directory"
-Method,IsSameDirectory,9113,9130,18,private static,bool,"string? first, string? second"
-Method,SanitizeFileName,9130,9142,13,private static,string,"string? fileName, string fallback"
-Method,EnsureUniqueFilePath,9142,9163,22,private static,string,string path
-Method,TryEnsureManagedModTargetIsSafe,9163,9208,46,private,bool,"string fullPath, string? errorMessage"
-Method,TrySaveSnapshot,9208,9289,82,private,bool,"string directory, string title, string filter, string folderWarningMessage, string fallbackName, Func<string?>? suggestedNameProvider, Action<string>? onSuccess, string failureContext, bool includeModVersions, bool exclusive, IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations, Action<SerializablePreset>? configureSerializable"
-Method,BuildSerializablePreset,9289,9354,66,private,SerializablePreset,"string entryName, bool includeModVersions, bool exclusive, IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations, string? gameVersion"
-Method,ResolveGameVersion,9354,9362,9,private,string?,string? requestedVersion
-Method,BuildSerializableConfigList,9362,9412,51,private static,SerializableConfigList?,"IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations"
-Method,SavePresetMenuItem_OnClick,9412,9436,25,private,void,"object sender, RoutedEventArgs e"
-Method,TrySaveModlist,9436,9441,6,private,bool,
-Method,TrySaveModlist,9441,9541,101,private,bool,"Func<string?>? suggestedNameProvider, string? savedFilePath"
-Method,TrySaveAutomaticModlist,9541,9581,41,private,bool,"string requestedName, string savedName, string filePath"
-Method,PromptModlistLoadMode,9581,9617,37,private,ModlistLoadMode?,
-Method,GetModlistLoadOptions,9617,9624,8,private,PresetLoadOptions,ModlistLoadMode mode
-Method,EnsureModlistBackupBeforeLoad,9624,9665,42,private,bool,
-Method,TryBuildCurrentModlistJson,9665,9695,31,private,bool,"string modlistName, string? description, string? version, string uploader, IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations, string? gameVersion, string json"
-Method,CreateAutomaticBackupAsync,9695,9704,10,private,Task,string trigger
-Method,CreateAppStartedBackupAsync,9704,9713,10,private,Task,
-Method,CreateBackupAsync,9713,9790,78,private async,Task,"string trigger, string fallbackFileName, bool pruneAutomaticBackups, bool pruneAppStartedBackups"
-Method,CaptureConfigurationsForBackup,9790,9846,57,private,"IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>?",IReadOnlyList<ModListItemViewModel> mods
-Method,IsAppStartedBackup,9846,9855,10,private static,bool,string? path
-Method,PruneAutomaticBackups,9855,9886,32,private static,void,string directory
-Method,PruneAppStartedBackups,9886,9917,32,private static,void,string directory
-Method,BuildCloudModlistName,9917,9922,6,private static,string,
-Method,EnsureQuestPdfLicense,9922,9930,9,private static,void,
-Method,GetLines,9930,9938,9,private static,string[],string content
-Method,GenerateInstalledModsPdf,9938,10052,115,private static,void,"string filePath, string listName, string? modlistVersion, string? description, string uploaderName, string? gameVersion, IReadOnlyList<ModListItemViewModel> mods, SerializablePreset serializable, SerializableConfigList? configList"
-Method,GetUploaderNameForPdf,10052,10066,15,private,string,
-Method,DetermineUploaderName,10066,10073,8,private,string,FirebaseModlistStore store
-Method,SaveModlistMenuItem_OnClick,10073,10084,12,private,void,"object sender, RoutedEventArgs e"
-Method,SaveModlistToCloudAsync,10084,10176,93,private,Task,
-Method,NormalizeCloudVersion,10176,10181,6,private static,string?,string? version
-Method,BuildModConfigOptions,10181,10210,30,private,List<ModConfigOption>,bool selectByDefault
-Method,TryReadModConfigurations,10210,10260,51,private,"Dictionary<string, IReadOnlyList<ModConfigurationSnapshot>>?",IReadOnlyList<ModConfigOption> selectedConfigOptions
-Method,TryGetRelativeConfigPath,10260,10278,19,private,string?,"string path, string sanitizedFileName"
-Method,NormalizeRelativeConfigPath,10278,10297,20,private static,string?,"string? relativePath, string sanitizedFileName"
-Method,EnsureUniqueRelativePath,10297,10316,20,private static,string,"string relativePath, HashSet<string> usedRelativePaths"
-Method,GetSupportedConfigFiles,10316,10324,9,private static,string[],string directory
-Method,IsSupportedConfigExtension,10324,10335,12,private static,bool,string? extension
-Method,GetSafeConfigFileName,10335,10363,29,private static,string,"string? candidate, string? modId"
-Method,ResolveConfigExtension,10363,10374,12,private static,string,string? candidate
-Method,SanitizeForFileName,10374,10386,13,private static,string,string? value
-Method,SaveModlistToCloudMenuItem_OnClick,10386,10395,10,private async,void,"object sender, RoutedEventArgs e"
-Method,SaveCloudModlistButton_OnClick,10395,10401,7,private async,void,"object sender, RoutedEventArgs e"
-Method,ModifyCloudModlistsButton_OnClick,10401,10407,7,private async,void,"object sender, RoutedEventArgs e"
-Method,IsCloudUploaderNameAvailableAsync,10407,10430,24,private async,Task<bool>,"FirebaseModlistStore store, string uploader"
-Method,LocalModlistsDataGrid_OnSelectionChanged,10430,10445,16,private,void,"object sender, SelectionChangedEventArgs e"
-Method,SaveLocalModlistButton_OnClick,10445,10459,15,private,void,"object sender, RoutedEventArgs e"
-Method,InstallLocalModlistButton_OnClick,10459,10479,21,private async,void,"object sender, RoutedEventArgs e"
-Method,OpenModlistsFolderButton_OnClick,10479,10498,20,private,void,"object sender, RoutedEventArgs e"
-Method,DeleteLocalModlistsButton_OnClick,10498,10566,69,private,void,"object sender, RoutedEventArgs e"
-Method,ModifyLocalModlistButton_OnClick,10566,10652,87,private,void,"object sender, RoutedEventArgs e"
-Method,RefreshCloudModlistsButton_OnClick,10652,10657,6,private async,void,"object sender, RoutedEventArgs e"
-Method,CloudModlistsDataGrid_OnSelectionChanged,10657,10665,9,private,void,"object sender, SelectionChangedEventArgs e"
-Method,InstallCloudModlistButton_OnClick,10665,10739,75,private async,void,"object sender, RoutedEventArgs e"
-Method,LoadModlistFromCloudMenuItem_OnClick,10739,10811,73,private async,void,"object sender, RoutedEventArgs e"
-Method,DeleteCloudModlistMenuItem_OnClick,10811,10855,45,private async,void,"object sender, RoutedEventArgs e"
-Method,LoadPresetMenuItem_OnSubmenuOpened,10855,10925,71,private,void,"object sender, RoutedEventArgs e"
-Method,LoadPresetMenuItem_OnClick,10925,10956,32,private async,void,"object sender, RoutedEventArgs e"
-Method,LoadPresetMenuItem_OnPresetClick,10956,10963,8,private async,void,"object sender, RoutedEventArgs e"
-Method,LoadPresetFromFileAsync,10963,10995,33,private async,Task,string filePath
-Method,LoadModlistMenuItem_OnClick,10995,11016,22,private async,void,"object sender, RoutedEventArgs e"
-Method,LoadModlistFromFileAsync,11016,11061,46,private async,Task,string filePath
-Method,MainWindow_OnPreviewDragEnter,11061,11066,6,private,void,"object sender, DragEventArgs e"
-Method,MainWindow_OnPreviewDragOver,11066,11071,6,private,void,"object sender, DragEventArgs e"
-Method,MainWindow_OnPreviewDrop,11071,11086,16,private async,void,"object sender, DragEventArgs e"
-Method,HandleModlistDragEvent,11086,11099,14,private,void,DragEventArgs e
-Method,TryGetDroppedModlistFile,11099,11117,19,private static,bool,"DragEventArgs e, string? filePath"
-Method,HasSupportedModlistExtension,11117,11124,8,private static,bool,string filePath
-Method,TryLoadPresetFromFile,11124,11161,38,private,bool,"string filePath, string fallbackName, PresetLoadOptions options, ModPreset? preset, string? errorMessage"
-Method,TryLoadPresetFromPdf,11161,11260,100,private,bool,"string filePath, string fallbackName, PresetLoadOptions options, ModPreset? preset, string? errorMessage"
-Method,TryLoadPresetFromJson,11260,11300,41,private,bool,"string json, string fallbackName, PresetLoadOptions options, ModPreset? preset, string? errorMessage, string? sourceName, string? configJson"
-Method,TryBuildPresetFromSerializable,11300,11416,117,private,bool,"SerializablePreset data, string fallbackName, PresetLoadOptions options, ModPreset? preset, string? errorMessage, string? fallbackNameFromSource"
-Method,ApplyConfigListToPreset,11416,11437,22,private static,void,"SerializablePreset preset, SerializableConfigList? configList"
-Method,BuildConfigKey,11437,11451,15,private static,string,SerializableModConfiguration configuration
-Method,ExecuteCloudOperationAsync,11451,11524,74,private async,Task,"Func<FirebaseModlistStore, Task> operation, string actionDescription"
-Method,MigrateLegacyFirebaseDataIfNeededAsync,11524,11556,33,private async,Task,
-Method,EnsureCloudStoreInitializedAsync,11556,11588,33,private async,Task<FirebaseModlistStore>,
-Method,PromptForCloudSaveReplacement,11588,11603,16,private,CloudModlistSlot?,IReadOnlyList<CloudModlistSlot> slots
-Method,ShowCloudModlistManagementDialogAsync,11603,11626,24,private async,Task,FirebaseModlistStore store
-Method,BuildCloudModlistManagementEntriesAsync,11626,11647,22,private async,Task<IReadOnlyList<CloudModlistManagementEntry>>,FirebaseModlistStore store
-Method,RenameCloudModlistAsync,11647,11718,72,private async,Task<bool>,"FirebaseModlistStore store, CloudModlistManagementEntry entry, string newName"
-Method,DeleteCloudModlistAsync,11718,11750,33,private async,Task<bool>,"FirebaseModlistStore store, CloudModlistManagementEntry entry"
-Method,DeleteAllCloudModlistsAndAuthorizationAsync,11750,11777,28,private async,Task,"FirebaseModlistStore store, bool showCompletionMessage"
-Method,UpdateCloudModlistsAfterChangeAsync,11777,11785,9,private async,Task,
-Method,ReplaceCloudModlistName,11785,11816,32,private static,string,"string json, string newName"
-Method,GetCloudModlistSlotsAsync,11816,11854,39,private async,Task<List<CloudModlistSlot>>,"FirebaseModlistStore store, bool includeEmptySlots, bool captureContent"
-Method,RefreshLocalModlists,11854,11919,66,private,void,"bool force, IReadOnlyCollection<string>? preferredSelection"
-Method,BuildLocalModlistEntries,11919,11953,35,private,IReadOnlyList<LocalModlistListEntry>,List<string> errors
-Method,TryCreateLocalModlistEntry,11953,12029,77,private,bool,"string filePath, LocalModlistListEntry? entry, string? error"
-Method,TryCreateLocalModlistEntryFromJson,12029,12065,37,private,bool,"string filePath, string json, LocalModlistListEntry? entry, string? error"
-Method,RefreshCloudModlistsAsync,12065,12097,33,private async,Task,bool force
-Method,BuildCloudModlistEntries,12097,12141,45,private,IReadOnlyList<CloudModlistListEntry>,IEnumerable<CloudModlistRegistryEntry> registryEntries
-Method,EnsureCloudModlistContentAsync,12141,12184,44,private async,Task<CloudModlistListEntry?>,CloudModlistListEntry entry
-Method,SetLocalModlistSelection,12184,12212,29,private,void,IReadOnlyList<LocalModlistListEntry> selection
-Method,SetCloudModlistSelection,12212,12224,13,private,void,CloudModlistListEntry? entry
-Method,UpdateCloudModlistControlsEnabledState,12224,12242,19,private,void,
-Method,UpdateLocalModlistControlsEnabledState,12242,12257,16,private,void,
-Method,RefreshManagerUpdateLinkAsync,12257,12296,40,private async,Task,
-Method,GetManagerInformationalVersion,12296,12322,27,private static,string?,
-Method,BuildCloudSlotDisplay,12322,12332,11,private static,string,"string slotKey, ModlistMetadata metadata, bool isOccupied"
-Method,FormatCloudSlotLabel,12332,12342,11,private static,string,string slotKey
-Method,ExtractModlistName,12342,12347,6,private static,string?,string? json
-Method,ExtractModlistMetadata,12347,12389,43,private static,ModlistMetadata,string? json
-Method,TryGetTrimmedProperty,12389,12401,13,private static,string?,"JsonElement element, string propertyName"
-Method,EnsurePresetDirectory,12401,12409,9,private,string,
-Method,EnsureBackupDirectory,12409,12418,10,private,string,
-Method,EnsureLocalModBackupRootDirectory,12418,12426,9,private,string,
-Method,CreateLocalModBackupSessionDirectory,12426,12437,12,private,string,
-Method,EnsureUniqueDirectoryPath,12437,12452,16,private static,string,string path
-Method,CopyDirectoryContents,12452,12474,23,private static,void,"string sourceDirectory, string destinationDirectory"
-Method,GetLocalModBackupEntryDirectory,12474,12483,10,private,string,"string sessionDirectory, ModListItemViewModel mod"
-Method,BackupLocalModAtPath,12483,12501,19,private static,void,"string sourcePath, string destinationDirectory"
-Method,EnsureModListDirectory,12501,12509,9,private,string,
-Method,EnsureRebuiltModListDirectory,12509,12517,9,private,string,
-Method,EnsureCloudModListCacheDirectory,12517,12525,9,private,string,
-Method,IsPathWithinDirectory,12525,12540,16,private static,bool,"string directory, string candidatePath"
-Method,BuildSuggestedFileName,12540,12552,13,private static,string,"string? name, string fallback"
-Method,GetUniqueFilePath,12552,12569,18,private static,string,"string directory, string baseFileName, string extension"
-Method,GetSnapshotNameFromFilePath,12569,12575,7,private static,string,"string filePath, string fallback"
-Method,ApplyPresetAsync,12575,12617,43,private async,Task,"ModPreset preset, bool importConfigurations"
-Method,ImportPresetConfigsAsync,12617,12805,189,private async,Task,ModPreset preset
-Method,ApplyPresetModVersionsAsync,12805,13040,236,private async,Task<bool>,ModPreset preset
-Method,TryInstallPresetModAsync,13040,13108,69,private async,Task<PresetModInstallResult>,"ModPresetModState state, IProgress<ModUpdateProgress>? installProgress"
-Method,ApplyExclusivePresetAsync,13108,13238,131,private async,Task,ModPreset preset
-Method,VersionsMatch,13238,13258,21,private static,bool,"string? desiredVersion, string? installedVersion"
-Method,LatestVersionTextBlock_OnToolTipOpening,13258,13268,11,private,void,"object sender, ToolTipEventArgs e"
-Method,LatestVersionTextBlock_OnToolTipClosing,13268,13277,10,private,void,"object sender, ToolTipEventArgs e"
-Method,ChangelogToolTip_OnPreviewMouseWheel,13277,13294,18,private,void,"object sender, MouseWheelEventArgs e"
-Method,ModsDataGrid_OnPreviewMouseWheel,13294,13319,26,private,void,"object sender, MouseWheelEventArgs e"
-Method,IsDescendantOfToolTip,13319,13331,13,private static,bool,DependencyObject? source
-Method,GetParent,13331,13347,17,private static,DependencyObject?,DependencyObject current
-Method,FindAncestor,13347,13360,14,private static,T?,DependencyObject? source
-Method,GetCurrentScrollMultiplier,13360,13365,6,private,double,
-Method,ShouldPreserveModsViewState,13365,13380,16,private,bool,"ICollectionView? previousView, ICollectionView? nextView"
-Method,AttachToModsView,13380,13413,34,private,void,"ICollectionView? modsView, bool preserveState"
-Method,ModsView_OnCollectionChanged,13413,13423,11,private,void,"object? sender, NotifyCollectionChangedEventArgs e"
-Method,HandleModRowSelection,13423,13472,50,private,void,ModListItemViewModel mod
-Method,SelectAllModsInCurrentView,13472,13486,15,private,void,
-Method,ApplyRangeSelection,13486,13509,24,private,bool,"ModListItemViewModel start, ModListItemViewModel end, bool preserveExisting"
-Method,GetModsInViewOrder,13509,13517,9,private,List<ModListItemViewModel>,
-Method,AddToSelection,13517,13527,11,private,void,ModListItemViewModel mod
-Method,RemoveFromSelection,13527,13536,10,private,void,ModListItemViewModel mod
-Method,ClearSelection,13536,13554,19,private,void,bool resetAnchor
-Method,ClearModDatabaseSelections,13554,13579,26,private,void,
-Method,RestoreSelectionFromSourcePaths,13579,13626,48,private,void,"IReadOnlyList<string> sourcePaths, string? anchorSourcePath"
-Method,UpdateSelectionAnchorAfterRestore,13626,13646,21,private,void,"IReadOnlyList<ModListItemViewModel> selection, string? anchorSourcePath"
-Method,SubscribeToSelectedMod,13646,13680,35,private,void,ModListItemViewModel mod
-Method,UnsubscribeFromSelectedMod,13680,13689,10,private,void,ModListItemViewModel mod
-Method,RefreshSelectedModFixButton,13689,13695,7,private,void,ModListItemViewModel mod
-Method,RefreshSelectedModCopyForServerButton,13695,13702,8,private,void,ModListItemViewModel mod
-Method,UpdateSelectedModButtons,13702,13737,36,private,void,
-Method,UpdateServerOptionsState,13737,13752,16,private,void,bool isEnabled
-Method,UpdateSelectedModFixButton,13752,13769,18,private,void,ModListItemViewModel? mod
-Method,UpdateSelectedModCopyForServerButton,13769,13795,27,private,void,ModListItemViewModel? mod
-Method,UpdateSelectedModButton,13795,13815,21,private static,void,"WpfButton? button, ModListItemViewModel? mod, bool requireModDatabaseLink, bool requireUpdate"
-Method,UpdateSelectedModEditConfigButton,13815,13838,24,private,void,ModListItemViewModel? mod
-Method,ShouldIgnoreRowSelection,13838,13854,17,private,bool,DependencyObject? source
-Method,GetModsScrollViewer,13854,13868,15,private,ScrollViewer?,
-Method,ClearScrollViewerCache,13868,13874,7,private,void,
-Method,FindDescendantScrollViewer,13874,13890,17,private static,ScrollViewer?,DependencyObject? current
-Method,UpdateModsAsync,13890,14091,202,private async,Task,"IReadOnlyList<ModListItemViewModel> mods, bool isBulk, IReadOnlyDictionary<ModListItemViewModel, ModReleaseInfo>? releaseOverrides, bool showSummary, Func<ModListItemViewModel, ModReleaseInfo, IProgress<ModUpdateProgress>?>? progressFactory, Action<ModListItemViewModel, ModReleaseInfo, ModUpdateResult>? completionCallback"
-Method,SelectReleaseForMod,14091,14113,23,private,ModReleaseInfo?,"ModListItemViewModel mod, bool isBulk, ModUpdateReleasePreference? bulkPreference, List<ModUpdateOperationResult> results, bool abortRequested"
-Method,ShowBulkUpdateChangelogDialog,14113,14146,34,private,void,IReadOnlyList<ModUpdateOperationResult> results
-Method,BuildChangelogSummary,14146,14164,19,private static,string?,IReadOnlyList<ModListItemViewModel.ReleaseChangelog> changelogEntries
-Method,ShowUpdateSummary,14164,14210,47,private static,void,"IReadOnlyList<ModUpdateOperationResult> results, bool isBulk, bool aborted"
-Method,ActiveToggle_OnPreviewMouseLeftButtonDown,14210,14222,13,private,void,"object sender, MouseButtonEventArgs e"
-Method,ActiveToggle_OnPreviewMouseLeftButtonUp,14222,14227,6,private,void,"object sender, MouseButtonEventArgs e"
-Method,ActiveToggle_OnPreviewMouseMove,14227,14234,8,private,void,"object sender, MouseEventArgs e"
-Method,ActiveToggle_OnToggled,14234,14263,30,private,void,"object sender, RoutedEventArgs e"
-Method,OnActivated,14263,14272,10,protected override,void,EventArgs e
-Method,OnDeactivated,14272,14278,7,protected override,void,EventArgs e
-Method,OnClosed,14278,14289,12,protected override,void,EventArgs e
-Nested record,PresetLoadOptions,14289,14295,7,private readonly,,
-Nested enum,ModlistLoadMode,14295,14301,7,private,,
-Nested record,ManagerDeletionResult,14301,14303,3,private readonly,,
-Nested record,InstalledModLogIdentifier,14303,14305,3,private readonly,,
-Nested class,ModUsagePromptData,14305,14324,20,private sealed,,
-Nested enum,InstalledModsColumn,14324,14340,17,private,,
-Delegate,PathValidator,14340,14342,3,private,,"string? path, string? normalizedPath, string? errorMessage"
-Nested struct,CompatibilityEvaluation,14342,14370,29,private readonly,,
-Nested class,ModlistMetadata,14370,14398,29,private sealed,,
-Nested record,PresetModInstallResult,14398,14404,7,private readonly,,
-Nested enum,ModUpdateReleasePreference,14404,14410,7,private,,
-Nested record,ModUpdateOperationResult,14410,14440,31,private readonly,,
+Field,SummaryKeyPatchModPrefix,85,85,1,private const,string,
+Field,SummaryKeyLinePrefix,86,86,1,private const,string,
+Field,MaxDataBackupsMenuItems,87,87,1,private const,int,
+Field,WindowPositionScreenMargin,88,88,1,private const,int,
+Method,CreateHostKeyVerifierWithStorage,97,108,12,private,"Func<ServerTarget, Func<string, HostKeyVerificationResult, Task<bool>>, Func<string, HostKeyVerificationResult, Task<bool>>>",
+Field,DiscordInviteUrl,111,111,1,private const,string,
+Field,ManagerModDatabaseUrl,112,112,1,private static readonly,string,
+Field,ManagerModDatabaseModId,113,113,1,private static readonly,string,
+Field,ModDatabaseUnavailableMessage,114,114,1,private static readonly,string,
+Field,ModListScrollMultiplier,117,117,1,private static readonly,double,
+Field,ModDbDesignScrollMultiplier,118,118,1,private static readonly,double,
+Field,LoadMoreScrollThreshold,119,119,1,private static readonly,double,
+Field,HoverOverlayOpacity,120,120,1,private static readonly,double,
+Field,SelectionOverlayOpacity,121,121,1,private static readonly,double,
+Field,ModInfoPanelHorizontalOverhang,124,124,1,private static readonly,double,
+Field,DefaultModInfoPanelLeft,125,125,1,private static readonly,double,
+Field,DefaultModInfoPanelTop,126,126,1,private static readonly,double,
+Field,DefaultModInfoPanelRightMargin,127,127,1,private static readonly,double,
+Field,PresetDirectoryName,130,130,1,private static readonly,string,
+Field,ModListDirectoryName,131,131,1,private static readonly,string,
+Field,CloudModListCacheDirectoryName,132,132,1,private static readonly,string,
+Field,RebuiltModListDirectoryName,133,133,1,private static readonly,string,
+Field,AutomaticConfigMaxWordDistance,134,134,1,private static readonly,int,
+Field,ConnectivityTestHttpClient,136,139,4,private static readonly,HttpClient,
+Field,ExperimentalModDebugLogPrefixes,141,147,7,private static readonly,string[],
+Field,ExperimentalModDebugLogExtensions,149,153,5,private static readonly,string[],
+Field,ExperimentalModDebugIgnoredLinePhrases,155,163,9,private static readonly,string[],
+Field,SupportedConfigExtensions,165,170,6,private static readonly,string[],
+Field,SummarizableLinePrefixes,173,183,11,private static readonly,string[],
+Field,_isQuestPdfLicenseInitialized,185,185,1,private static,bool,
+Field,PatchAssetMissingRegex,187,189,3,private static readonly,Regex,
+Field,StandardPresetLoadOptions,191,191,1,private static readonly,PresetLoadOptions,
+Field,ModListLoadOptions,192,192,1,private static readonly,PresetLoadOptions,
+Field,BoundModProperty,198,202,5,private static readonly,DependencyProperty,
+Field,BoundModHandlerProperty,204,208,5,private static readonly,DependencyProperty,
+Field,RowIsHoveredProperty,210,214,5,private static readonly,DependencyProperty,
+Field,IsDataBackupInProgressProperty,216,221,6,public static readonly,DependencyProperty,
+Field,DataBackupProgressProperty,223,228,6,public static readonly,DependencyProperty,
+Field,DataBackupStatusMessageProperty,230,235,6,public static readonly,DependencyProperty,
+Field,IsModlistInstallInProgressProperty,237,242,6,public static readonly,DependencyProperty,
+Field,ModlistInstallProgressProperty,244,249,6,public static readonly,DependencyProperty,
+Field,ModlistInstallStatusMessageProperty,251,256,6,public static readonly,DependencyProperty,
+Field,ModlistDownloadSpeedProperty,258,263,6,public static readonly,DependencyProperty,
+Field,HasModlistDownloadSpeedProperty,265,270,6,public static readonly,DependencyProperty,
+Property,IsDataBackupInProgress,272,276,5,public,bool,
+Property,DataBackupProgress,278,282,5,public,double,
+Property,DataBackupStatusMessage,284,288,5,public,string,
+Property,IsModlistInstallInProgress,290,294,5,public,bool,
+Property,ModlistInstallProgress,296,300,5,public,double,
+Property,ModlistInstallStatusMessage,302,306,5,public,string,
+Property,ModlistDownloadSpeed,308,312,5,public,string,
+Property,HasModlistDownloadSpeed,314,318,5,public,bool,
+Field,_backupSemaphore,325,325,1,private readonly,SemaphoreSlim,
+Field,_cloudStoreLock,326,326,1,private readonly,SemaphoreSlim,
+Field,_developerProfileMenuItems,329,329,1,private readonly,List<MenuItem>,
+Field,_gameProfileMenuItems,330,330,1,private readonly,List<MenuItem>,
+Field,_installedColumnVisibilityPreferences,331,331,1,private readonly,"Dictionary<InstalledModsColumn, bool>",
+Field,_modCompatibilityCommentsService,334,334,1,private readonly,ModCompatibilityCommentsService,
+Field,_modDatabaseService,335,335,1,private readonly,ModDatabaseService,
+Field,_modUpdateService,336,336,1,private readonly,ModUpdateService,
+Field,_dataBackupService,337,337,1,private,DataBackupService,
+Field,_modActivityLoggingService,338,338,1,private readonly,ModActivityLoggingService,
+Field,_userConfiguration,339,339,1,private readonly,UserConfigurationService,
+Field,_serverTargetService,340,340,1,private readonly,ServerTargetService,
+Field,_syncEngine,341,341,1,private readonly,SyncEngine,
+Field,_traceListener,342,342,1,private,ModManagerTraceListener?,
+Field,_selectedModPropertyHandlers,345,345,1,private readonly,"Dictionary<ModListItemViewModel, PropertyChangedEventHandler>",
+Field,_selectedMods,346,346,1,private readonly,List<ModListItemViewModel>,
+Field,_selectedLocalModlists,347,347,1,private readonly,List<LocalModlistListEntry>,
+Field,_selectedCloudModlist,348,348,1,private,CloudModlistListEntry?,
+Field,_selectionAnchor,349,349,1,private,ModListItemViewModel?,
+Field,_cloudModlistsLoaded,352,352,1,private,bool,
+Field,_firebaseMigrationAttempted,353,353,1,private,bool,
+Field,_cloudModlistStore,354,354,1,private,FirebaseModlistStore?,
+Field,_currentModsView,357,357,1,private,ICollectionView?,
+Field,_modsScrollViewer,358,358,1,private,ScrollViewer?,
+Field,_modsScrollViewerSource,359,359,1,private,DataGrid?,
+Field,_modsCollection,360,360,1,private,INotifyCollectionChanged?,
+Field,_customShortcutPath,363,363,1,private,string?,
+Field,_dataDirectory,364,364,1,private,string?,
+Field,_gameDirectory,365,365,1,private,string?,
+Field,_gameSessionMonitor,368,368,1,private,GameSessionMonitor?,
+Field,_modsWatcherTimer,369,369,1,private,DispatcherTimer?,
+Field,_modUsagePromptData,370,370,1,private,ModUsagePromptData?,
+Field,_votesCacheWatcher,371,371,1,private,VotesCacheWatcher?,
+Field,_hasAppliedInitialModInfoPanelPosition,374,374,1,private,bool,
+Field,_isApplyingMultiToggle,375,375,1,private,bool,
+Field,_isApplyingPreset,376,376,1,private,bool,
+Field,_isAutomaticRefreshRunning,377,377,1,private,bool,
+Field,_isCloudModlistRefreshInProgress,378,378,1,private,bool,
+Field,_isDependencyResolutionRefreshPending,379,379,1,private,bool,
+Field,_isDraggingModInfoPanel,380,380,1,private,bool,
+Field,_isInitializing,381,381,1,private,bool,
+Field,_isUpdatingModlistsTabSelection,382,382,1,private,bool,
+Field,_isUpdatingMiddleTabSelection,383,383,1,private,bool,
+Field,_isModUpdateInProgress,384,384,1,private,bool,
+Field,_isModUsageDialogOpen,385,385,1,private,bool,
+Field,_isRefreshingAfterModlistLoad,386,386,1,private,bool,
+Field,_isWindowActive,387,387,1,private,bool,
+Field,_refreshAfterModlistLoadPending,388,388,1,private,bool,
+Field,_localModlistsLoaded,389,389,1,private,bool,
+Field,_suppressSortPreferenceSave,390,390,1,private,bool,
+Field,_isModBrowserWatcherSubscribed,391,391,1,private,bool,
+Field,_modInfoDragOffset,394,394,1,private,Point,
+Field,_recentLocalModBackupDirectory,397,397,1,private,string?,
+Field,_recentLocalModBackupModNames,398,398,1,private,List<string>?,
+Field,_modlistInstallCompletedSteps,399,399,1,private,int,
+Field,_modlistInstallTotalSteps,400,400,1,private,int,
+Field,_viewModel,403,403,1,private,MainViewModel?,
+Field,_modBrowserViewModel,404,404,1,private,ModBrowserViewModel?,
+Field,_customThemeMenuItems,405,405,1,private readonly,List<MenuItem>,
+Constructor,MainWindow,411,494,84,public,,
+Property,RefreshModsUiCommand,500,500,1,public,IAsyncRelayCommand,
+Method,ReportStatus,502,505,4,public,void,"string message, bool isError = false"
+Method,InitializeColumnVisibilityMenu,511,523,13,private,void,
+Method,RegisterColumnMenuItem,525,537,13,private,void,"MenuItem? menuItem, InstalledModsColumn column"
+Method,InstalledModsColumnMenuItem_OnChecked,539,547,9,private,void,"object sender, RoutedEventArgs e"
+Method,ApplyInstalledColumnVisibility,549,569,21,private,void,"InstalledModsColumn columnKey, bool isVisible"
+Method,NotifyViewModelOfInstalledColumnVisibility,571,574,4,private,void,"InstalledModsColumn column, bool isVisible"
+Method,ApplyColumnVisibilityPreferencesToViewModel,576,582,7,private,void,
+Method,MainWindow_Loaded,590,621,32,private async,void,"object sender, RoutedEventArgs e"
+Method,MigrateLegacyRebuiltModlistsIfNeeded,623,669,47,private,void,
+Method,PromptCacheRefreshIfNeededAsync,671,691,21,private async,Task,
+Method,ClearManagerCachesForVersionUpdateAsync,693,717,25,private async,Task,
+Method,CheckAndPromptMigrationAsync,719,751,33,private async,Task,
+Method,PerformMigrationAsync,753,816,64,private,Task,
+Method,TryShowModUsagePromptAsync,818,863,46,private,Task,
+Method,PrepareModUsagePromptData,865,953,89,private,ModUsagePromptData?,
+Method,UpdateModUsagePromptIndicator,955,960,6,private,void,bool isVisible
+Method,ShowModUsagePromptDialogAsync,962,1086,125,private async,Task,
+Method,EnsureInstalledModsCachedAsync,1088,1105,18,private,Task,"MainViewModel viewModel, bool ignoreUserSetting = false"
+Method,MainWindow_OnClosing,1107,1150,44,private,void,"object? sender, CancelEventArgs e"
+Method,RootGrid_OnSizeChanged,1152,1157,6,private,void,"object sender, SizeChangedEventArgs e"
+Method,ModInfoBorder_OnMouseLeftButtonDown,1163,1173,11,private,void,"object sender, MouseButtonEventArgs e"
+Method,ModInfoBorder_OnMouseMove,1175,1185,11,private,void,"object sender, MouseEventArgs e"
+Method,ModInfoBorder_OnMouseLeftButtonUp,1187,1195,9,private,void,"object sender, MouseButtonEventArgs e"
+Method,ModInfoBorder_OnLostMouseCapture,1197,1203,7,private,void,"object sender, MouseEventArgs e"
+Method,ApplyStoredModInfoPanelPosition,1205,1215,11,private,void,
+Method,EnsureModInfoPanelWithinBounds,1217,1229,13,private,void,bool persist
+Method,SetModInfoPanelPosition,1231,1260,30,private,void,"double left, double top, bool persist"
+Method,ComputeDefaultModInfoPanelLeft,1262,1284,23,private,double,
+Method,GetModInfoPanelWidth,1286,1294,9,private,double,
+Method,GetModInfoPanelHeight,1296,1304,9,private,double,
+Method,IsModInfoDragInitiationBlocked,1306,1319,14,private static,bool,DependencyObject? source
+Method,DisableAutoRefreshMenuItem_OnClick,1325,1355,31,private,void,"object sender, RoutedEventArgs e"
+Method,AutomaticDataBackupsMenuItem_OnClick,1357,1390,34,private,void,"object sender, RoutedEventArgs e"
+Method,DisableInternetAccessMenuItem_OnClick,1392,1401,10,private,void,"object sender, RoutedEventArgs e"
+Method,ThemeMenuItem_OnClick,1403,1435,33,private,void,"object sender, RoutedEventArgs e"
+Method,EditThemeMenuItem_OnClick,1437,1440,4,private,void,"object sender, RoutedEventArgs e"
+Method,UpdateThemeMenuSelection,1442,1459,18,private,void,"ColorTheme theme, string? themeName = null"
+Method,GenerateSurprisePalette,1461,1469,9,private static,"IReadOnlyDictionary<string, string>",
+Method,GenerateRandomColor,1471,1486,16,private static,string,string baseColor
+Method,RefreshCustomThemeMenuItems,1488,1536,49,private,void,
+Method,ShowCustomThemeEditor,1538,1560,23,private,void,
+Method,AlwaysClearModlistsMenuItem_OnClick,1562,1568,7,private,void,"object sender, RoutedEventArgs e"
+Method,AlwaysAddModlistsMenuItem_OnClick,1570,1576,7,private,void,"object sender, RoutedEventArgs e"
+Method,HandleModlistAutoLoadMenuClick,1578,1585,8,private,void,"object sender, ModlistAutoLoadBehavior enabledBehavior, ModlistAutoLoadBehavior disabledBehavior"
+Method,SetModlistAutoLoadBehavior,1587,1591,5,private,void,ModlistAutoLoadBehavior behavior
+Method,UpdateModlistAutoLoadMenu,1593,1600,8,private,void,ModlistAutoLoadBehavior behavior
+Method,UpdateGameVersionMenuItem,1602,1614,13,private,void,string? gameVersion
+Method,ApplyStoredWindowDimensions,1616,1637,22,private,void,
+Method,IsWindowPositionOnScreen,1639,1652,14,private static,bool,"double left, double top"
+Method,SaveWindowDimensions,1654,1664,11,private,void,
+Method,SetUsernameDisplay,1666,1671,6,private,void,string? name
+Method,ResolveUploaderName,1673,1699,27,private,string,string? fallbackUserId = null
+Method,ApplyPlayerIdentityToUiAndCloudStore,1701,1706,6,private,void,
+Method,ApplyPlayerIdentityToCloudStore,1708,1713,6,private,void,FirebaseModlistStore? store
+Method,SaveUploaderName,1715,1721,7,private,void,
+Method,EnableServerOptionsMenuItem_OnClick,1723,1730,8,private,void,"object sender, RoutedEventArgs e"
+Method,UseFasterThumbnailsMenuItem_OnClick,1732,1738,7,private,void,"object sender, RoutedEventArgs e"
+Method,DisableHoverEffectsMenuItem_OnClick,1740,1751,12,private,void,"object sender, RoutedEventArgs e"
+Method,LogModUpdateMenuItem_OnClick,1753,1759,7,private,void,"object sender, RoutedEventArgs e"
+Method,LogModInstallMenuItem_OnClick,1761,1767,7,private,void,"object sender, RoutedEventArgs e"
+Method,LogModDeletionMenuItem_OnClick,1769,1775,7,private,void,"object sender, RoutedEventArgs e"
+Method,LogAppLifecycleMenuItem_OnClick,1777,1783,7,private,void,"object sender, RoutedEventArgs e"
+Method,LogErrorsAndExceptionsMenuItem_OnClick,1785,1792,8,private,void,"object sender, RoutedEventArgs e"
+Method,InitializeTraceListener,1794,1811,18,private,void,
+Method,UpdateLoggingMenuState,1813,1825,13,private,void,
+Method,GenerateServerInstallMacroMenuItem_OnClick,1827,1976,150,private,void,"object sender, RoutedEventArgs e"
+Method,CacheAllVersionsMenuItem_OnClick,1978,1984,7,private,void,"object sender, RoutedEventArgs e"
+Method,RequireExactVsVersionMenuItem_OnClick,1986,1992,7,private,void,"object sender, RoutedEventArgs e"
+Method,ExperimentalModDebuggingMenuItem_OnClick,1994,2060,67,private async,void,"object sender, RoutedEventArgs e"
+Method,ExperimentalAllModsDebuggingMenuItem_OnClick,2062,2155,94,private async,void,"object sender, RoutedEventArgs e"
+Method,CollectExperimentalModDebugLines,2157,2165,9,private static,List<ExperimentalModDebugLogLine>,"string logsDirectory, string modId"
+Method,CollectInstalledModDebugLines,2167,2178,12,private static,List<ExperimentalModDebugLogLine>,"string logsDirectory, IReadOnlyList<InstalledModLogIdentifier> modIdentifiers"
+Method,GetExperimentalModDebugFilePaths,2180,2211,32,private static,List<string>,string logsDirectory
+Method,AppendExperimentalModDebugLines,2213,2239,27,private static,void,"List<ExperimentalModDebugLogLine> logLines, string filePath, string modId"
+Method,AppendInstalledModDebugLines,2241,2272,32,private static,void,"List<ExperimentalModDebugLogLine> logLines, string filePath, IReadOnlyList<InstalledModLogIdentifier> modIdentifiers"
+Method,AppendExperimentalModDebugFileSection,2274,2286,13,private static,void,"List<ExperimentalModDebugLogLine> logLines, string fileName, List<string> matchedLines"
+Method,AppendExperimentalModDebugFileSectionWithModId,2288,2304,17,private static,void,"List<ExperimentalModDebugLogLine> logLines, string filePath, string fileName, List<(string Line, int LineNumber)> matchedLines, string modId"
+Method,AppendExperimentalModDebugFileSectionWithMods,2306,2321,16,private static,void,"List<ExperimentalModDebugLogLine> logLines, string filePath, string fileName, List<(string Line, string ModName, int LineNumber)> matchedLines"
+Method,ShouldIgnoreExperimentalModDebugLine,2323,2330,8,private static,bool,string line
+Method,SummarizePatchMissingLines,2332,2386,55,private static,List<string>,List<string> matchedLines
+Method,SummarizePatchMissingLinesWithLineNumbers,2388,2446,59,private static,"List<(string Line, int LineNumber)>","List<(string Line, int LineNumber)> matchedLines"
+Method,AddOrIncrementSummary,2448,2463,16,private static,void,"List<string> summarized, Dictionary<string, (int Index, int HiddenCount)> summaries, string line, string summaryKey"
+Method,AddOrIncrementSummaryWithLineNumber,2465,2481,17,private static,void,"List<(string Line, int LineNumber)> summarized, Dictionary<string, (int Index, int HiddenCount)> summaries, string line, int lineNumber, string summaryKey"
+Method,SummarizePatchMissingLinesWithModAndLineNumbers,2483,2543,61,private static,"List<(string Line, string ModName, int LineNumber)>","List<(string Line, string ModName, int LineNumber)> matchedLines"
+Method,AddOrIncrementSummaryWithModAndLineNumber,2545,2562,18,private static,void,"List<(string Line, string ModName, int LineNumber)> summarized, Dictionary<string, (int Index, int HiddenCount)> summaries, string line, string modName, int lineNumber, string summaryKey"
+Method,InitializeViewModel,2568,2593,26,private,void,
+Method,InitializeModBrowserView,2595,2620,26,private,void,
+Method,InitializeVotesCacheWatcher,2622,2636,15,private,void,
+Method,OnVotesCacheChanged,2638,2657,20,private,void,"object? sender, EventArgs e"
+Method,SubscribeModBrowserToDirectoryWatcher,2659,2665,7,private,void,
+Method,UnsubscribeModBrowserFromDirectoryWatcher,2667,2673,7,private,void,
+Method,ModsWatcherOnChangesDetected,2675,2691,17,private,void,"object? sender, EventArgs e"
+Method,SyncInstalledModsToModBrowser,2693,2714,22,private,void,
+Method,AddModToInstalledAndRemoveFromSearch,2716,2734,19,private,void,int modId
+Method,InstallModFromBrowserAsync,2736,2842,107,private async,Task,DownloadableMod mod
+Method,ConvertToModListItemViewModel,2848,2914,67,private,ModListItemViewModel,DownloadableMod mod
+Method,ConvertToModReleaseInfo,2920,2944,25,private,ModReleaseInfo?,DownloadableModRelease release
+Method,OnUserReportVoteSubmitted,2946,2961,16,private,void,"object? sender, ModUserReportChangedEventArgs e"
+Method,ViewModelOnPropertyChanged,2963,3044,82,private,void,"object? sender, PropertyChangedEventArgs e"
+Method,UpdateSearchColumnVisibility,3046,3049,4,private,void,bool isSearchingModDatabase
+Method,HandleModlistsVisibilityChanged,3051,3073,23,private,void,bool isVisible
+Method,MiddleTabControl_OnSelectionChanged,3075,3113,39,private async,void,"object sender, SelectionChangedEventArgs e"
+Method,UpdateModBrowserTabVisibilityState,3115,3129,15,private,void,bool isSelected
+Method,SyncMiddleTabControlToViewModel,3131,3157,27,private,void,
+Method,ModlistsTabControl_OnSelectionChanged,3159,3194,36,private,void,"object sender, SelectionChangedEventArgs e"
+Method,ModlistsTabControl_OnLoaded,3196,3199,4,private,void,"object sender, RoutedEventArgs e"
+Method,ApplyPreferredModlistsTabSelection,3201,3211,11,private,void,
+Method,InternetAccessManager_OnInternetAccessChanged,3213,3225,13,private,void,"object? sender, EventArgs e"
+Method,EnsureCloudModlistsConsent,3227,3238,12,private,bool,
+Method,EnsureFirebaseAuthConsent,3240,3265,26,private,bool,string message
+Method,HasFirebaseAuthStateFile,3267,3271,5,private static,bool,
+Method,EnsureUserReportVotingConsent,3273,3282,10,private,bool,
+Method,EnsureFirebaseAuthBackedUpIfAvailable,3284,3316,33,private,void,
+Method,DeleteFirebaseAuthFiles,3318,3329,12,private,void,
+Method,TryDeleteFirebaseAuthFile,3331,3344,14,private static,void,string path
+Method,UpdateSearchSortingBehavior,3346,3351,6,private,void,bool isSearchingModDatabase
+Method,ShouldRefreshAfterDependencyResolution,3353,3357,5,private static,bool,string? statusMessage
+Method,RefreshModsAfterDependencyResolutionAsync,3359,3383,25,private async,Task,
+Method,ScheduleRefreshAfterModlistLoadIfReady,3385,3416,32,private,void,
+Method,RestoreSortPreference,3418,3429,12,private,void,
+Method,ApplyModListSort,3431,3448,18,private,void,"string sortMemberPath, ListSortDirection direction, bool persistPreference"
+Method,ApplySortOption,3450,3474,25,private,void,"SortOption option, bool persistPreference"
+Method,IsActiveSortMember,3476,3483,8,private static,bool,string? sortMemberPath
+Method,NormalizeSortMemberPath,3485,3497,13,private static,string,string sortMemberPath
+Method,SortMemberMatches,3499,3507,9,private static,bool,"string? columnSortMemberPath, string sortMemberPath"
+Method,FindMatchingSortOption,3509,3524,16,private,SortOption?,"string sortMemberPath, ListSortDirection direction"
+Method,SortOptionMatches,3526,3546,21,private static,bool,"SortOption option, string sortMemberPath, ListSortDirection direction"
+Method,BuildSortDescriptions,3548,3573,26,private static,"(string Property, ListSortDirection Direction)[]","string sortMemberPath, ListSortDirection direction"
+Method,BuildSortDisplayName,3575,3594,20,private static,string,"string sortMemberPath, ListSortDirection direction"
+Method,UpdateSortPreferenceFromSelectedOption,3596,3618,23,private,void,bool persistPreference
+Method,UpdateColumnSortVisuals,3620,3629,10,private,void,"string sortMemberPath, ListSortDirection direction"
+Method,ClearColumnSortIndicators,3631,3636,6,private,void,
+Method,InitializeViewModelAsync,3638,3667,30,private async,Task,MainViewModel viewModel
+Method,DisposeCurrentViewModel,3669,3678,10,private,void,
+Method,DisposeViewModel,3680,3687,8,private,void,MainViewModel? viewModel
+Method,StartModsWatcher,3689,3701,13,private,void,
+Method,StartGameSessionMonitor,3703,3732,30,private,void,
+Method,StopGameSessionMonitor,3734,3741,8,private,void,
+Method,GameSessionMonitor_OnPromptRequired,3743,3746,4,private,void,"object? sender, EventArgs e"
+Method,ScanForModConfigFilesAsync,3748,3752,5,private,"Task<IReadOnlyList<(string ModId, string DisplayName, string ConfigPath)>>",MainViewModel viewModel
+Method,ScanForModConfigFilesAsync,3754,3788,35,private async,"Task<IReadOnlyList<(string ModId, string DisplayName, string ConfigPath)>>","MainViewModel viewModel, IReadOnlyCollection<string>? modIds"
+Method,ScanForModConfigFilesAsync,3790,3866,77,private async,"Task<IReadOnlyList<(string ModId, string DisplayName, string ConfigPath)>>","MainViewModel viewModel, IReadOnlyList<ModListItemViewModel> candidateMods"
+Method,FindConfigMatches,3868,3943,76,private static,"List<(string ModId, string ConfigPath)>","IReadOnlyList<(string ModId, string DisplayName)> mods, IReadOnlyList<string> configPaths"
+Method,TryCalculateMatchScore,3945,3976,32,private static,bool,"IReadOnlyList<string> words, IReadOnlyList<string> candidateTokens, out int score"
+Method,CalculateBestDistance,3978,3986,9,private static,int,"string token, string word, int maxDistance"
+Method,CalculateLevenshteinDistance,3988,4025,38,private static,int,"ReadOnlySpan<char> source, ReadOnlySpan<char> target, int maxDistance"
+Method,BuildModSearchTokenSets,4027,4062,36,private static,List<IReadOnlyList<string>>,"string? modId, string? displayName"
+Method,AreTokenListsEqual,4064,4073,10,private static,bool,"IReadOnlyList<string> first, IReadOnlyList<string> second"
+Method,BuildSearchTokens,4075,4087,13,private static,List<string>,"string value, bool includeCombinedToken = true"
+Method,ExtractWords,4089,4136,48,private static,List<string>,string value
+Method,StopModsWatcher,4138,4146,9,private,void,
+Method,ModsWatcherTimerOnTick,4148,4173,26,private async,void,"object? sender, EventArgs e"
+Method,RefreshModsAsync,4175,4207,33,private async,Task,bool allowModDetailsRefresh = false
+Method,RefreshModDetailsOnly,4209,4215,7,private,void,
+Method,TryInitializePaths,4217,4232,16,private,bool,
+Method,TryResolveDataDirectory,4234,4271,38,private,bool,
+Method,TryResolveGameDirectory,4273,4313,41,private,bool,
+Method,TryResolveCustomShortcut,4315,4338,24,private,void,
+Method,HandleViewModelInitializationFailure,4340,4356,17,private,void,Exception exception
+Method,ReloadViewModelAsync,4358,4420,63,private async,Task,
+Method,PromptForDirectory,4422,4462,41,private,string?,"string description, string? initialPath, PathValidator validator, bool allowCancel"
+Method,PromptForConfigFile,4464,4493,30,private,string?,"ModListItemViewModel mod, string? previousPath"
+Method,GetInitialConfigDirectory,4495,4517,23,private,string?,string? previousPath
+Method,TryValidateDataDirectory,4519,4557,39,private static,bool,"string? path, out string? normalizedPath, out string? errorMessage"
+Method,TryValidateGameDirectory,4559,4608,50,private static,bool,"string? path, out string? normalizedPath, out string? errorMessage"
+Method,ModsDataGrid_OnSorting,4614,4632,19,private,void,"object sender, DataGridSortingEventArgs e"
+Method,ModsDataGrid_OnSelectionChanged,4634,4646,13,private,void,"object sender, SelectionChangedEventArgs e"
+Method,ModsDataGrid_OnPreviewKeyDown,4648,4651,4,private async,void,"object sender, KeyEventArgs e"
+Method,MainWindow_OnPreviewKeyDown,4653,4656,4,private async,void,"object sender, KeyEventArgs e"
+Method,UserReportsButton_OnClick,4658,4722,65,private async,void,"object sender, RoutedEventArgs e"
+Method,TryHandleModListKeyDownAsync,4724,4755,32,private async,Task<bool>,KeyEventArgs e
+Method,ModsDataGrid_OnPreviewMouseLeftButtonDown,4757,4779,23,private,void,"object sender, MouseButtonEventArgs e"
+Method,ModsDataGridRow_OnPreviewMouseLeftButtonDown,4781,4796,16,private,void,"object sender, MouseButtonEventArgs e"
+Method,ModDatabaseCard_OnPreviewMouseLeftButtonDown,4798,4813,16,private,void,"object sender, MouseButtonEventArgs e"
+Method,ModsDataGridRow_OnLoaded,4815,4828,14,private,void,"object sender, RoutedEventArgs e"
+Method,ModsDataGridRow_OnDataContextChanged,4830,4839,10,private,void,"object sender, DependencyPropertyChangedEventArgs e"
+Method,ModsDataGridRow_OnUnloaded,4841,4851,11,private,void,"object sender, RoutedEventArgs e"
+Method,ModsDataGridRow_OnMouseEnter,4853,4863,11,private,void,"object sender, MouseEventArgs e"
+Method,ModsDataGridRow_OnMouseLeave,4865,4875,11,private,void,"object sender, MouseEventArgs e"
+Method,ResetRowOverlays,4877,4913,37,private static,void,DataGridRow row
+Method,AreHoverOverlaysSuppressed,4915,4918,4,private,bool,
+Method,AreHoverOverlaysSuppressed,4920,4923,4,private static,bool,DataGridRow row
+Method,AreHoverEffectsDisabled,4925,4928,4,private static,bool,DependencyObject dependencyObject
+Method,ClearRowOverlayValues,4930,4940,11,private static,void,DataGridRow row
+Method,RefreshHoverOverlayState,4942,4946,5,private,void,
+Method,RefreshRowHoverOverlays,4948,4956,9,private static,void,DataGrid? dataGrid
+Method,UpdateRowModSubscription,4958,4988,31,private static,void,"DataGridRow row, ModListItemViewModel? newMod"
+Method,SetBoundMod,4990,4993,4,private static,void,"DataGridRow row, ModListItemViewModel? mod"
+Method,GetBoundMod,4995,4998,4,private static,ModListItemViewModel?,DataGridRow row
+Method,SetBoundModHandler,5000,5003,4,private static,void,"DataGridRow row, PropertyChangedEventHandler? handler"
+Method,GetBoundModHandler,5005,5008,4,private static,PropertyChangedEventHandler?,DataGridRow row
+Method,SetRowIsHovered,5010,5013,4,private static,void,"DataGridRow row, bool value"
+Method,GetRowIsHovered,5015,5018,4,private static,bool,DataGridRow row
+Method,ModDatabasePageButton_OnClick,5020,5028,9,private,void,"object sender, RoutedEventArgs e"
+Method,SelectedModCopyForServerButton_OnClick,5030,5055,26,private,void,"object sender, RoutedEventArgs e"
+Method,EditConfigButton_OnClick,5057,5142,86,private,void,"object sender, RoutedEventArgs e"
+Method,DeleteModButton_OnClick,5144,5159,16,private async,void,"object sender, RoutedEventArgs e"
+Method,CloseModInfoButton_OnClick,5161,5165,5,private,void,"object sender, RoutedEventArgs e"
+Method,DeleteSelectedModsAsync,5167,5179,13,private async,Task,
+Method,DeleteSingleModAsync,5181,5220,40,private async,Task,ModListItemViewModel mod
+Method,DeleteMultipleModsAsync,5222,5293,72,private async,Task,IReadOnlyList<ModListItemViewModel> mods
+Method,TryDeleteModAtPath,5295,5333,39,private,bool,"ModListItemViewModel mod, string modPath"
+Method,FixModButton_OnClick,5335,5453,119,private async,void,"object sender, RoutedEventArgs e"
+Method,InstallModButton_OnClick,5455,5557,103,private async,void,"object sender, RoutedEventArgs e"
+Method,InstallOrUpdateDependencyAsync,5559,5655,97,private async,"Task<(bool Success, string Message)>","ModDependencyInfo dependency, ModListItemViewModel? installedMod"
+Method,SelectReleaseForDependency,5657,5696,40,private static,ModReleaseInfo?,"ModDependencyInfo dependency, ModDatabaseInfo info"
+Method,SelectReleaseForInstall,5698,5705,8,private static,ModReleaseInfo?,ModListItemViewModel mod
+Method,UpdateModButton_OnClick,5707,5723,17,private async,void,"object sender, RoutedEventArgs e"
+Method,SelectedModVersionComboBox_OnSelectionChanged,5725,5749,25,private async,void,"object sender, SelectionChangedEventArgs e"
+Method,SelectedModVersionComboBox_OnDropDownOpened,5751,5771,21,private,void,"object sender, EventArgs e"
+Method,UpdateAllModsMenuItem_OnClick,5773,5822,50,private async,void,"object sender, RoutedEventArgs e"
+Method,CheckModsCompatibilityMenuItem_OnClick,5824,5928,105,private async,void,"object sender, RoutedEventArgs e"
+Method,EvaluateCompatibility,5930,6005,76,private static,CompatibilityEvaluation,"ModListItemViewModel mod, string targetVersion, string displayName, bool requireExactMatch"
+Method,ReleaseSupportsVersion,6007,6019,13,private static,bool,"ModReleaseInfo release, string targetVersion, bool requireExactMatch"
+Method,ModsMenuItem_OnSubmenuOpened,6021,6024,4,private async,void,"object sender, RoutedEventArgs e"
+Method,DeleteCachedModsMenuItem_OnClick,6026,6079,54,private async,void,"object sender, RoutedEventArgs e"
+Method,SaveInstalledModsPdfMenuItem_OnClick,6081,6139,59,private,void,"object sender, RoutedEventArgs e"
+Method,TrySaveInstalledModsPdf,6141,6266,126,private,bool,"string listName, string? version, string? description, string uploaderName, IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations, string? gameVersion, IReadOnlyList<ModListItemViewModel>? preFetchedMods = null"
+Method,ManagerDataFolderMenuItem_OnClick,6268,6296,29,private,void,"object sender, RoutedEventArgs e"
+Method,ManagerModDbPageMenuItem_OnClick,6298,6301,4,private,void,"object sender, RoutedEventArgs e"
+Method,ChangeManagerFolderMenuItem_OnClick,6303,6424,122,private,void,"object sender, RoutedEventArgs e"
+Method,MoveDirectoryContents,6426,6488,63,private static,void,"string sourceDir, string targetDir"
+Method,HandleResetManagerFolder,6490,6584,95,private,void,string currentFolder
+Method,RestartApplication,6586,6615,30,private static,void,
+Method,HelpMenuItem_OnClick,6617,6628,12,private,void,"object sender, RoutedEventArgs e"
+Method,GuideMenuItem_OnClick,6630,6642,13,private,void,"object sender, RoutedEventArgs e"
+Method,ScanForModConfigsMenuItem_OnClick,6644,6739,96,private async,void,"object sender, RoutedEventArgs e"
+Method,ManagerUpdateLink_OnRequestNavigate,6741,6745,5,private,void,"object sender, RequestNavigateEventArgs e"
+Method,DiscordButton_OnClick,6747,6780,34,private,void,"object sender, RoutedEventArgs e"
+Method,ModUsagePromptLink_OnClick,6782,6787,6,private async,void,"object sender, RoutedEventArgs e"
+Method,OpenManagerModDatabasePage,6789,6817,29,private,void,
+Method,ExperimentalCompReviewMenuItem_OnClick,6819,6879,61,private async,void,"object sender, RoutedEventArgs e"
+Method,BuildExperimentalCompReviewMessage,6881,6901,21,private static,string,ModCompatibilityCommentsService.ExperimentalCompReviewResult result
+Method,FormatExperimentalCompReviewScore,6903,6907,5,private static,string,double score
+Method,DeleteCloudAuthMenuItem_OnClick,6909,6926,18,private async,void,"object sender, RoutedEventArgs e"
+Method,ResolveExperimentalCompReviewIdentifier,6928,6936,9,private static,string,ModListItemViewModel selectedMod
+Method,TryExtractModSlug,6938,6971,34,private static,string?,string? modDatabasePageUrl
+Method,ClearAllCachesMenuItem_OnClick,6973,7088,116,private,void,"object sender, RoutedEventArgs e"
+Method,RestoreFirebaseAuthBackupMenuItem_OnClick,7090,7166,77,private,void,"object sender, RoutedEventArgs e"
+Method,DeleteAllManagerFilesMenuItem_OnClick,7168,7239,72,private async,void,"object sender, RoutedEventArgs e"
+Method,SwitchToInstalledModsTab,7241,7245,5,private,void,
+Method,PrepareForModlistLoad,7247,7251,5,private,void,
+Method,UpdateModlistLoadingUiState,7254,7272,19,private,void,
+Method,RefreshDeleteCachedModsMenuHeaderAsync,7274,7292,19,private async,Task,
+Method,CalculateDirectorySize,7294,7353,60,private static,long,string rootDirectory
+Method,GetCachedModsDirectory,7355,7358,4,private static,string?,
+Method,GetManagerDataDirectory,7360,7363,4,private static,string?,
+Method,DeleteAllManagerFiles,7365,7427,63,private static,ManagerDeletionResult,string? dataDirectory
+Method,AddCandidateDirectory,7429,7435,7,private static,void,"ISet<string> directories, string? path"
+Method,AddCandidateFile,7437,7443,7,private static,void,"ISet<string> files, string? path"
+Method,TryCombineSpecialFolder,7445,7459,15,private static,string?,"Environment.SpecialFolder folder, string relativePath"
+Method,TryGetSpecialFolderPath,7461,7475,15,private static,string?,Environment.SpecialFolder folder
+Method,TryNormalizePath,7477,7490,14,private static,string?,string? path
+Method,RefreshModsWithErrorHandlingAsync,7492,7516,25,private async,Task,
+Method,ClearManagerCaches,7518,7544,27,private static,void,bool preserveModCache
+Method,ClearCachedModsDirectory,7546,7551,6,private static,void,string cachedModsDirectory
+Method,BuildCacheClearErrorMessage,7553,7570,18,private static,string,"string context, Exception ex"
+Method,OnActiveGameProfileChangedAsync,7572,7580,9,private async,Task,
+Method,GameProfilesMenuItem_OnSubmenuOpened,7582,7586,5,private,void,"object sender, RoutedEventArgs e"
+Method,CreateGameProfileMenuItem_OnClick,7588,7638,51,private async,void,"object sender, RoutedEventArgs e"
+Method,EditGameProfileMenuItem_OnClick,7640,7670,31,private,void,"object sender, RoutedEventArgs e"
+Method,DeleteGameProfileMenuItem_OnClick,7672,7698,27,private async,void,"object sender, RoutedEventArgs e"
+Method,GameProfileMenuItem_OnClick,7700,7714,15,private async,void,"object sender, RoutedEventArgs e"
+Method,SelectDataFolderMenuItem_OnClick,7716,7733,18,private async,void,"object sender, RoutedEventArgs e"
+Method,SelectGameFolderMenuItem_OnClick,7735,7750,16,private,void,"object sender, RoutedEventArgs e"
+Method,RefreshDeveloperProfilesMenuEntries,7752,7790,39,private,void,
+Method,RefreshGameProfileMenuItems,7792,7832,41,private,void,
+Method,UpdateGameProfileMenuChecks,7834,7841,8,private,void,
+Method,UpdateActiveGameProfileDisplay,7843,7860,18,private,void,
+Method,UpdateDeveloperProfileMenuChecks,7862,7880,19,private,void,
+Method,DeveloperProfileMenuItem_OnClick,7882,7912,31,private async,void,"object sender, RoutedEventArgs e"
+Method,DeveloperProfileManager_OnCurrentProfileChanged,7914,7928,15,private,void,"object? sender, DeveloperProfileChangedEventArgs e"
+Method,ExitMenuItem_OnClick,7930,7933,4,private,void,"object sender, RoutedEventArgs e"
+Method,ManageServerTargetsMenuItem_OnClick,7935,7946,12,private,void,"object sender, RoutedEventArgs e"
+Method,SyncToServerMenuItem_OnClick,7948,7997,50,private,void,"object sender, RoutedEventArgs e"
+Method,CreateSftpClientWrapper,7999,8005,7,private,ISftpClientWrapper,"ServerTarget target, string? password, Func<string, HostKeyVerificationResult, Task<bool>> hostKeyVerifier"
+Method,TestServerConnectionAsync,8007,8017,11,private async,Task<bool>,"ServerTarget target, string? password, Func<string, HostKeyVerificationResult, Task<bool>> hostKeyVerifier"
+Method,ShowHostKeyVerificationAsync,8019,8032,14,private async,Task<bool>,"string fingerprint, HostKeyVerificationResult verificationResult"
+Method,UpdateSyncToServerMenuState,8034,8039,6,private,void,
+Method,TryEnsureDataBackupBeforeLaunchAsync,8041,8080,40,private async,Task<bool>,
+Method,LaunchGameButton_OnClick,8082,8162,81,private async,void,"object sender, RoutedEventArgs e"
+Method,SetCustomShortcutMenuItem_OnClick,8164,8238,75,private,void,"object sender, RoutedEventArgs e"
+Method,RestoreDataFolderMenuItem_OnSubmenuOpened,8240,8347,108,private,void,"object sender, RoutedEventArgs e"
+Method,RestoreDataFolderMenuItem_OnBackupClick,8349,8372,24,private async,void,"object sender, RoutedEventArgs e"
+Method,OpenDataBackupDirectoryMenuItem_OnClick,8374,8412,39,private,void,"object? sender, RoutedEventArgs e"
+Method,ChangeBackupLocationMenuItem_OnClick,8414,8456,43,private,void,"object? sender, RoutedEventArgs e"
+Method,DeleteDataFolderBackupsMenuItem_OnClick,8458,8526,69,private,void,"object? sender, RoutedEventArgs e"
+Method,RestoreBackupMenuItem_OnSubmenuOpened,8528,8600,73,private,void,"object sender, RoutedEventArgs e"
+Method,RestoreBackupMenuItem_OnBackupClick,8602,8615,14,private async,void,"object sender, RoutedEventArgs e"
+Method,RestoreBackupAsync,8617,8651,35,private async,Task,"string backupPath, bool restoreConfigurations"
+Method,RestoreDataBackupAsync,8653,8711,59,private async,Task,DataFolderBackupSummary summary
+Method,CreateDataBackupProgressReporter,8713,8723,11,private,IProgress<DataFolderBackupProgress>,string fallbackMessage
+Method,ShowDataBackupOverlay,8725,8730,6,private,void,string message
+Method,HideDataBackupOverlay,8732,8737,6,private,void,
+Method,BeginModlistInstallUi,8739,8747,9,private,void,"int totalSteps, string message"
+Method,UpdateModlistInstallUi,8749,8759,11,private,void,"string status, double? stepPercent, double? bytesPerSecond"
+Method,CompleteModlistInstallStep,8761,8769,9,private,void,string status
+Method,EndModlistInstallUi,8771,8779,9,private,void,
+Method,ClampPercent,8781,8785,5,private static,double,double? value
+Method,UpdateModlistDownloadSpeed,8787,8798,12,private,void,double? bytesPerSecond
+Method,FormatDownloadSpeed,8800,8813,14,private static,string,double bytesPerSecond
+Method,CreateModlistInstallProgressReporter,8815,8825,11,private,IProgress<ModUpdateProgress>,string modDisplayName
+Method,CreateModUpdateProgressReporter,8827,8837,11,private,IProgress<ModUpdateProgress>,"string modDisplayName, IProgress<ModUpdateProgress>? additionalProgress = null"
+Method,OpenModFolderButton_OnClick,8839,8842,4,private,void,"object sender, RoutedEventArgs e"
+Method,OpenConfigFolderButton_OnClick,8844,8847,4,private,void,"object sender, RoutedEventArgs e"
+Method,OpenLogsFolderButton_OnClick,8849,8852,4,private,void,"object sender, RoutedEventArgs e"
+Method,OpenFolder,8854,8887,34,private static,void,"string? path, string description"
+Method,OpenFolderWithShell,8889,8908,20,private static,void,string path
+Method,TryGetManagedModPath,8910,8948,39,private,bool,"ModListItemViewModel mod, out string fullPath, out string? errorMessage"
+Method,TryGetDependencyInstallTargetPath,8950,8989,40,private,bool,"string modId, ModReleaseInfo release, out string fullPath, out string? errorMessage"
+Method,TryGetInstallTargetPath,8991,9030,40,private,bool,"ModListItemViewModel mod, ModReleaseInfo release, out string fullPath, out string? errorMessage"
+Method,TryGetUpdateTargetPath,9032,9077,46,private,bool,"ModListItemViewModel mod, ModReleaseInfo release, string existingPath, out string fullPath, out string? errorMessage"
+Method,IsPathWithinManagedMods,9079,9086,8,private,bool,string fullPath
+Method,IsPathUnderDirectory,9088,9112,25,private static,bool,"string path, string? directory"
+Method,IsSameDirectory,9114,9129,16,private static,bool,"string? first, string? second"
+Method,SanitizeFileName,9131,9141,11,private static,string,"string? fileName, string fallback"
+Method,EnsureUniqueFilePath,9143,9162,20,private static,string,string path
+Method,TryEnsureManagedModTargetIsSafe,9164,9207,44,private,bool,"string fullPath, out string? errorMessage"
+Method,TrySaveSnapshot,9209,9288,80,private,bool,"string directory, string title, string filter, string folderWarningMessage, string fallbackName, Func<string?>? suggestedNameProvider, Action<string>? onSuccess, string failureContext, bool includeModVersions, bool exclusive, IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations = null, Action<SerializablePreset>? configureSerializable = null"
+Method,BuildSerializablePreset,9290,9353,64,private,SerializablePreset,"string entryName, bool includeModVersions, bool exclusive, IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations = null, string? gameVersion = null"
+Method,ResolveGameVersion,9355,9361,7,private,string?,string? requestedVersion
+Method,BuildSerializableConfigList,9363,9411,49,private static,SerializableConfigList?,"IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations"
+Method,SavePresetMenuItem_OnClick,9417,9435,19,private,void,"object sender, RoutedEventArgs e"
+Method,TrySaveModlist,9437,9440,4,private,bool,
+Method,TrySaveModlist,9442,9540,99,private,bool,"Func<string?>? suggestedNameProvider, out string? savedFilePath"
+Method,TrySaveAutomaticModlist,9542,9580,39,private,bool,"string requestedName, out string savedName, out string filePath"
+Method,PromptModlistLoadMode,9582,9616,35,private,ModlistLoadMode?,
+Method,GetModlistLoadOptions,9618,9623,6,private,PresetLoadOptions,ModlistLoadMode mode
+Method,EnsureModlistBackupBeforeLoad,9625,9664,40,private,bool,
+Method,TryBuildCurrentModlistJson,9666,9694,29,private,bool,"string modlistName, string? description, string? version, string uploader, IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations, string? gameVersion, out string json"
+Method,CreateAutomaticBackupAsync,9696,9703,8,private,Task,string trigger
+Method,CreateAppStartedBackupAsync,9705,9712,8,private,Task,
+Method,CreateBackupAsync,9714,9789,76,private async,Task,"string trigger, string fallbackFileName, bool pruneAutomaticBackups, bool pruneAppStartedBackups"
+Method,CaptureConfigurationsForBackup,9791,9845,55,private,"IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>?",IReadOnlyList<ModListItemViewModel> mods
+Method,IsAppStartedBackup,9847,9854,8,private static,bool,string? path
+Method,PruneAutomaticBackups,9856,9885,30,private static,void,string directory
+Method,PruneAppStartedBackups,9887,9916,30,private static,void,string directory
+Method,BuildCloudModlistName,9918,9921,4,private static,string,
+Method,EnsureQuestPdfLicense,9923,9929,7,private static,void,
+Method,GetLines,9931,9937,7,private static,string[],string content
+Method,GenerateInstalledModsPdf,9939,10051,113,private static,void,"string filePath, string listName, string? modlistVersion, string? description, string uploaderName, string? gameVersion, IReadOnlyList<ModListItemViewModel> mods, SerializablePreset serializable, SerializableConfigList? configList"
+Method,GetUploaderNameForPdf,10053,10065,13,private,string,
+Method,DetermineUploaderName,10067,10072,6,private,string,FirebaseModlistStore store
+Method,SaveModlistMenuItem_OnClick,10074,10083,10,private,void,"object sender, RoutedEventArgs e"
+Method,SaveModlistToCloudAsync,10085,10175,91,private,Task,
+Method,NormalizeCloudVersion,10177,10180,4,private static,string?,string? version
+Method,BuildModConfigOptions,10182,10209,28,private,List<ModConfigOption>,bool selectByDefault = true
+Method,TryReadModConfigurations,10211,10259,49,private,"Dictionary<string, IReadOnlyList<ModConfigurationSnapshot>>?",IReadOnlyList<ModConfigOption> selectedConfigOptions
+Method,TryGetRelativeConfigPath,10261,10277,17,private,string?,"string path, string sanitizedFileName"
+Method,NormalizeRelativeConfigPath,10279,10296,18,private static,string?,"string? relativePath, string sanitizedFileName"
+Method,EnsureUniqueRelativePath,10298,10315,18,private static,string,"string relativePath, HashSet<string> usedRelativePaths"
+Method,GetSupportedConfigFiles,10317,10323,7,private static,string[],string directory
+Method,IsSupportedConfigExtension,10325,10334,10,private static,bool,string? extension
+Method,GetSafeConfigFileName,10336,10362,27,private static,string,"string? candidate, string? modId"
+Method,ResolveConfigExtension,10364,10373,10,private static,string,string? candidate
+Method,SanitizeForFileName,10375,10385,11,private static,string,string? value
+Method,SaveModlistToCloudMenuItem_OnClick,10387,10394,8,private async,void,"object sender, RoutedEventArgs e"
+Method,SaveCloudModlistButton_OnClick,10396,10400,5,private async,void,"object sender, RoutedEventArgs e"
+Method,ModifyCloudModlistsButton_OnClick,10402,10406,5,private async,void,"object sender, RoutedEventArgs e"
+Method,IsCloudUploaderNameAvailableAsync,10408,10429,22,private async,Task<bool>,"FirebaseModlistStore store, string uploader"
+Method,LocalModlistsDataGrid_OnSelectionChanged,10431,10444,14,private,void,"object sender, SelectionChangedEventArgs e"
+Method,SaveLocalModlistButton_OnClick,10446,10458,13,private,void,"object sender, RoutedEventArgs e"
+Method,InstallLocalModlistButton_OnClick,10460,10478,19,private async,void,"object sender, RoutedEventArgs e"
+Method,OpenModlistsFolderButton_OnClick,10480,10497,18,private,void,"object sender, RoutedEventArgs e"
+Method,DeleteLocalModlistsButton_OnClick,10499,10565,67,private,void,"object sender, RoutedEventArgs e"
+Method,ModifyLocalModlistButton_OnClick,10567,10651,85,private,void,"object sender, RoutedEventArgs e"
+Method,RefreshCloudModlistsButton_OnClick,10653,10656,4,private async,void,"object sender, RoutedEventArgs e"
+Method,CloudModlistsDataGrid_OnSelectionChanged,10658,10664,7,private,void,"object sender, SelectionChangedEventArgs e"
+Method,InstallCloudModlistButton_OnClick,10666,10738,73,private async,void,"object sender, RoutedEventArgs e"
+Method,LoadModlistFromCloudMenuItem_OnClick,10740,10810,71,private async,void,"object sender, RoutedEventArgs e"
+Method,DeleteCloudModlistMenuItem_OnClick,10812,10854,43,private async,void,"object sender, RoutedEventArgs e"
+Method,LoadPresetMenuItem_OnSubmenuOpened,10856,10924,69,private,void,"object sender, RoutedEventArgs e"
+Method,LoadPresetMenuItem_OnClick,10926,10955,30,private async,void,"object sender, RoutedEventArgs e"
+Method,LoadPresetMenuItem_OnPresetClick,10957,10962,6,private async,void,"object sender, RoutedEventArgs e"
+Method,LoadPresetFromFileAsync,10964,10994,31,private async,Task,string filePath
+Method,LoadModlistMenuItem_OnClick,10996,11015,20,private async,void,"object sender, RoutedEventArgs e"
+Method,LoadModlistFromFileAsync,11017,11060,44,private async,Task,string filePath
+Method,MainWindow_OnPreviewDragEnter,11062,11065,4,private,void,"object sender, DragEventArgs e"
+Method,MainWindow_OnPreviewDragOver,11067,11070,4,private,void,"object sender, DragEventArgs e"
+Method,MainWindow_OnPreviewDrop,11072,11085,14,private async,void,"object sender, DragEventArgs e"
+Method,HandleModlistDragEvent,11087,11098,12,private,void,DragEventArgs e
+Method,TryGetDroppedModlistFile,11100,11116,17,private static,bool,"DragEventArgs e, out string? filePath"
+Method,HasSupportedModlistExtension,11118,11123,6,private static,bool,string filePath
+Method,TryLoadPresetFromFile,11125,11160,36,private,bool,"string filePath, string fallbackName, PresetLoadOptions options, out ModPreset? preset, out string? errorMessage"
+Method,TryLoadPresetFromPdf,11162,11259,98,private,bool,"string filePath, string fallbackName, PresetLoadOptions options, out ModPreset? preset, out string? errorMessage"
+Method,TryLoadPresetFromJson,11261,11299,39,private,bool,"string json, string fallbackName, PresetLoadOptions options, out ModPreset? preset, out string? errorMessage, string? sourceName = null, string? configJson = null"
+Method,TryBuildPresetFromSerializable,11301,11415,115,private,bool,"SerializablePreset data, string fallbackName, PresetLoadOptions options, out ModPreset? preset, out string? errorMessage, string? fallbackNameFromSource = null"
+Method,ApplyConfigListToPreset,11417,11436,20,private static,void,"SerializablePreset preset, SerializableConfigList? configList"
+Method,BuildConfigKey,11438,11450,13,private static,string,SerializableModConfiguration configuration
+Method,ExecuteCloudOperationAsync,11456,11523,68,private async,Task,"Func<FirebaseModlistStore, Task> operation, string actionDescription"
+Method,MigrateLegacyFirebaseDataIfNeededAsync,11525,11555,31,private async,Task,
+Method,EnsureCloudStoreInitializedAsync,11557,11587,31,private async,Task<FirebaseModlistStore>,
+Method,PromptForCloudSaveReplacement,11589,11602,14,private,CloudModlistSlot?,IReadOnlyList<CloudModlistSlot> slots
+Method,ShowCloudModlistManagementDialogAsync,11604,11625,22,private async,Task,FirebaseModlistStore store
+Method,BuildCloudModlistManagementEntriesAsync,11627,11646,20,private async,Task<IReadOnlyList<CloudModlistManagementEntry>>,FirebaseModlistStore store
+Method,RenameCloudModlistAsync,11648,11717,70,private async,Task<bool>,"FirebaseModlistStore store, CloudModlistManagementEntry entry, string newName"
+Method,DeleteCloudModlistAsync,11719,11749,31,private async,Task<bool>,"FirebaseModlistStore store, CloudModlistManagementEntry entry"
+Method,DeleteAllCloudModlistsAndAuthorizationAsync,11751,11776,26,private async,Task,"FirebaseModlistStore store, bool showCompletionMessage = true"
+Method,UpdateCloudModlistsAfterChangeAsync,11778,11784,7,private async,Task,
+Method,ReplaceCloudModlistName,11786,11815,30,private static,string,"string json, string newName"
+Method,GetCloudModlistSlotsAsync,11817,11853,37,private async,Task<List<CloudModlistSlot>>,"FirebaseModlistStore store, bool includeEmptySlots, bool captureContent"
+Method,RefreshLocalModlists,11855,11918,64,private,void,"bool force, IReadOnlyCollection<string>? preferredSelection = null"
+Method,BuildLocalModlistEntries,11920,11952,33,private,IReadOnlyList<LocalModlistListEntry>,out List<string> errors
+Method,TryCreateLocalModlistEntry,11954,12028,75,private,bool,"string filePath, out LocalModlistListEntry? entry, out string? error"
+Method,TryCreateLocalModlistEntryFromJson,12030,12064,35,private,bool,"string filePath, string json, out LocalModlistListEntry? entry, out string? error"
+Method,RefreshCloudModlistsAsync,12066,12096,31,private async,Task,bool force
+Method,BuildCloudModlistEntries,12098,12140,43,private,IReadOnlyList<CloudModlistListEntry>,IEnumerable<CloudModlistRegistryEntry> registryEntries
+Method,EnsureCloudModlistContentAsync,12142,12183,42,private async,Task<CloudModlistListEntry?>,CloudModlistListEntry entry
+Method,SetLocalModlistSelection,12185,12211,27,private,void,IReadOnlyList<LocalModlistListEntry> selection
+Method,SetCloudModlistSelection,12213,12223,11,private,void,CloudModlistListEntry? entry
+Method,UpdateCloudModlistControlsEnabledState,12225,12241,17,private,void,
+Method,UpdateLocalModlistControlsEnabledState,12243,12256,14,private,void,
+Method,RefreshManagerUpdateLinkAsync,12258,12295,38,private async,Task,
+Method,GetManagerInformationalVersion,12297,12321,25,private static,string?,
+Method,BuildCloudSlotDisplay,12323,12331,9,private static,string,"string slotKey, ModlistMetadata metadata, bool isOccupied"
+Method,FormatCloudSlotLabel,12333,12341,9,private static,string,string slotKey
+Method,ExtractModlistName,12343,12346,4,private static,string?,string? json
+Method,ExtractModlistMetadata,12348,12388,41,private static,ModlistMetadata,string? json
+Method,TryGetTrimmedProperty,12390,12400,11,private static,string?,"JsonElement element, string propertyName"
+Method,EnsurePresetDirectory,12402,12408,7,private,string,
+Method,EnsureBackupDirectory,12410,12417,8,private,string,
+Method,EnsureLocalModBackupRootDirectory,12419,12425,7,private,string,
+Method,CreateLocalModBackupSessionDirectory,12427,12436,10,private,string,
+Method,EnsureUniqueDirectoryPath,12438,12451,14,private static,string,string path
+Method,CopyDirectoryContents,12453,12473,21,private static,void,"string sourceDirectory, string destinationDirectory"
+Method,GetLocalModBackupEntryDirectory,12475,12482,8,private,string,"string sessionDirectory, ModListItemViewModel mod"
+Method,BackupLocalModAtPath,12484,12500,17,private static,void,"string sourcePath, string destinationDirectory"
+Method,EnsureModListDirectory,12502,12508,7,private,string,
+Method,EnsureRebuiltModListDirectory,12510,12516,7,private,string,
+Method,EnsureCloudModListCacheDirectory,12518,12524,7,private,string,
+Method,IsPathWithinDirectory,12526,12539,14,private static,bool,"string directory, string candidatePath"
+Method,BuildSuggestedFileName,12541,12551,11,private static,string,"string? name, string fallback"
+Method,GetUniqueFilePath,12553,12568,16,private static,string,"string directory, string baseFileName, string extension"
+Method,GetSnapshotNameFromFilePath,12570,12574,5,private static,string,"string filePath, string fallback"
+Method,ApplyPresetAsync,12576,12616,41,private async,Task,"ModPreset preset, bool importConfigurations = true"
+Method,ImportPresetConfigsAsync,12618,12804,187,private async,Task,ModPreset preset
+Method,ApplyPresetModVersionsAsync,12806,13039,234,private async,Task<bool>,ModPreset preset
+Method,TryInstallPresetModAsync,13041,13107,67,private async,Task<PresetModInstallResult>,"ModPresetModState state, IProgress<ModUpdateProgress>? installProgress = null"
+Method,ApplyExclusivePresetAsync,13110,13237,128,private async,Task,ModPreset preset
+Method,VersionsMatch,13239,13257,19,private static,bool,"string? desiredVersion, string? installedVersion"
+Method,LatestVersionTextBlock_OnToolTipOpening,13259,13267,9,private,void,"object sender, ToolTipEventArgs e"
+Method,LatestVersionTextBlock_OnToolTipClosing,13269,13276,8,private,void,"object sender, ToolTipEventArgs e"
+Method,ChangelogToolTip_OnPreviewMouseWheel,13278,13293,16,private,void,"object sender, MouseWheelEventArgs e"
+Method,ModsDataGrid_OnPreviewMouseWheel,13295,13318,24,private,void,"object sender, MouseWheelEventArgs e"
+Method,IsDescendantOfToolTip,13320,13330,11,private static,bool,DependencyObject? source
+Method,GetParent,13332,13346,15,private static,DependencyObject?,DependencyObject current
+Method,FindAncestor,13348,13359,12,private static,T?,DependencyObject? source
+Method,GetCurrentScrollMultiplier,13361,13364,4,private,double,
+Method,ShouldPreserveModsViewState,13366,13379,14,private,bool,"ICollectionView? previousView, ICollectionView? nextView"
+Method,AttachToModsView,13381,13412,32,private,void,"ICollectionView? modsView, bool preserveState = false"
+Method,ModsView_OnCollectionChanged,13414,13422,9,private,void,"object? sender, NotifyCollectionChangedEventArgs e"
+Method,HandleModRowSelection,13428,13471,44,private,void,ModListItemViewModel mod
+Method,SelectAllModsInCurrentView,13473,13485,13,private,void,
+Method,ApplyRangeSelection,13487,13508,22,private,bool,"ModListItemViewModel start, ModListItemViewModel end, bool preserveExisting"
+Method,GetModsInViewOrder,13510,13516,7,private,List<ModListItemViewModel>,
+Method,AddToSelection,13518,13526,9,private,void,ModListItemViewModel mod
+Method,RemoveFromSelection,13528,13535,8,private,void,ModListItemViewModel mod
+Method,ClearSelection,13537,13553,17,private,void,bool resetAnchor = false
+Method,ClearModDatabaseSelections,13555,13578,24,private,void,
+Method,RestoreSelectionFromSourcePaths,13580,13625,46,private,void,"IReadOnlyList<string> sourcePaths, string? anchorSourcePath"
+Method,UpdateSelectionAnchorAfterRestore,13627,13645,19,private,void,"IReadOnlyList<ModListItemViewModel> selection, string? anchorSourcePath"
+Method,SubscribeToSelectedMod,13647,13679,33,private,void,ModListItemViewModel mod
+Method,UnsubscribeFromSelectedMod,13681,13688,8,private,void,ModListItemViewModel mod
+Method,RefreshSelectedModFixButton,13690,13694,5,private,void,ModListItemViewModel mod
+Method,RefreshSelectedModCopyForServerButton,13696,13701,6,private,void,ModListItemViewModel mod
+Method,UpdateSelectedModButtons,13703,13736,34,private,void,
+Method,UpdateServerOptionsState,13738,13751,14,private,void,bool isEnabled
+Method,UpdateSelectedModFixButton,13753,13768,16,private,void,ModListItemViewModel? mod
+Method,UpdateSelectedModCopyForServerButton,13770,13794,25,private,void,ModListItemViewModel? mod
+Method,UpdateSelectedModButton,13796,13814,19,private static,void,"WpfButton? button, ModListItemViewModel? mod, bool requireModDatabaseLink, bool requireUpdate = false"
+Method,UpdateSelectedModEditConfigButton,13816,13837,22,private,void,ModListItemViewModel? mod
+Method,ShouldIgnoreRowSelection,13839,13853,15,private,bool,DependencyObject? source
+Method,GetModsScrollViewer,13855,13867,13,private,ScrollViewer?,
+Method,ClearScrollViewerCache,13869,13873,5,private,void,
+Method,FindDescendantScrollViewer,13875,13889,15,private static,ScrollViewer?,DependencyObject? current
+Method,UpdateModsAsync,13891,14090,200,private async,Task,"IReadOnlyList<ModListItemViewModel> mods, bool isBulk, IReadOnlyDictionary<ModListItemViewModel, ModReleaseInfo>? releaseOverrides = null, bool showSummary = true, Func<ModListItemViewModel, ModReleaseInfo, IProgress<ModUpdateProgress>?>? progressFactory = null, Action<ModListItemViewModel, ModReleaseInfo, ModUpdateResult>? completionCallback = null"
+Method,SelectReleaseForMod,14092,14112,21,private,ModReleaseInfo?,"ModListItemViewModel mod, bool isBulk, ref ModUpdateReleasePreference? bulkPreference, List<ModUpdateOperationResult> results, ref bool abortRequested"
+Method,ShowBulkUpdateChangelogDialog,14114,14145,32,private,void,IReadOnlyList<ModUpdateOperationResult> results
+Method,BuildChangelogSummary,14147,14163,17,private static,string?,IReadOnlyList<ModListItemViewModel.ReleaseChangelog> changelogEntries
+Method,ShowUpdateSummary,14165,14209,45,private static,void,"IReadOnlyList<ModUpdateOperationResult> results, bool isBulk, bool aborted"
+Method,ActiveToggle_OnPreviewMouseLeftButtonDown,14211,14221,11,private,void,"object sender, MouseButtonEventArgs e"
+Method,ActiveToggle_OnPreviewMouseLeftButtonUp,14223,14226,4,private,void,"object sender, MouseButtonEventArgs e"
+Method,ActiveToggle_OnPreviewMouseMove,14228,14233,6,private,void,"object sender, MouseEventArgs e"
+Method,ActiveToggle_OnToggled,14235,14262,28,private,void,"object sender, RoutedEventArgs e"
+Method,OnActivated,14264,14271,8,protected override,void,EventArgs e
+Method,OnDeactivated,14273,14277,5,protected override,void,EventArgs e
+Method,OnClosed,14279,14288,10,protected override,void,EventArgs e
+Nested record,PresetLoadOptions,14294,14294,1,private readonly,,
+Nested enum,ModlistLoadMode,14296,14300,5,private,,
+Nested record,ManagerDeletionResult,14302,14302,1,private readonly,,
+Nested record,InstalledModLogIdentifier,14304,14304,1,private readonly,,
+Nested class,ModUsagePromptData,14306,14323,18,private sealed,,
+Nested enum,InstalledModsColumn,14325,14339,15,private,,
+Delegate,PathValidator,14341,14341,1,private,,"string? path, out string? normalizedPath, out string? errorMessage"
+Nested struct,CompatibilityEvaluation,14343,14369,27,private readonly,,
+Nested class,ModlistMetadata,14371,14397,27,private sealed,,
+Nested record,PresetModInstallResult,14399,14403,5,private readonly,,
+Nested enum,ModUpdateReleasePreference,14405,14409,5,private,,
+Nested record,ModUpdateOperationResult,14411,14439,29,private readonly,,
