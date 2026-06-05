@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{B0F3D876
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainWindowSplitter", "tools\MainWindowSplitter\MainWindowSplitter.csproj", "{88BD25BE-97C3-4421-ACD0-BC1A61B6C44E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SplitPlanValidator", "tools\SplitPlanValidator\SplitPlanValidator.csproj", "{CE4F7A73-82FB-42D0-82E3-2543AF12F80A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{88BD25BE-97C3-4421-ACD0-BC1A61B6C44E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88BD25BE-97C3-4421-ACD0-BC1A61B6C44E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88BD25BE-97C3-4421-ACD0-BC1A61B6C44E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE4F7A73-82FB-42D0-82E3-2543AF12F80A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE4F7A73-82FB-42D0-82E3-2543AF12F80A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE4F7A73-82FB-42D0-82E3-2543AF12F80A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE4F7A73-82FB-42D0-82E3-2543AF12F80A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -32,5 +38,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{88BD25BE-97C3-4421-ACD0-BC1A61B6C44E} = {B0F3D876-DAD8-41C2-B9AB-5F292324B5EA}
+		{CE4F7A73-82FB-42D0-82E3-2543AF12F80A} = {B0F3D876-DAD8-41C2-B9AB-5F292324B5EA}
 	EndGlobalSection
 EndGlobal
