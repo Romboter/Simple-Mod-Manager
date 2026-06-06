@@ -226,4 +226,9 @@ public partial class MainWindow
                 _cloudModlistsLoaded = false;
         }
 
+    private async void ModifyCloudModlistsButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            await ExecuteCloudOperationAsync(async store => { await ShowCloudModlistManagementDialogAsync(store); },
+                "manage your cloud modlists");
+        }
 }
