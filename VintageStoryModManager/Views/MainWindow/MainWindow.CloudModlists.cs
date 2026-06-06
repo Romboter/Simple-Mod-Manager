@@ -271,29 +271,6 @@ public partial class MainWindow
                 "manage your cloud modlists");
         }
 
-    private async Task<bool> IsCloudUploaderNameAvailableAsync(FirebaseModlistStore store, string uploader)
-        {
-            if (string.IsNullOrWhiteSpace(uploader)) return true;
-
-            var trimmedUploader = uploader.Trim();
-            var currentUserId = store.CurrentUserId;
-            var registryEntries = await store.GetRegistryEntriesAsync();
-
-            foreach (var entry in registryEntries)
-            {
-                if (!string.IsNullOrEmpty(currentUserId) &&
-                    string.Equals(entry.OwnerId, currentUserId, StringComparison.Ordinal))
-                    continue;
-
-                var metadata = ModlistMetadataParser.ExtractModlistMetadata(entry.ContentJson);
-                if (metadata.Uploader is not null &&
-                    string.Equals(metadata.Uploader, trimmedUploader, StringComparison.OrdinalIgnoreCase))
-                    return false;
-            }
-
-            return true;
-        }
-
     private async Task ExecuteCloudOperationAsync(Func<FirebaseModlistStore, Task> operation, string actionDescription)
         {
             try
