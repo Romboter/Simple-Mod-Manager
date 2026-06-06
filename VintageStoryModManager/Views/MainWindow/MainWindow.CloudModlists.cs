@@ -207,54 +207,42 @@ public partial class MainWindow
             return options;
         }
 
-    private Dictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? TryReadModConfigurations(
-            IReadOnlyList<ModConfigOption> selectedConfigOptions)
+    private Dictionary<string, IReadOnlyList<ModConfigurationSnapshot>>?
+            TryReadModConfigurations(
+                IReadOnlyList<ModConfigOption> selectedConfigOptions)
         {
-            if (selectedConfigOptions is null || selectedConfigOptions.Count == 0) return null;
+            var requests =
+                selectedConfigOptions
+                    .Where(option => option is not null)
+                    .Select(option =>
+                        new ModConfigurationCaptureRequest(
+                            option.ModId,
+                            option.DisplayName,
+                            option.ConfigPaths))
+                    .ToList();
 
-            var includedConfigurations = new Dictionary<string, List<ModConfigurationSnapshot>>(StringComparer.OrdinalIgnoreCase);
-            var readErrors = new List<string>();
+            var captureResult =
+                ModConfigurationCaptureService.Capture(
+                    requests,
+                    _dataDirectory);
 
-            foreach (var option in selectedConfigOptions)
+            if (captureResult.Errors.Count > 0)
             {
-                if (option is null || option.ConfigPaths.Count == 0) continue;
-
-                foreach (var path in option.ConfigPaths)
-                {
-                    try
-                    {
-                        var content = File.ReadAllText(path);
-                        var fileName = ModConfigPathHelper.GetSafeConfigFileName(Path.GetFileName(path), option.ModId);
-                        var relativePath = TryGetRelativeConfigPath(path, fileName);
-
-                        if (!includedConfigurations.TryGetValue(option.ModId, out var snapshots))
-                        {
-                            snapshots = new List<ModConfigurationSnapshot>();
-                            includedConfigurations[option.ModId] = snapshots;
-                        }
-
-                        snapshots.Add(new ModConfigurationSnapshot(fileName, content, relativePath));
-                    }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
-                                                   or NotSupportedException or PathTooLongException)
-                    {
-                        readErrors.Add($"{option.DisplayName}: {ex.Message}");
-                    }
-                }
-            }
-
-            if (readErrors.Count > 0)
                 WpfMessageBox.Show(
-                    "Some configuration files could not be included:\n" + string.Join("\n", readErrors),
+                    "Some configuration files could not be included:\n" +
+                    string.Join("\n", captureResult.Errors),
                     "Simple VS Manager",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
+            }
 
-            if (includedConfigurations.Count == 0) return null;
-
-            return includedConfigurations.ToDictionary(pair => pair.Key,
-                pair => (IReadOnlyList<ModConfigurationSnapshot>)pair.Value,
-                StringComparer.OrdinalIgnoreCase);
+            return captureResult.Configurations is null
+                ? null
+                : new Dictionary<
+                    string,
+                    IReadOnlyList<ModConfigurationSnapshot>>(
+                        captureResult.Configurations,
+                        StringComparer.OrdinalIgnoreCase);
         }
 
     private string? TryGetRelativeConfigPath(string path, string sanitizedFileName)
