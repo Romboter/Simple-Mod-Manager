@@ -82,10 +82,6 @@ namespace VintageStoryModManager.Views;
 public partial class MainWindow : Window
 {
 
-    private const string SummaryKeyPatchModPrefix = "__PATCH_MOD__";
-
-    private const string SummaryKeyLinePrefix = "__PREFIX__";
-
     private const int MaxDataBackupsMenuItems = 15;
 
     private const int WindowPositionScreenMargin = 50;
@@ -131,48 +127,7 @@ public partial class MainWindow : Window
             Timeout = TimeSpan.FromSeconds(10)
         };
 
-    private static readonly string[] ExperimentalModDebugLogPrefixes =
-        {
-            "client-debug",
-            "client-main",
-            "server-debug",
-            "server-main"
-        };
-
-    private static readonly string[] ExperimentalModDebugLogExtensions =
-        {
-            ".txt",
-            ".log"
-        };
-
-    private static readonly string[] ExperimentalModDebugIgnoredLinePhrases =
-        {
-            "Check for mod systems in mod ",
-            "Loaded assembly ",
-            "Instantiate mod systems for ",
-            "Starting system:",
-            "Mods, sorted by dependency:",
-            "External Origins in load order:"
-        };
-
-
-    private static readonly string[] SummarizableLinePrefixes =
-        {
-            "Patch file",
-            "Lang key not found:",
-            "[Config lib] Values patched:",
-            "Loading sound file, game may stutter",
-            "[Config lib] Patched",
-            "Block must have a unique code",
-            "Failed resolving a blocks blockdrop or smeltedstack",
-            "Missing mapping for texture code"
-        };
-
     private static bool _isQuestPdfLicenseInitialized;
-
-    private static readonly Regex PatchAssetMissingRegex = new(
-            @"\bPatch \d+ in (?<mod>[^:\r\n]+)",
-            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
     private static readonly PresetLoadOptions StandardPresetLoadOptions = new(true, false, false);
 
