@@ -189,7 +189,7 @@ public partial class MainWindow
         {
             try
             {
-                await Task.Run(() => ClearManagerCaches(false)).ConfigureAwait(true);
+                await Task.Run(() => ManagerCacheCleanupService.ClearManagerCaches(false)).ConfigureAwait(true);
                 await RefreshDeleteCachedModsMenuHeaderAsync().ConfigureAwait(true);
 
                 WpfMessageBox.Show(
