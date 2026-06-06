@@ -231,7 +231,7 @@ public partial class MainWindow
             var selected = PromptForDirectory(
                 "Select your VintagestoryData folder",
                 _dataDirectory,
-                TryValidateDataDirectory,
+                InstallationPathValidator.TryValidateDataDirectory,
                 true);
 
             if (selected is null) return;
@@ -250,7 +250,7 @@ public partial class MainWindow
             var selected = PromptForDirectory(
                 "Select your Vintage Story installation folder",
                 _gameDirectory,
-                TryValidateGameDirectory,
+                InstallationPathValidator.TryValidateGameDirectory,
                 true);
 
             if (selected is null) return;

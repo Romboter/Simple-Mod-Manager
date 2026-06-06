@@ -111,12 +111,12 @@ public partial class MainWindow
         {
             var requiresSelection = _userConfiguration.RequiresDataDirectorySelection;
             var storedPath = _userConfiguration.DataDirectory;
-            if (!requiresSelection && TryValidateDataDirectory(storedPath, out _dataDirectory, out _)) return true;
+            if (!requiresSelection && InstallationPathValidator.TryValidateDataDirectory(storedPath, out _dataDirectory, out _)) return true;
 
             if (!string.IsNullOrWhiteSpace(storedPath)) _userConfiguration.ClearDataDirectory();
 
             var defaultPath = DataDirectoryLocator.Resolve();
-            if (!requiresSelection && TryValidateDataDirectory(defaultPath, out _dataDirectory, out _)) return true;
+            if (!requiresSelection && InstallationPathValidator.TryValidateDataDirectory(defaultPath, out _dataDirectory, out _)) return true;
 
             var promptMessage = requiresSelection
                 ? "Select the Vintage Story data folder for this profile to enable mod management."
@@ -130,7 +130,7 @@ public partial class MainWindow
             _dataDirectory = PromptForDirectory(
                 "Select your VintagestoryData folder",
                 _userConfiguration.DataDirectory ?? defaultPath,
-                TryValidateDataDirectory,
+                InstallationPathValidator.TryValidateDataDirectory,
                 true);
 
             if (_dataDirectory is null)
@@ -150,14 +150,14 @@ public partial class MainWindow
         {
             var requiresSelection = _userConfiguration.RequiresGameDirectorySelection;
             var storedPath = _userConfiguration.GameDirectory;
-            if (!requiresSelection && TryValidateGameDirectory(storedPath, out _gameDirectory, out _)) return true;
+            if (!requiresSelection && InstallationPathValidator.TryValidateGameDirectory(storedPath, out _gameDirectory, out _)) return true;
 
             if (!string.IsNullOrWhiteSpace(storedPath)) _userConfiguration.ClearGameDirectory();
 
             var defaultPath = GameDirectoryLocator.Resolve();
             if (!requiresSelection
                 && !string.IsNullOrWhiteSpace(defaultPath)
-                && TryValidateGameDirectory(defaultPath, out _gameDirectory, out _))
+                && InstallationPathValidator.TryValidateGameDirectory(defaultPath, out _gameDirectory, out _))
                 return true;
 
             var promptMessage = requiresSelection
@@ -172,7 +172,7 @@ public partial class MainWindow
             _gameDirectory = PromptForDirectory(
                 "Select your Vintage Story installation folder",
                 _userConfiguration.GameDirectory ?? (string.IsNullOrWhiteSpace(defaultPath) ? null : defaultPath),
-                TryValidateGameDirectory,
+                InstallationPathValidator.TryValidateGameDirectory,
                 true);
 
             if (_gameDirectory is null)
@@ -390,97 +390,6 @@ public partial class MainWindow
             }
 
             return null;
-        }
-
-    private static bool TryValidateDataDirectory(string? path, out string? normalizedPath, out string? errorMessage)
-        {
-            normalizedPath = null;
-            errorMessage = null;
-
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                errorMessage = "No folder was selected.";
-                return false;
-            }
-
-            try
-            {
-                normalizedPath = Path.GetFullPath(path);
-            }
-            catch (Exception)
-            {
-                errorMessage = "The folder path is invalid.";
-                return false;
-            }
-
-            if (!Directory.Exists(normalizedPath))
-            {
-                errorMessage = "The folder does not exist.";
-                return false;
-            }
-
-            var hasClientSettings = File.Exists(Path.Combine(normalizedPath, "clientsettings.json"));
-            var hasMods = Directory.Exists(Path.Combine(normalizedPath, "Mods"));
-            var hasConfig = Directory.Exists(Path.Combine(normalizedPath, "ModConfig"));
-
-            if (!hasClientSettings && !hasMods && !hasConfig)
-            {
-                errorMessage = "The folder does not appear to be a VintagestoryData directory.";
-                return false;
-            }
-
-            return true;
-        }
-
-    private static bool TryValidateGameDirectory(string? path, out string? normalizedPath, out string? errorMessage)
-        {
-            normalizedPath = null;
-            errorMessage = null;
-
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                errorMessage = "No folder was selected.";
-                return false;
-            }
-
-            string candidate;
-            try
-            {
-                candidate = Path.GetFullPath(path);
-            }
-            catch (Exception)
-            {
-                errorMessage = "The folder path is invalid.";
-                return false;
-            }
-
-            if (File.Exists(candidate))
-            {
-                var directory = Path.GetDirectoryName(candidate);
-                if (string.IsNullOrWhiteSpace(directory))
-                {
-                    errorMessage = "The folder path is invalid.";
-                    return false;
-                }
-
-                candidate = directory;
-            }
-
-            if (!Directory.Exists(candidate))
-            {
-                errorMessage = "The folder does not exist.";
-                return false;
-            }
-
-            var executable = GameDirectoryLocator.FindExecutable(candidate);
-            if (executable is null)
-            {
-                errorMessage = "The folder does not contain a Vintage Story executable.";
-                return false;
-            }
-
-            normalizedPath = candidate;
-            return true;
         }
 
     private void OpenModFolderButton_OnClick(object sender, RoutedEventArgs e)
