@@ -4,6 +4,7 @@ using SimpleVsManager.Cloud;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
@@ -236,4 +237,95 @@ public partial class MainWindow
                 _cloudModlistsLoaded = false;
         }
 
+    private async Task RefreshCloudModlistsAsync(bool force)
+        {
+            if (_isCloudModlistRefreshInProgress) return;
+
+            if (!force && _cloudModlistsLoaded) return;
+
+            _isCloudModlistRefreshInProgress = true;
+            UpdateCloudModlistControlsEnabledState();
+
+            try
+            {
+                await ExecuteCloudOperationAsync(async store =>
+                {
+                    var registryEntries = await store.GetRegistryEntriesAsync();
+                    var listEntries =
+                        CloudModlistHelper.BuildListEntries(registryEntries);
+
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        _viewModel?.ReplaceCloudModlists(listEntries);
+                        _cloudModlistsLoaded = true;
+                        SetCloudModlistSelection(null);
+                        if (CloudModlistsDataGrid != null) CloudModlistsDataGrid.SelectedItem = null;
+                    }, DispatcherPriority.Background);
+                }, "load cloud modlists");
+            }
+            finally
+            {
+                _isCloudModlistRefreshInProgress = false;
+                UpdateCloudModlistControlsEnabledState();
+            }
+        }
+
+    private async Task<CloudModlistListEntry?> EnsureCloudModlistContentAsync(CloudModlistListEntry entry)
+        {
+            if (entry.IsContentComplete && !string.IsNullOrWhiteSpace(entry.ContentJson)) return entry;
+
+            CloudModlistListEntry? refreshedEntry = null;
+
+            await ExecuteCloudOperationAsync(async store =>
+            {
+                refreshedEntry =
+                    await CloudModlistContentService.EnsureContentAsync(
+                        store,
+                        entry);
+            }, "download the selected cloud modlist");
+
+            if (refreshedEntry is null)
+            {
+                WpfMessageBox.Show("The selected cloud modlist could not be downloaded.",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return null;
+            }
+
+            _viewModel?.TryReplaceCloudModlist(entry, refreshedEntry);
+            SetCloudModlistSelection(refreshedEntry);
+
+            return refreshedEntry;
+        }
+
+    private void SetCloudModlistSelection(CloudModlistListEntry? entry)
+        {
+            _selectedCloudModlist = entry;
+
+            if (SelectedModlistTitle is not null) SelectedModlistTitle.Text = entry?.DisplayName ?? string.Empty;
+
+            if (SelectedModlistDescription is not null)
+                SelectedModlistDescription.Text = entry?.Description ?? string.Empty;
+
+            UpdateCloudModlistControlsEnabledState();
+        }
+
+    private void UpdateCloudModlistControlsEnabledState()
+        {
+            var internetEnabled = !InternetAccessManager.IsInternetAccessDisabled;
+
+            if (SaveCloudModlistButton is not null) SaveCloudModlistButton.IsEnabled = internetEnabled;
+
+            if (ModifyCloudModlistsButton is not null) ModifyCloudModlistsButton.IsEnabled = internetEnabled;
+
+            if (RefreshCloudModlistsButton is not null)
+                RefreshCloudModlistsButton.IsEnabled = internetEnabled && !_isCloudModlistRefreshInProgress;
+
+            if (InstallCloudModlistButton is not null)
+            {
+                var hasSelection = _selectedCloudModlist is not null;
+                InstallCloudModlistButton.IsEnabled = internetEnabled && hasSelection;
+            }
+        }
 }
