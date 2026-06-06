@@ -110,7 +110,7 @@ public partial class MainWindow
 
             dialog.FileOk += (_, args) =>
             {
-                if (IsPathWithinDirectory(directory, dialog.FileName)) return;
+                if (PathRelationshipHelper.IsPathWithinDirectory(directory, dialog.FileName)) return;
 
                 WpfMessageBox.Show(folderWarningMessage,
                     "Simple VS Manager",
@@ -372,7 +372,7 @@ public partial class MainWindow
 
             dialog.FileOk += (_, args) =>
             {
-                if (IsPathWithinDirectory(presetDirectory, dialog.FileName)) return;
+                if (PathRelationshipHelper.IsPathWithinDirectory(presetDirectory, dialog.FileName)) return;
 
                 WpfMessageBox.Show("Please select a preset from the Presets folder.",
                     "Simple VS Manager",
@@ -1037,7 +1037,7 @@ public partial class MainWindow
                 var uniqueRelativePath = ModConfigPathHelper.EnsureUniqueRelativePath(relativePath, usedRelativePaths);
                 var targetPath = Path.Combine(configDirectory, uniqueRelativePath);
 
-                if (!IsPathWithinDirectory(configDirectory, targetPath))
+                if (!PathRelationshipHelper.IsPathWithinDirectory(configDirectory, targetPath))
                 {
                     uniqueRelativePath = ModConfigPathHelper.EnsureUniqueRelativePath(fileName, usedRelativePaths);
                     targetPath = Path.Combine(configDirectory, uniqueRelativePath);

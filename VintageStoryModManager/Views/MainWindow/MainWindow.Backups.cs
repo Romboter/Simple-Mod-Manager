@@ -136,7 +136,7 @@ public partial class MainWindow
             else
             {
                 filteredBackups = backups
-                    .Where(summary => IsSameDirectory(summary.SourceDataDirectory, dataDirectory))
+                    .Where(summary => PathRelationshipHelper.IsSameDirectory(summary.SourceDataDirectory, dataDirectory))
                     .ToArray();
             }
 
@@ -499,7 +499,7 @@ public partial class MainWindow
         {
             if (string.IsNullOrWhiteSpace(_dataDirectory) || !Directory.Exists(_dataDirectory)) return;
 
-            if (!IsSameDirectory(summary.SourceDataDirectory, _dataDirectory))
+            if (!PathRelationshipHelper.IsSameDirectory(summary.SourceDataDirectory, _dataDirectory))
             {
                 WpfMessageBox.Show(
                     "This backup was created for a different VintagestoryData folder and cannot be restored.",

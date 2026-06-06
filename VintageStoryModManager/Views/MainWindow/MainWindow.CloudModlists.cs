@@ -263,7 +263,7 @@ public partial class MainWindow
             if (string.IsNullOrWhiteSpace(_dataDirectory)) return null;
 
             var configDirectory = Path.Combine(_dataDirectory, "ModConfig");
-            if (!IsPathWithinDirectory(configDirectory, path)) return null;
+            if (!PathRelationshipHelper.IsPathWithinDirectory(configDirectory, path)) return null;
 
             try
             {
