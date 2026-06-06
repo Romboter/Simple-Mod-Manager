@@ -127,8 +127,6 @@ public partial class MainWindow : Window
             Timeout = TimeSpan.FromSeconds(10)
         };
 
-    private static bool _isQuestPdfLicenseInitialized;
-
     private static readonly PresetLoadOptions StandardPresetLoadOptions = new(true, false, false);
 
     private static readonly PresetLoadOptions ModListLoadOptions = new(true, true, true);

@@ -86,7 +86,7 @@ public partial class MainWindow
         {
             return ExecuteCloudOperationAsync(async store =>
             {
-                var suggestedName = BuildCloudModlistName();
+                var suggestedName = InstalledModsPdfGenerator.BuildCloudModlistName();
                 var configOptions = BuildModConfigOptions(selectByDefault: false);
                 var detailsDialog = new CloudModlistDetailsDialog(
                     this,
