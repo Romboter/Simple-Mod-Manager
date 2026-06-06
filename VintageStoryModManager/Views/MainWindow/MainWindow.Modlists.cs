@@ -765,8 +765,12 @@ public partial class MainWindow
 
                 if (confirmation != MessageBoxResult.Yes) return;
 
-                await store.DeleteAsync(selectedSlot.SlotKey);
-                _viewModel?.ReportStatus($"Deleted cloud modlist from {slotLabel}.");
+                await CloudModlistManagementService.DeleteSlotAsync(
+                    store,
+                    selectedSlot);
+
+                _viewModel?.ReportStatus(
+                    $"Deleted cloud modlist from {slotLabel}.");
             }, "delete the cloud modlist");
 
             if (_viewModel?.IsViewingModlistTab == true)

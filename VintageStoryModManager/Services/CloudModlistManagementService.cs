@@ -159,6 +159,19 @@ internal static class CloudModlistManagementService
             null);
     }
 
+    internal static async Task DeleteSlotAsync(
+        FirebaseModlistStore store,
+        CloudModlistSlot slot,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        ArgumentNullException.ThrowIfNull(slot);
+
+        await store.DeleteAsync(
+            slot.SlotKey,
+            cancellationToken);
+    }
+
     internal static async Task DeleteAllUserDataAndAuthorizationAsync(
         FirebaseModlistStore store,
         CancellationToken cancellationToken = default)
