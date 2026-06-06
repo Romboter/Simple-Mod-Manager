@@ -205,7 +205,7 @@ public partial class MainWindow
 
             if (!Equals(tabControl.SelectedItem, OnlineModlistsTabItem)) return;
 
-            if (HasFirebaseAuthStateFile()) EnsureFirebaseAuthBackedUpIfAvailable();
+            if (FirebaseAuthFileService.HasFirebaseAuthStateFile()) EnsureFirebaseAuthBackedUpIfAvailable();
 
             if (!EnsureCloudModlistsConsent())
             {

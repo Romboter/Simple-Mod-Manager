@@ -136,12 +136,6 @@ public partial class MainWindow
             return result == MessageBoxResult.OK;
         }
 
-    private static bool HasFirebaseAuthStateFile()
-        {
-            var stateFilePath = FirebaseAnonymousAuthenticator.GetStateFilePath();
-            return !string.IsNullOrWhiteSpace(stateFilePath) && File.Exists(stateFilePath);
-        }
-
     private bool EnsureUserReportVotingConsent()
         {
             var message =
@@ -190,28 +184,14 @@ public partial class MainWindow
     private void DeleteFirebaseAuthFiles()
         {
             var stateFilePath = FirebaseAnonymousAuthenticator.GetStateFilePath();
-            if (!string.IsNullOrWhiteSpace(stateFilePath)) TryDeleteFirebaseAuthFile(stateFilePath);
+            if (!string.IsNullOrWhiteSpace(stateFilePath)) FirebaseAuthFileService.TryDeleteFirebaseAuthFile(stateFilePath);
 
             var dataDirectory = _dataDirectory;
             if (string.IsNullOrWhiteSpace(dataDirectory)) return;
 
             var backupDirectory = Path.Combine(dataDirectory, "ModData", "SimpleVSManager");
             var backupPath = Path.Combine(backupDirectory, "firebase-auth.json");
-            TryDeleteFirebaseAuthFile(backupPath);
+            FirebaseAuthFileService.TryDeleteFirebaseAuthFile(backupPath);
         }
 
-    private static void TryDeleteFirebaseAuthFile(string path)
-        {
-            if (string.IsNullOrWhiteSpace(path)) return;
-
-            try
-            {
-                if (File.Exists(path)) File.Delete(path);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
-                                           or SecurityException)
-            {
-                StatusLogService.AppendStatus($"Failed to delete Firebase auth file {path}: {ex.Message}", true);
-            }
-        }
 }
