@@ -449,67 +449,86 @@ public partial class MainWindow
             CloudModlistManagementEntry entry,
             string newName)
         {
-            if (string.IsNullOrWhiteSpace(newName)) return false;
+            var result =
+                await CloudModlistManagementService.RenameAsync(
+                    store,
+                    entry,
+                    newName);
 
-            var trimmedName = newName.Trim();
-            var json = entry.CachedContent;
+            switch (result.Status)
+            {
+                case CloudModlistRenameStatus.InvalidName:
+                    return false;
 
-            if (string.IsNullOrWhiteSpace(json))
-                try
-                {
-                    json = await store.LoadAsync(entry.SlotKey);
-                }
-                catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-                {
-                    StatusLogService.AppendStatus($"Failed to load cloud modlist for rename: {ex.Message}", true);
-                    WpfMessageBox.Show($"Failed to load the cloud modlist before renaming:\n{ex.Message}",
+                case CloudModlistRenameStatus.LoadFailed:
+                    StatusLogService.AppendStatus(
+                        $"Failed to load cloud modlist for rename: " +
+                        $"{result.ErrorMessage}",
+                        true);
+
+                    WpfMessageBox.Show(
+                        $"Failed to load the cloud modlist before renaming:\n" +
+                        result.ErrorMessage,
                         "Simple VS Manager",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
+
                     return false;
-                }
 
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                WpfMessageBox.Show(
-                    "The selected cloud modlist could not be loaded.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return false;
+                case CloudModlistRenameStatus.ContentUnavailable:
+                    WpfMessageBox.Show(
+                        "The selected cloud modlist could not be loaded.",
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    return false;
+
+                case CloudModlistRenameStatus.InvalidContent:
+                    StatusLogService.AppendStatus(
+                        $"Failed to update cloud modlist name: " +
+                        $"{result.ErrorMessage}",
+                        true);
+
+                    WpfMessageBox.Show(
+                        $"The cloud modlist data is invalid and could not " +
+                        $"be renamed:\n{result.ErrorMessage}",
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    return false;
+
+                case CloudModlistRenameStatus.SaveFailed:
+                    StatusLogService.AppendStatus(
+                        $"Failed to rename cloud modlist: " +
+                        $"{result.ErrorMessage}",
+                        true);
+
+                    WpfMessageBox.Show(
+                        $"Failed to rename the cloud modlist:\n" +
+                        result.ErrorMessage,
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    return false;
+
+                case CloudModlistRenameStatus.Success:
+                    break;
+
+                default:
+                    throw new InvalidOperationException(
+                        "Unexpected cloud modlist rename result.");
             }
 
-            string updatedJson;
-            try
-            {
-                updatedJson = CloudModlistHelper.ReplaceCloudModlistName(json, trimmedName);
-            }
-            catch (Exception ex) when (ex is JsonException or InvalidOperationException)
-            {
-                StatusLogService.AppendStatus($"Failed to update cloud modlist name: {ex.Message}", true);
-                WpfMessageBox.Show($"The cloud modlist data is invalid and could not be renamed:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return false;
-            }
+            var slotLabel =
+                CloudModlistHelper.FormatCloudSlotLabel(
+                    entry.SlotKey);
 
-            try
-            {
-                await store.SaveAsync(entry.SlotKey, updatedJson);
-            }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-            {
-                StatusLogService.AppendStatus($"Failed to rename cloud modlist: {ex.Message}", true);
-                WpfMessageBox.Show($"Failed to rename the cloud modlist:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return false;
-            }
-
-            var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(entry.SlotKey);
-            _viewModel?.ReportStatus($"Renamed cloud modlist in {slotLabel} to \"{trimmedName}\".");
+            _viewModel?.ReportStatus(
+                $"Renamed cloud modlist in {slotLabel} to " +
+                $"\"{result.Name}\".");
 
             await UpdateCloudModlistsAfterChangeAsync();
             return true;

@@ -1,3 +1,5 @@
+using System.Net.Http;
+using System.Text.Json;
 using SimpleVsManager.Cloud;
 using VintageStoryModManager.Models;
 
@@ -39,4 +41,105 @@ internal static class CloudModlistManagementService
 
         return entries;
     }
+
+    internal static async Task<CloudModlistRenameResult> RenameAsync(
+        FirebaseModlistStore store,
+        CloudModlistManagementEntry entry,
+        string newName)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        ArgumentNullException.ThrowIfNull(entry);
+
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            return new CloudModlistRenameResult(
+                CloudModlistRenameStatus.InvalidName,
+                null,
+                null);
+        }
+
+        var trimmedName = newName.Trim();
+        var json = entry.CachedContent;
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            try
+            {
+                json =
+                    await store.LoadAsync(
+                        entry.SlotKey);
+            }
+            catch (Exception ex) when (
+                ex is HttpRequestException or
+                TaskCanceledException)
+            {
+                return new CloudModlistRenameResult(
+                    CloudModlistRenameStatus.LoadFailed,
+                    null,
+                    ex.Message);
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return new CloudModlistRenameResult(
+                CloudModlistRenameStatus.ContentUnavailable,
+                null,
+                null);
+        }
+
+        string updatedJson;
+        try
+        {
+            updatedJson =
+                CloudModlistHelper.ReplaceCloudModlistName(
+                    json,
+                    trimmedName);
+        }
+        catch (Exception ex) when (
+            ex is JsonException or
+            InvalidOperationException)
+        {
+            return new CloudModlistRenameResult(
+                CloudModlistRenameStatus.InvalidContent,
+                null,
+                ex.Message);
+        }
+
+        try
+        {
+            await store.SaveAsync(
+                entry.SlotKey,
+                updatedJson);
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException or
+            TaskCanceledException)
+        {
+            return new CloudModlistRenameResult(
+                CloudModlistRenameStatus.SaveFailed,
+                null,
+                ex.Message);
+        }
+
+        return new CloudModlistRenameResult(
+            CloudModlistRenameStatus.Success,
+            trimmedName,
+            null);
+    }
 }
+
+internal enum CloudModlistRenameStatus
+{
+    Success,
+    InvalidName,
+    LoadFailed,
+    ContentUnavailable,
+    InvalidContent,
+    SaveFailed
+}
+
+internal sealed record CloudModlistRenameResult(
+    CloudModlistRenameStatus Status,
+    string? Name,
+    string? ErrorMessage);
