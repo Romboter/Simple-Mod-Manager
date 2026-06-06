@@ -935,7 +935,8 @@ public partial class MainWindow
                 await ExecuteCloudOperationAsync(async store =>
                 {
                     var registryEntries = await store.GetRegistryEntriesAsync();
-                    var listEntries = BuildCloudModlistEntries(registryEntries);
+                    var listEntries =
+                        CloudModlistHelper.BuildListEntries(registryEntries);
 
                     await Dispatcher.InvokeAsync(() =>
                     {
@@ -951,50 +952,6 @@ public partial class MainWindow
                 _isCloudModlistRefreshInProgress = false;
                 UpdateCloudModlistControlsEnabledState();
             }
-        }
-
-    private IReadOnlyList<CloudModlistListEntry> BuildCloudModlistEntries(
-            IEnumerable<CloudModlistRegistryEntry> registryEntries)
-        {
-            var list = new List<CloudModlistListEntry>();
-            if (registryEntries is null) return list;
-
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var entry in registryEntries)
-            {
-                if (entry is null) continue;
-
-                if (!seen.Add(entry.RegistryKey)) continue;
-
-                var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(entry.SlotKey);
-                var metadata = ModlistMetadataParser.ExtractModlistMetadata(entry.ContentJson);
-                list.Add(new CloudModlistListEntry(
-                    entry.OwnerId,
-                    entry.SlotKey,
-                    slotLabel,
-                    metadata.Name,
-                    metadata.Description,
-                    metadata.Version,
-                    metadata.Uploader,
-                    metadata.Mods,
-                    entry.ContentJson,
-                    entry.DateAdded,
-                    metadata.GameVersion,
-                    entry.IsContentComplete));
-            }
-
-            list.Sort((left, right) =>
-            {
-                var compare = string.Compare(left.DisplayName, right.DisplayName, StringComparison.OrdinalIgnoreCase);
-                if (compare != 0) return compare;
-
-                compare = string.Compare(left.OwnerId, right.OwnerId, StringComparison.OrdinalIgnoreCase);
-                if (compare != 0) return compare;
-
-                return string.Compare(left.SlotKey, right.SlotKey, StringComparison.OrdinalIgnoreCase);
-            });
-
-            return list;
         }
 
     private async Task<CloudModlistListEntry?> EnsureCloudModlistContentAsync(CloudModlistListEntry entry)
@@ -1017,20 +974,10 @@ public partial class MainWindow
                 return null;
             }
 
-            var metadata = ModlistMetadataParser.ExtractModlistMetadata(registryEntry.ContentJson);
-            var refreshedEntry = new CloudModlistListEntry(
-                registryEntry.OwnerId,
-                registryEntry.SlotKey,
-                CloudModlistHelper.FormatCloudSlotLabel(registryEntry.SlotKey),
-                metadata.Name,
-                metadata.Description,
-                metadata.Version,
-                metadata.Uploader,
-                metadata.Mods,
-                registryEntry.ContentJson,
-                registryEntry.DateAdded,
-                metadata.GameVersion,
-                true);
+            var refreshedEntry =
+                CloudModlistHelper.CreateListEntry(
+                    registryEntry,
+                    true);
 
             if (_viewModel?.TryReplaceCloudModlist(entry, refreshedEntry) == true)
                 SetCloudModlistSelection(refreshedEntry);

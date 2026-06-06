@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using VintageStoryModManager;
+using VintageStoryModManager.Models;
 
 namespace VintageStoryModManager.Services;
 
@@ -57,6 +58,79 @@ internal static class CloudModlistHelper
 
             return slotKey;
         }
+
+    internal static IReadOnlyList<CloudModlistListEntry> BuildListEntries(
+        IEnumerable<CloudModlistRegistryEntry>? registryEntries)
+    {
+        var list = new List<CloudModlistListEntry>();
+        if (registryEntries is null)
+            return list;
+
+        var seen = new HashSet<string>(
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (var entry in registryEntries)
+        {
+            if (entry is null)
+                continue;
+
+            if (!seen.Add(entry.RegistryKey))
+                continue;
+
+            list.Add(CreateListEntry(entry));
+        }
+
+        list.Sort((left, right) =>
+        {
+            var comparison = string.Compare(
+                left.DisplayName,
+                right.DisplayName,
+                StringComparison.OrdinalIgnoreCase);
+
+            if (comparison != 0)
+                return comparison;
+
+            comparison = string.Compare(
+                left.OwnerId,
+                right.OwnerId,
+                StringComparison.OrdinalIgnoreCase);
+
+            if (comparison != 0)
+                return comparison;
+
+            return string.Compare(
+                left.SlotKey,
+                right.SlotKey,
+                StringComparison.OrdinalIgnoreCase);
+        });
+
+        return list;
+    }
+
+    internal static CloudModlistListEntry CreateListEntry(
+        CloudModlistRegistryEntry entry,
+        bool? isContentComplete = null)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+
+        var metadata =
+            ModlistMetadataParser.ExtractModlistMetadata(
+                entry.ContentJson);
+
+        return new CloudModlistListEntry(
+            entry.OwnerId,
+            entry.SlotKey,
+            FormatCloudSlotLabel(entry.SlotKey),
+            metadata.Name,
+            metadata.Description,
+            metadata.Version,
+            metadata.Uploader,
+            metadata.Mods,
+            entry.ContentJson,
+            entry.DateAdded,
+            metadata.GameVersion,
+            isContentComplete ?? entry.IsContentComplete);
+    }
 
     internal static string? ExtractModlistName(string? json)
         {
