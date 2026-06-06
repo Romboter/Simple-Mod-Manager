@@ -1468,7 +1468,7 @@ public partial class MainWindow
                         try
                         {
                             var entryDirectory = GetLocalModBackupEntryDirectory(localBackupSessionDirectory, mod);
-                            BackupLocalModAtPath(modPath, entryDirectory);
+                            LocalModBackupService.BackupLocalModAtPath(modPath, entryDirectory);
 
                             var name = string.IsNullOrWhiteSpace(mod.DisplayName)
                                 ? mod.ModId
