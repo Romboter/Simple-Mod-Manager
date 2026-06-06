@@ -653,7 +653,7 @@ public partial class MainWindow
             var loadOptions = GetModlistLoadOptions(mode);
             var fallbackName = entry.Name ?? entry.DisplayName ?? "Modlist";
 
-            if (!TryLoadPresetFromFile(cacheFilePath,
+            if (!PresetFileLoader.TryLoadPresetFromFile(cacheFilePath,
                     fallbackName,
                     loadOptions,
                     out var preset,
@@ -723,7 +723,7 @@ public partial class MainWindow
                 }
 
                 var sourceName = selectedSlot.Name ?? CloudModlistHelper.FormatCloudSlotLabel(selectedSlot.SlotKey);
-                if (!TryLoadPresetFromJson(json,
+                if (!PresetFileLoader.TryLoadPresetFromJson(json,
                         "Modlist",
                         loadOptions,
                         out var preset,

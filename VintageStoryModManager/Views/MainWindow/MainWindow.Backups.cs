@@ -473,7 +473,7 @@ public partial class MainWindow
                 return;
             }
 
-            if (!TryLoadPresetFromFile(backupPath,
+            if (!PresetFileLoader.TryLoadPresetFromFile(backupPath,
                     "Backup",
                     ModListLoadOptions,
                     out var preset,
