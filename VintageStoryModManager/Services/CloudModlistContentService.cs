@@ -31,4 +31,18 @@ internal static class CloudModlistContentService
             registryEntry,
             true);
     }
+
+    internal static async Task<string?> EnsureSlotContentAsync(
+        FirebaseModlistStore store,
+        CloudModlistSlot slot)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        ArgumentNullException.ThrowIfNull(slot);
+
+        if (!string.IsNullOrWhiteSpace(slot.CachedContent))
+            return slot.CachedContent;
+
+        return await store.LoadAsync(
+            slot.SlotKey);
+    }
 }

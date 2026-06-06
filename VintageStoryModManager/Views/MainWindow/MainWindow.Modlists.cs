@@ -683,18 +683,19 @@ public partial class MainWindow
                 PrepareForModlistLoad();
 
                 var loadOptions = GetModlistLoadOptions(mode);
-                var json = selectedSlot.CachedContent;
+                var json =
+                    await CloudModlistContentService.EnsureSlotContentAsync(
+                        store,
+                        selectedSlot);
+
                 if (string.IsNullOrWhiteSpace(json))
                 {
-                    json = await store.LoadAsync(selectedSlot.SlotKey);
-                    if (string.IsNullOrWhiteSpace(json))
-                    {
-                        WpfMessageBox.Show("The selected cloud modlist is empty.",
-                            "Simple VS Manager",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
-                        return;
-                    }
+                    WpfMessageBox.Show(
+                        "The selected cloud modlist is empty.",
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
                 }
 
                 var sourceName = selectedSlot.Name ?? CloudModlistHelper.FormatCloudSlotLabel(selectedSlot.SlotKey);
