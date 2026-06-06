@@ -116,52 +116,56 @@ public partial class MainWindow
                         gameVersion,
                         out var json)) return;
 
-                var slots =
-                    await CloudModlistSlotService.LoadSlotsAsync(
+                var savePlan =
+                    await CloudModlistSaveService.PrepareSaveAsync(
                         store,
-                        true,
-                        false);
+                        modlistName);
+
                 var trimmedModlistName = modlistName.Trim();
 
                 CloudModlistSlot? replacementSlot = null;
                 string? slotKey = null;
 
-                var matchingSlot = slots.FirstOrDefault(slot =>
-                    slot.IsOccupied
-                    && string.Equals((slot.Name ?? string.Empty).Trim(), trimmedModlistName,
-                        StringComparison.OrdinalIgnoreCase));
-
-                if (matchingSlot is not null)
+                if (savePlan.MatchingSlot is { } matchingSlot)
                 {
-                    var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(matchingSlot.SlotKey);
+                    var slotLabel =
+                        CloudModlistHelper.FormatCloudSlotLabel(
+                            matchingSlot.SlotKey);
+
                     var replaceExisting = WpfMessageBox.Show(
-                        $"A cloud modlist named \"{trimmedModlistName}\" already exists in {slotLabel}. Do you want to replace it?",
+                        $"A cloud modlist named \"{trimmedModlistName}\" " +
+                        $"already exists in {slotLabel}. Do you want to " +
+                        "replace it?",
                         "Simple VS Manager",
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Question);
 
-                    if (replaceExisting != MessageBoxResult.Yes) return;
+                    if (replaceExisting != MessageBoxResult.Yes)
+                        return;
 
                     replacementSlot = matchingSlot;
                     slotKey = matchingSlot.SlotKey;
                 }
 
-                CloudModlistSlot? freeSlot = null;
                 if (slotKey is null)
-                {
-                    freeSlot = slots.FirstOrDefault(slot => !slot.IsOccupied);
-                    slotKey = freeSlot?.SlotKey;
-                }
+                    slotKey = savePlan.FreeSlot?.SlotKey;
 
                 if (slotKey is null)
                 {
-                    replacementSlot = PromptForCloudSaveReplacement(slots);
-                    if (replacementSlot is null) return;
+                    replacementSlot =
+                        PromptForCloudSaveReplacement(
+                            savePlan.Slots);
+
+                    if (replacementSlot is null)
+                        return;
 
                     slotKey = replacementSlot.SlotKey;
                 }
 
-                await store.SaveAsync(slotKey, json);
+                await CloudModlistSaveService.SaveAsync(
+                    store,
+                    slotKey,
+                    json);
 
                 if (replacementSlot is not null)
                 {
