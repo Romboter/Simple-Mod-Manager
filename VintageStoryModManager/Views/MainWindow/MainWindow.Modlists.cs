@@ -884,14 +884,17 @@ public partial class MainWindow
         {
             if (entry.IsContentComplete && !string.IsNullOrWhiteSpace(entry.ContentJson)) return entry;
 
-            CloudModlistRegistryEntry? registryEntry = null;
+            CloudModlistListEntry? refreshedEntry = null;
 
             await ExecuteCloudOperationAsync(async store =>
             {
-                registryEntry = await store.GetRegistryEntryAsync(entry.OwnerId);
+                refreshedEntry =
+                    await CloudModlistContentService.EnsureContentAsync(
+                        store,
+                        entry);
             }, "download the selected cloud modlist");
 
-            if (registryEntry is null || string.IsNullOrWhiteSpace(registryEntry.ContentJson))
+            if (refreshedEntry is null)
             {
                 WpfMessageBox.Show("The selected cloud modlist could not be downloaded.",
                     "Simple VS Manager",
@@ -900,15 +903,8 @@ public partial class MainWindow
                 return null;
             }
 
-            var refreshedEntry =
-                CloudModlistHelper.CreateListEntry(
-                    registryEntry,
-                    true);
-
-            if (_viewModel?.TryReplaceCloudModlist(entry, refreshedEntry) == true)
-                SetCloudModlistSelection(refreshedEntry);
-            else
-                SetCloudModlistSelection(refreshedEntry);
+            _viewModel?.TryReplaceCloudModlist(entry, refreshedEntry);
+            SetCloudModlistSelection(refreshedEntry);
 
             return refreshedEntry;
         }
