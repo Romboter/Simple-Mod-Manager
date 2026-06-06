@@ -454,7 +454,7 @@ public partial class MainWindow
 
     private async void MainWindow_OnPreviewDrop(object sender, DragEventArgs e)
         {
-            if (!TryGetDroppedModlistFile(e, out var filePath))
+            if (!ModlistDropHelper.TryGetDroppedModlistFile(e, out var filePath))
             {
                 e.Effects = DragDropEffects.None;
                 e.Handled = true;
@@ -471,38 +471,13 @@ public partial class MainWindow
         {
             e.Handled = true;
 
-            if (TryGetDroppedModlistFile(e, out _))
+            if (ModlistDropHelper.TryGetDroppedModlistFile(e, out _))
             {
                 e.Effects = DragDropEffects.Copy;
                 return;
             }
 
             e.Effects = DragDropEffects.None;
-        }
-
-    private static bool TryGetDroppedModlistFile(DragEventArgs e, out string? filePath)
-        {
-            filePath = null;
-
-            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return false;
-
-            if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0) return false;
-
-            foreach (var candidate in files)
-                if (HasSupportedModlistExtension(candidate))
-                {
-                    filePath = candidate;
-                    return true;
-                }
-
-            return false;
-        }
-
-    private static bool HasSupportedModlistExtension(string filePath)
-        {
-            var extension = Path.GetExtension(filePath);
-            return string.Equals(extension, ".json", StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase);
         }
 
     private bool TryLoadPresetFromFile(string filePath, string fallbackName, PresetLoadOptions options,

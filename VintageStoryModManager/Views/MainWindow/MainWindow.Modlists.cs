@@ -909,7 +909,7 @@ public partial class MainWindow
 
             foreach (var filePath in Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly))
             {
-                if (!HasSupportedModlistExtension(filePath)) continue;
+                if (!ModlistDropHelper.HasSupportedModlistExtension(filePath)) continue;
 
                 if (TryCreateLocalModlistEntry(filePath, out var entry, out var error))
                 {
