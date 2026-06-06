@@ -142,14 +142,8 @@ public partial class MainWindow
 
             try
             {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                };
-
-                var json = JsonSerializer.Serialize(serializable, options);
+                var json =
+                    PdfModlistSerializer.SerializeToJson(serializable);
                 File.WriteAllText(filePath, json);
 
                 onSuccess?.Invoke(entryName);

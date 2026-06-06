@@ -639,14 +639,8 @@ public partial class MainWindow
                     includedConfigurations,
                     ResolveGameVersion(null));
 
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                };
-
-                var json = JsonSerializer.Serialize(serializable, options);
+                var json =
+                    PdfModlistSerializer.SerializeToJson(serializable);
 
                 try
                 {

@@ -24,10 +24,26 @@ public static class PdfModlistSerializer
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
+    private static readonly JsonSerializerOptions IndentedSerializationOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
     private static readonly JsonSerializerOptions DeserializationOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
+
+    public static string SerializeToJson(SerializablePreset preset)
+    {
+        ArgumentNullException.ThrowIfNull(preset);
+
+        return JsonSerializer.Serialize(
+            preset,
+            IndentedSerializationOptions);
+    }
 
     public static string SerializeToBase64(SerializablePreset preset)
     {

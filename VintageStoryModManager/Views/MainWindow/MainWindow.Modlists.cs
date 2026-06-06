@@ -188,14 +188,8 @@ public partial class MainWindow
                     ? null
                     : createdBy.Trim();
 
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                };
-
-                var json = JsonSerializer.Serialize(serializable, options);
+                var json =
+                    PdfModlistSerializer.SerializeToJson(serializable);
                 File.WriteAllText(filePath, json);
 
                 _viewModel?.ReportStatus($"Saved modlist \"{entryName}\".");
@@ -233,14 +227,8 @@ public partial class MainWindow
 
             try
             {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                };
-
-                var json = JsonSerializer.Serialize(serializable, options);
+                var json =
+                    PdfModlistSerializer.SerializeToJson(serializable);
                 File.WriteAllText(filePath, json);
 
                 _viewModel.ReportStatus($"Saved modlist \"{savedName}\".");
@@ -367,14 +355,8 @@ public partial class MainWindow
             serializable.Version = string.IsNullOrWhiteSpace(version) ? null : version.Trim();
             serializable.Uploader = string.IsNullOrWhiteSpace(uploader) ? null : uploader.Trim();
 
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            };
-
-            json = JsonSerializer.Serialize(serializable, options);
+            json =
+                PdfModlistSerializer.SerializeToJson(serializable);
             return true;
         }
 
@@ -581,16 +563,10 @@ public partial class MainWindow
             preset.Version = updatedVersion;
             preset.GameVersion = updatedGameVersion;
 
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            };
-
             try
             {
-                var updatedJson = JsonSerializer.Serialize(preset, options);
+                var updatedJson =
+                    PdfModlistSerializer.SerializeToJson(preset);
                 File.WriteAllText(entry.FilePath, updatedJson);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
