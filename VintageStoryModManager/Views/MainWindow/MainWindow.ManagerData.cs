@@ -174,223 +174,221 @@ public partial class MainWindow
         }
 
     private void ChangeManagerFolderMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        var currentFolder =
+            ManagerDataFolderRelocationService.GetCurrentManagerFolder();
+
+        if (string.IsNullOrWhiteSpace(currentFolder))
         {
-            var currentFolder = ModCacheLocator.GetManagerDataDirectory();
-            if (string.IsNullOrWhiteSpace(currentFolder))
-            {
-                WpfMessageBox.Show(
-                    "Cannot determine the current manager data folder location.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return;
-            }
+            WpfMessageBox.Show(
+                "Cannot determine the current manager data folder location.",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return;
+        }
 
-            var dialog = new ChangeManagerFolderDialog(this, currentFolder);
-            var dialogResult = dialog.ShowDialog();
+        var dialog = new ChangeManagerFolderDialog(this, currentFolder);
+        var dialogResult = dialog.ShowDialog();
 
-            if (dialogResult != true)
-                return;
+        if (dialogResult != true)
+            return;
 
-            if (dialog.Result == ChangeManagerFolderDialogResult.Reset)
-            {
-                HandleResetManagerFolder(currentFolder);
-                return;
-            }
+        if (dialog.Result == ChangeManagerFolderDialogResult.Reset)
+        {
+            HandleResetManagerFolder(currentFolder);
+            return;
+        }
 
-            if (dialog.Result != ChangeManagerFolderDialogResult.Yes)
-                return;
+        if (dialog.Result != ChangeManagerFolderDialogResult.Yes)
+            return;
 
-            // Show folder browser dialog
-            using var folderDialog = new WinForms.FolderBrowserDialog
-            {
-                Description = "Select the new location for the \"Simple VS Manager\" folder.\n" +
-                              "The folder will be created if it doesn't exist.",
-                ShowNewFolderButton = true,
-                UseDescriptionForTitle = true
-            };
+        using var folderDialog = new WinForms.FolderBrowserDialog
+        {
+            Description =
+                "Select the new location for the \"Simple VS Manager\" folder.\n" +
+                "The folder will be created if it doesn't exist.",
+            ShowNewFolderButton = true,
+            UseDescriptionForTitle = true
+        };
 
-            if (folderDialog.ShowDialog() != WinForms.DialogResult.OK)
-                return;
+        if (folderDialog.ShowDialog() != WinForms.DialogResult.OK)
+            return;
 
-            var newParentFolder = folderDialog.SelectedPath;
-            if (string.IsNullOrWhiteSpace(newParentFolder))
-                return;
+        var newParentFolder = folderDialog.SelectedPath;
+        if (string.IsNullOrWhiteSpace(newParentFolder))
+            return;
 
-            var newManagerFolder = Path.Combine(newParentFolder, "Simple VS Manager");
+        var newManagerFolder =
+            ManagerDataFolderRelocationService.GetCustomManagerFolder(
+                newParentFolder);
 
-            // Check if the destination already exists and is not the current folder
-            if (Directory.Exists(newManagerFolder) &&
-                !string.Equals(currentFolder, newManagerFolder, StringComparison.OrdinalIgnoreCase))
-            {
-                var overwriteMessage = $"The folder \"{newManagerFolder}\" already exists.\n\n" +
-                                       "Do you want to merge with the existing folder?\n" +
-                                       "(Existing files with the same name will be overwritten)";
+        if (ManagerDataFolderRelocationService.DirectoryExists(newManagerFolder) &&
+            !ManagerDataFolderRelocationService.IsSameLocation(
+                currentFolder,
+                newManagerFolder))
+        {
+            var overwriteMessage =
+                $"The folder \"{newManagerFolder}\" already exists.\n\n" +
+                "Do you want to merge with the existing folder?\n" +
+                "(Existing files with the same name will be overwritten)";
 
-                var overwriteResult = WpfMessageBox.Show(
-                    overwriteMessage,
-                    "Folder Already Exists",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
-
-                if (overwriteResult != MessageBoxResult.Yes)
-                    return;
-            }
-
-            // Confirm the move
-            var confirmMessage = $"Move manager folder from:\n{currentFolder}\n\nTo:\n{newManagerFolder}\n\n" +
-                                 "The application will restart after the move is complete.\n\n" +
-                                 "Continue?";
-
-            var confirmResult = WpfMessageBox.Show(
-                confirmMessage,
-                "Confirm Move",
+            var overwriteResult = WpfMessageBox.Show(
+                overwriteMessage,
+                "Folder Already Exists",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
-            if (confirmResult != MessageBoxResult.Yes)
+            if (overwriteResult != MessageBoxResult.Yes)
                 return;
+        }
 
-            try
+        var confirmMessage =
+            $"Move manager folder from:\n{currentFolder}\n\n" +
+            $"To:\n{newManagerFolder}\n\n" +
+            "The application will restart after the move is complete.\n\n" +
+            "Continue?";
+
+        var confirmResult = WpfMessageBox.Show(
+            confirmMessage,
+            "Confirm Move",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirmResult != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            var moveResult =
+                ManagerDataFolderRelocationService.MoveToCustomFolder(
+                    currentFolder,
+                    newManagerFolder);
+
+            if (moveResult == ManagerFolderMoveResult.SameLocation)
             {
-                // If moving to the same location, just cancel
-                if (string.Equals(currentFolder, newManagerFolder, StringComparison.OrdinalIgnoreCase))
-                {
-                    WpfMessageBox.Show(
-                        "The selected location is the same as the current location.",
-                        "Simple VS Manager",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                    return;
-                }
-
-                // Create the new folder if it doesn't exist
-                Directory.CreateDirectory(newManagerFolder);
-
-                // Move all files and subdirectories
-                DirectoryUtility.MoveDirectoryContents(currentFolder, newManagerFolder);
-
-                // Save the new custom folder path
-                CustomConfigFolderManager.SetCustomConfigFolder(newManagerFolder);
-
-                // Show success message
-                var successMessage = $"Manager folder moved successfully to:\n{newManagerFolder}\n\n" +
-                                     "The application will now restart.";
-
                 WpfMessageBox.Show(
-                    successMessage,
-                    "Move Complete",
+                    "The selected location is the same as the current location.",
+                    "Simple VS Manager",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
+                return;
+            }
 
-                // Restart the application
-                RestartApplication();
-            }
-            catch (Exception ex)
-            {
-                WpfMessageBox.Show(
-                    $"Failed to move the manager folder:\n\n{ex.Message}",
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
+            var successMessage =
+                $"Manager folder moved successfully to:\n{newManagerFolder}\n\n" +
+                "The application will now restart.";
+
+            WpfMessageBox.Show(
+                successMessage,
+                "Move Complete",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+            RestartApplication();
         }
+        catch (Exception ex)
+        {
+            WpfMessageBox.Show(
+                $"Failed to move the manager folder:\n\n{ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
 
     private void HandleResetManagerFolder(string currentFolder)
+    {
+        var defaultFolder =
+            ManagerDataFolderRelocationService.GetDefaultManagerFolder();
+
+        if (string.IsNullOrWhiteSpace(defaultFolder))
         {
-            // Get the default location
-            var defaultFolder = ModCacheLocator.GetDefaultManagerDataDirectory();
-            if (string.IsNullOrWhiteSpace(defaultFolder))
-            {
-                WpfMessageBox.Show(
-                    "Cannot determine the default manager data folder location.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return;
-            }
-
-            // Check if already at default location
-            if (string.Equals(currentFolder, defaultFolder, StringComparison.OrdinalIgnoreCase))
-            {
-                WpfMessageBox.Show(
-                    $"Already using the default manager folder location:\n{defaultFolder}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                return;
-            }
-
-            // Confirm reset
-            var confirmMessage = $"Reset manager folder to default location?\n\n" +
-                                 $"Current location:\n{currentFolder}\n\n" +
-                                 $"Default location:\n{defaultFolder}\n\n" +
-                                 "The manager will:\n" +
-                                 "• Move all configuration files, cached mods, backups, and presets\n" +
-                                 "• Update the configuration to use the default location\n" +
-                                 "• Require a restart to complete the change\n\n" +
-                                 "Note: The Firebase authentication backup (SVSM Backup folder) will remain in its original location.\n\n" +
-                                 "Continue?";
-
-            var confirmResult = WpfMessageBox.Show(
-                confirmMessage,
-                "Reset to Default Location",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (confirmResult != MessageBoxResult.Yes)
-                return;
-
-            try
-            {
-                // Check if the destination already exists
-                if (Directory.Exists(defaultFolder))
-                {
-                    var overwriteMessage = $"The default folder \"{defaultFolder}\" already exists.\n\n" +
-                                           "Do you want to merge with the existing folder?\n" +
-                                           "(Existing files with the same name will be overwritten)";
-
-                    var overwriteResult = WpfMessageBox.Show(
-                        overwriteMessage,
-                        "Folder Already Exists",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Warning);
-
-                    if (overwriteResult != MessageBoxResult.Yes)
-                        return;
-                }
-
-                // Create the default folder if it doesn't exist
-                Directory.CreateDirectory(defaultFolder);
-
-                // Move all files and subdirectories
-                DirectoryUtility.MoveDirectoryContents(currentFolder, defaultFolder);
-
-                // Clear the custom folder configuration to use the default
-                CustomConfigFolderManager.ClearCustomConfigFolder();
-
-                // Show success message
-                var successMessage = $"Manager folder reset to default location:\n{defaultFolder}\n\n" +
-                                     "The application will now restart.";
-
-                WpfMessageBox.Show(
-                    successMessage,
-                    "Reset Complete",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-
-                // Restart the application
-                RestartApplication();
-            }
-            catch (Exception ex)
-            {
-                WpfMessageBox.Show(
-                    $"Failed to reset the manager folder:\n\n{ex.Message}",
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
+            WpfMessageBox.Show(
+                "Cannot determine the default manager data folder location.",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return;
         }
+
+        if (ManagerDataFolderRelocationService.IsSameLocation(
+                currentFolder,
+                defaultFolder))
+        {
+            WpfMessageBox.Show(
+                $"Already using the default manager folder location:\n{defaultFolder}",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var confirmMessage =
+            "Reset manager folder to default location?\n\n" +
+            $"Current location:\n{currentFolder}\n\n" +
+            $"Default location:\n{defaultFolder}\n\n" +
+            "The manager will:\n" +
+            "• Move all configuration files, cached mods, backups, and presets\n" +
+            "• Update the configuration to use the default location\n" +
+            "• Require a restart to complete the change\n\n" +
+            "Note: The Firebase authentication backup (SVSM Backup folder) " +
+            "will remain in its original location.\n\n" +
+            "Continue?";
+
+        var confirmResult = WpfMessageBox.Show(
+            confirmMessage,
+            "Reset to Default Location",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (confirmResult != MessageBoxResult.Yes)
+            return;
+
+        if (ManagerDataFolderRelocationService.DirectoryExists(defaultFolder))
+        {
+            var overwriteMessage =
+                $"The default folder \"{defaultFolder}\" already exists.\n\n" +
+                "Do you want to merge with the existing folder?\n" +
+                "(Existing files with the same name will be overwritten)";
+
+            var overwriteResult = WpfMessageBox.Show(
+                overwriteMessage,
+                "Folder Already Exists",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (overwriteResult != MessageBoxResult.Yes)
+                return;
+        }
+
+        try
+        {
+            ManagerDataFolderRelocationService.ResetToDefaultFolder(
+                currentFolder,
+                defaultFolder);
+
+            var successMessage =
+                $"Manager folder reset to default location:\n{defaultFolder}\n\n" +
+                "The application will now restart.";
+
+            WpfMessageBox.Show(
+                successMessage,
+                "Reset Complete",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+            RestartApplication();
+        }
+        catch (Exception ex)
+        {
+            WpfMessageBox.Show(
+                $"Failed to reset the manager folder:\n\n{ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
 
     private static void RestartApplication()
         {
