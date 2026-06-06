@@ -173,13 +173,13 @@ public partial class MainWindow
 
             if (string.IsNullOrWhiteSpace(sortMemberPath)) return;
 
-            sortMemberPath = NormalizeSortMemberPath(sortMemberPath.Trim());
+            sortMemberPath = ModSortHelper.NormalizeSortMemberPath(sortMemberPath.Trim());
 
             var option = FindMatchingSortOption(sortMemberPath, direction);
             if (option is null)
             {
-                var sorts = BuildSortDescriptions(sortMemberPath, direction);
-                var displayName = BuildSortDisplayName(sortMemberPath, direction);
+                var sorts = ModSortHelper.BuildSortDescriptions(sortMemberPath, direction);
+                var displayName = ModSortHelper.BuildSortDisplayName(sortMemberPath, direction);
                 option = new SortOption(displayName, sorts);
             }
 
@@ -212,124 +212,21 @@ public partial class MainWindow
             }
         }
 
-    private static bool IsActiveSortMember(string? sortMemberPath)
-        {
-            if (string.IsNullOrWhiteSpace(sortMemberPath)) return false;
-
-            return string.Equals(sortMemberPath, nameof(ModListItemViewModel.IsActive), StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(sortMemberPath, nameof(ModListItemViewModel.ActiveSortOrder),
-                       StringComparison.OrdinalIgnoreCase);
-        }
-
-    private static string NormalizeSortMemberPath(string sortMemberPath)
-        {
-            if (string.IsNullOrWhiteSpace(sortMemberPath)) return sortMemberPath;
-
-            var trimmed = sortMemberPath.Trim();
-
-            if (string.Equals(trimmed, nameof(ModListItemViewModel.DisplayName), StringComparison.OrdinalIgnoreCase))
-                return nameof(ModListItemViewModel.NameSortKey);
-
-            return IsActiveSortMember(trimmed)
-                ? nameof(ModListItemViewModel.ActiveSortOrder)
-                : trimmed;
-        }
-
-    private static bool SortMemberMatches(string? columnSortMemberPath, string sortMemberPath)
-        {
-            if (string.IsNullOrWhiteSpace(columnSortMemberPath)) return false;
-
-            return string.Equals(
-                NormalizeSortMemberPath(columnSortMemberPath),
-                NormalizeSortMemberPath(sortMemberPath),
-                StringComparison.OrdinalIgnoreCase);
-        }
-
     private SortOption? FindMatchingSortOption(string sortMemberPath, ListSortDirection direction)
         {
             if (_viewModel is null) return null;
 
-            sortMemberPath = NormalizeSortMemberPath(sortMemberPath);
+            sortMemberPath = ModSortHelper.NormalizeSortMemberPath(sortMemberPath);
 
             foreach (var option in _viewModel.SortOptions)
-                if (SortOptionMatches(option, sortMemberPath, direction))
+                if (ModSortHelper.SortOptionMatches(option, sortMemberPath, direction))
                     return option;
 
             if (_viewModel.SelectedSortOption != null
-                && SortOptionMatches(_viewModel.SelectedSortOption, sortMemberPath, direction))
+                && ModSortHelper.SortOptionMatches(_viewModel.SelectedSortOption, sortMemberPath, direction))
                 return _viewModel.SelectedSortOption;
 
             return null;
-        }
-
-    private static bool SortOptionMatches(SortOption option, string sortMemberPath, ListSortDirection direction)
-        {
-            if (option.SortDescriptions.Count == 0) return false;
-
-            var primary = option.SortDescriptions[0];
-            if (!string.Equals(primary.Property, sortMemberPath, StringComparison.OrdinalIgnoreCase)
-                || primary.Direction != direction)
-                return false;
-
-            if (IsActiveSortMember(sortMemberPath))
-            {
-                if (option.SortDescriptions.Count < 2) return false;
-
-                var secondary = option.SortDescriptions[1];
-                return string.Equals(secondary.Property, nameof(ModListItemViewModel.NameSortKey),
-                           StringComparison.OrdinalIgnoreCase)
-                       && secondary.Direction == ListSortDirection.Ascending;
-            }
-
-            return true;
-        }
-
-    private static (string Property, ListSortDirection Direction)[] BuildSortDescriptions(string sortMemberPath,
-            ListSortDirection direction)
-        {
-            List<(string Property, ListSortDirection Direction)> sorts;
-
-            if (IsActiveSortMember(sortMemberPath))
-                sorts = new List<(string, ListSortDirection)>
-                {
-                    (nameof(ModListItemViewModel.ActiveSortOrder), direction),
-                    (nameof(ModListItemViewModel.NameSortKey), ListSortDirection.Ascending)
-                };
-            else if (string.Equals(sortMemberPath, nameof(ModListItemViewModel.LatestVersionSortKey),
-                         StringComparison.OrdinalIgnoreCase))
-                sorts = new List<(string, ListSortDirection)>
-                {
-                    (nameof(ModListItemViewModel.LatestVersionSortKey), direction),
-                    (nameof(ModListItemViewModel.NameSortKey), ListSortDirection.Ascending)
-                };
-            else
-                sorts = new List<(string, ListSortDirection)>
-                {
-                    (sortMemberPath, direction)
-                };
-
-            return sorts.ToArray();
-        }
-
-    private static string BuildSortDisplayName(string sortMemberPath, ListSortDirection direction)
-        {
-            if (IsActiveSortMember(sortMemberPath))
-                return direction == ListSortDirection.Ascending
-                    ? "Active (Active → Inactive)"
-                    : "Active (Inactive → Active)";
-
-            if (string.Equals(sortMemberPath, nameof(ModListItemViewModel.NameSortKey), StringComparison.OrdinalIgnoreCase))
-                return direction == ListSortDirection.Ascending
-                    ? "Name (A → Z)"
-                    : "Name (Z → A)";
-
-            if (string.Equals(sortMemberPath, nameof(ModListItemViewModel.LatestVersionSortKey),
-                    StringComparison.OrdinalIgnoreCase))
-                return direction == ListSortDirection.Ascending
-                    ? "Latest Version (Updates First)"
-                    : "Latest Version (Updates Last)";
-
-            return $"{sortMemberPath} ({(direction == ListSortDirection.Ascending ? "Ascending" : "Descending")})";
         }
 
     private void UpdateSortPreferenceFromSelectedOption(bool persistPreference)
@@ -361,7 +258,7 @@ public partial class MainWindow
             if (ModsDataGrid == null) return;
 
             foreach (var column in ModsDataGrid.Columns)
-                if (SortMemberMatches(column.SortMemberPath, sortMemberPath))
+                if (ModSortHelper.SortMemberMatches(column.SortMemberPath, sortMemberPath))
                     column.SortDirection = direction;
                 else
                     column.SortDirection = null;
