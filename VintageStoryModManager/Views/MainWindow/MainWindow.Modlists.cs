@@ -583,27 +583,33 @@ public partial class MainWindow
             string cacheDirectory;
             try
             {
-                cacheDirectory = EnsureCloudModListCacheDirectory();
+                cacheDirectory =
+                    EnsureCloudModListCacheDirectory();
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (
+                ex is IOException or UnauthorizedAccessException)
             {
-                WpfMessageBox.Show($"Failed to prepare the cloud modlist cache:\n{ex.Message}",
+                WpfMessageBox.Show(
+                    $"Failed to prepare the cloud modlist cache:\n{ex.Message}",
                     "Simple VS Manager",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 return;
             }
 
-            var cacheFileName = FileNameHelper.BuildSuggestedFileName(entry.Name ?? entry.DisplayName, "Cloud Modlist");
-            var cacheFilePath = FileNameHelper.GetUniqueFilePath(cacheDirectory, cacheFileName, ".json");
-
+            string cacheFilePath;
             try
             {
-                await File.WriteAllTextAsync(cacheFilePath, entry.ContentJson);
+                cacheFilePath =
+                    await CloudModlistCacheService.CacheAsync(
+                        cacheDirectory,
+                        entry);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (
+                ex is IOException or UnauthorizedAccessException)
             {
-                WpfMessageBox.Show($"Failed to cache the selected modlist:\n{ex.Message}",
+                WpfMessageBox.Show(
+                    $"Failed to cache the selected modlist:\n{ex.Message}",
                     "Simple VS Manager",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
