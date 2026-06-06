@@ -174,11 +174,6 @@ public partial class MainWindow
             }, "save the modlist to the cloud");
         }
 
-    private static string? NormalizeCloudVersion(string? version)
-        {
-            return string.IsNullOrWhiteSpace(version) ? null : version.Trim();
-        }
-
     private List<ModConfigOption> BuildModConfigOptions(bool selectByDefault = true)
         {
             var options = new List<ModConfigOption>();

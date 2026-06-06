@@ -62,4 +62,9 @@ internal static class CloudModlistHelper
         {
             return ModlistMetadataParser.ExtractModlistMetadata(json).Name;
         }
+
+    internal static string? NormalizeCloudVersion(string? version)
+        {
+            return string.IsNullOrWhiteSpace(version) ? null : version.Trim();
+        }
 }

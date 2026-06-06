@@ -1027,7 +1027,7 @@ public partial class MainWindow
 
                 var installedVersion = string.IsNullOrWhiteSpace(mod.Version) ? null : mod.Version!.Trim();
 
-                if (VersionsMatch(desiredVersion, installedVersion)) continue;
+                if (VersionStringUtility.VersionsMatch(desiredVersion, installedVersion)) continue;
 
                 var desiredNormalized = VersionStringUtility.Normalize(desiredVersion);
 
@@ -1432,26 +1432,6 @@ public partial class MainWindow
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
             }
-        }
-
-    private static bool VersionsMatch(string? desiredVersion, string? installedVersion)
-        {
-            if (string.IsNullOrWhiteSpace(desiredVersion) && string.IsNullOrWhiteSpace(installedVersion)) return true;
-
-            if (!string.IsNullOrWhiteSpace(desiredVersion) && !string.IsNullOrWhiteSpace(installedVersion))
-            {
-                if (string.Equals(desiredVersion.Trim(), installedVersion.Trim(), StringComparison.OrdinalIgnoreCase))
-                    return true;
-
-                var desiredNormalized = VersionStringUtility.Normalize(desiredVersion);
-                var installedNormalized = VersionStringUtility.Normalize(installedVersion);
-                if (!string.IsNullOrWhiteSpace(desiredNormalized)
-                    && !string.IsNullOrWhiteSpace(installedNormalized)
-                    && string.Equals(desiredNormalized, installedNormalized, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-
-            return false;
         }
 
 }

@@ -236,7 +236,7 @@ public partial class MainWindow
                         .ConfigureAwait(true);
                     var appliedChangelogEntries =
                         mod.GetChangelogEntriesForUpgrade(release.Version);
-                    var changelogSummary = BuildChangelogSummary(appliedChangelogEntries);
+                    var changelogSummary = ModChangelogFormatter.BuildChangelogSummary(appliedChangelogEntries);
                     results.Add(
                         ModUpdateOperationResult.SuccessResult(mod, release.Version, mod.Version, changelogSummary));
                 }
@@ -336,24 +336,6 @@ public partial class MainWindow
             };
 
             dialog.ShowDialog();
-        }
-
-    private static string? BuildChangelogSummary(IReadOnlyList<ModListItemViewModel.ReleaseChangelog> changelogEntries)
-        {
-            if (changelogEntries is not { Count: > 0 }) return null;
-
-            var builder = new StringBuilder();
-
-            for (var i = 0; i < changelogEntries.Count; i++)
-            {
-                var entry = changelogEntries[i];
-                if (i > 0) builder.AppendLine();
-
-                builder.AppendLine($"{entry.Version}:");
-                builder.AppendLine(entry.Changelog);
-            }
-
-            return builder.ToString().TrimEnd();
         }
 
     private static void ShowUpdateSummary(IReadOnlyList<ModUpdateOperationResult> results, bool isBulk, bool aborted)
