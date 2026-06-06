@@ -421,7 +421,9 @@ public partial class MainWindow
 
     private async Task ShowCloudModlistManagementDialogAsync(FirebaseModlistStore store)
         {
-            var entries = await BuildCloudModlistManagementEntriesAsync(store);
+            var entries =
+                await CloudModlistManagementService.LoadEntriesAsync(
+                    store);
             if (entries.Count == 0)
             {
                 WpfMessageBox.Show(
@@ -435,36 +437,11 @@ public partial class MainWindow
             var dialog = new CloudModlistManagementDialog(
                 this,
                 entries,
-                () => BuildCloudModlistManagementEntriesAsync(store),
+                () => CloudModlistManagementService.LoadEntriesAsync(store),
                 (entry, newName) => RenameCloudModlistAsync(store, entry, newName),
                 entry => DeleteCloudModlistAsync(store, entry));
 
             dialog.ShowDialog();
-        }
-
-    private async Task<IReadOnlyList<CloudModlistManagementEntry>> BuildCloudModlistManagementEntriesAsync(
-            FirebaseModlistStore store)
-        {
-            var slots =
-                await CloudModlistSlotService.LoadSlotsAsync(
-                    store,
-                    false,
-                    true);
-            var list = new List<CloudModlistManagementEntry>(slots.Count);
-
-            foreach (var slot in slots)
-            {
-                var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(slot.SlotKey);
-                list.Add(new CloudModlistManagementEntry(
-                    slot.SlotKey,
-                    slotLabel,
-                    slot.Name,
-                    slot.Version,
-                    slot.DisplayName,
-                    slot.CachedContent));
-            }
-
-            return list;
         }
 
     private async Task<bool> RenameCloudModlistAsync(
