@@ -129,7 +129,7 @@ public partial class MainWindow
 
                 if (matchingSlot is not null)
                 {
-                    var slotLabel = FormatCloudSlotLabel(matchingSlot.SlotKey);
+                    var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(matchingSlot.SlotKey);
                     var replaceExisting = WpfMessageBox.Show(
                         $"A cloud modlist named \"{trimmedModlistName}\" already exists in {slotLabel}. Do you want to replace it?",
                         "Simple VS Manager",
@@ -499,7 +499,7 @@ public partial class MainWindow
 
             foreach (var slot in slots)
             {
-                var slotLabel = FormatCloudSlotLabel(slot.SlotKey);
+                var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(slot.SlotKey);
                 list.Add(new CloudModlistManagementEntry(
                     slot.SlotKey,
                     slotLabel,
@@ -550,7 +550,7 @@ public partial class MainWindow
             string updatedJson;
             try
             {
-                updatedJson = ReplaceCloudModlistName(json, trimmedName);
+                updatedJson = CloudModlistHelper.ReplaceCloudModlistName(json, trimmedName);
             }
             catch (Exception ex) when (ex is JsonException or InvalidOperationException)
             {
@@ -576,7 +576,7 @@ public partial class MainWindow
                 return false;
             }
 
-            var slotLabel = FormatCloudSlotLabel(entry.SlotKey);
+            var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(entry.SlotKey);
             _viewModel?.ReportStatus($"Renamed cloud modlist in {slotLabel} to \"{trimmedName}\".");
 
             await UpdateCloudModlistsAfterChangeAsync();
@@ -608,7 +608,7 @@ public partial class MainWindow
                 return false;
             }
 
-            var slotLabel = FormatCloudSlotLabel(entry.SlotKey);
+            var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(entry.SlotKey);
             _viewModel?.ReportStatus($"Deleted cloud modlist from {slotLabel}.");
 
             await UpdateCloudModlistsAfterChangeAsync();

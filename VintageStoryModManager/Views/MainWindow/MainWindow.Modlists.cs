@@ -722,7 +722,7 @@ public partial class MainWindow
                     }
                 }
 
-                var sourceName = selectedSlot.Name ?? FormatCloudSlotLabel(selectedSlot.SlotKey);
+                var sourceName = selectedSlot.Name ?? CloudModlistHelper.FormatCloudSlotLabel(selectedSlot.SlotKey);
                 if (!TryLoadPresetFromJson(json,
                         "Modlist",
                         loadOptions,
@@ -743,7 +743,7 @@ public partial class MainWindow
                 var loadedModlist = preset!;
                 await CreateAutomaticBackupAsync("ModlistLoaded").ConfigureAwait(true);
                 await ApplyPresetAsync(loadedModlist);
-                var slotLabel = FormatCloudSlotLabel(selectedSlot.SlotKey);
+                var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(selectedSlot.SlotKey);
                 var status = mode == ModlistLoadMode.Replace
                     ? $"Loaded cloud modlist \"{loadedModlist.Name}\" from {slotLabel}."
                     : $"Added mods from cloud modlist \"{loadedModlist.Name}\" from {slotLabel}.";
@@ -772,7 +772,7 @@ public partial class MainWindow
                 var dialogResult = dialog.ShowDialog();
                 if (dialogResult != true || dialog.SelectedSlot is not CloudModlistSlot selectedSlot) return;
 
-                var slotLabel = FormatCloudSlotLabel(selectedSlot.SlotKey);
+                var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(selectedSlot.SlotKey);
                 var displayName = string.IsNullOrWhiteSpace(selectedSlot.Name)
                     ? slotLabel
                     : $"{slotLabel} (\"{selectedSlot.Name}\")";
@@ -793,37 +793,6 @@ public partial class MainWindow
                 await RefreshCloudModlistsAsync(true);
             else
                 _cloudModlistsLoaded = false;
-        }
-
-    private static string ReplaceCloudModlistName(string json, string newName)
-        {
-            using var document = JsonDocument.Parse(json);
-            if (document.RootElement.ValueKind != JsonValueKind.Object)
-                throw new InvalidOperationException("The cloud modlist content is not a valid object.");
-
-            using var stream = new MemoryStream();
-            using (var writer = new Utf8JsonWriter(stream))
-            {
-                writer.WriteStartObject();
-                var nameWritten = false;
-
-                foreach (var property in document.RootElement.EnumerateObject())
-                    if (property.NameEquals("name"))
-                    {
-                        writer.WriteString("name", newName);
-                        nameWritten = true;
-                    }
-                    else
-                    {
-                        property.WriteTo(writer);
-                    }
-
-                if (!nameWritten) writer.WriteString("name", newName);
-
-                writer.WriteEndObject();
-            }
-
-            return Encoding.UTF8.GetString(stream.ToArray());
         }
 
     private async Task<List<CloudModlistSlot>> GetCloudModlistSlotsAsync(
@@ -855,7 +824,7 @@ public partial class MainWindow
                             true);
                     }
 
-                var display = BuildCloudSlotDisplay(slotKey, metadata, isOccupied);
+                var display = CloudModlistHelper.BuildCloudSlotDisplay(slotKey, metadata, isOccupied);
                 var cachedContent = captureContent ? json : null;
                 result.Add(new CloudModlistSlot(slotKey, isOccupied, display, metadata.Name, metadata.Version,
                     cachedContent));
@@ -1120,7 +1089,7 @@ public partial class MainWindow
 
                 if (!seen.Add(entry.RegistryKey)) continue;
 
-                var slotLabel = FormatCloudSlotLabel(entry.SlotKey);
+                var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(entry.SlotKey);
                 var metadata = ModlistMetadataParser.ExtractModlistMetadata(entry.ContentJson);
                 list.Add(new CloudModlistListEntry(
                     entry.OwnerId,
@@ -1175,7 +1144,7 @@ public partial class MainWindow
             var refreshedEntry = new CloudModlistListEntry(
                 registryEntry.OwnerId,
                 registryEntry.SlotKey,
-                FormatCloudSlotLabel(registryEntry.SlotKey),
+                CloudModlistHelper.FormatCloudSlotLabel(registryEntry.SlotKey),
                 metadata.Name,
                 metadata.Description,
                 metadata.Version,
@@ -1330,31 +1299,6 @@ public partial class MainWindow
             {
                 return null;
             }
-        }
-
-    private static string BuildCloudSlotDisplay(string slotKey, ModlistMetadata metadata, bool isOccupied)
-        {
-            if (!isOccupied) return $"{FormatCloudSlotLabel(slotKey)} (Empty)";
-
-            var name = metadata.Name ?? "Unnamed Modlist";
-            return string.IsNullOrWhiteSpace(metadata.Version)
-                ? name
-                : $"{name} (v{metadata.Version})";
-        }
-
-    private static string FormatCloudSlotLabel(string slotKey)
-        {
-            if (string.Equals(slotKey, "public", StringComparison.OrdinalIgnoreCase)) return "Public Entry";
-
-            if (slotKey.Length > 4 && slotKey.StartsWith("slot", StringComparison.OrdinalIgnoreCase))
-                return $"Slot {slotKey.AsSpan(4).ToString()}";
-
-            return slotKey;
-        }
-
-    private static string? ExtractModlistName(string? json)
-        {
-            return ModlistMetadataParser.ExtractModlistMetadata(json).Name;
         }
 
 }
