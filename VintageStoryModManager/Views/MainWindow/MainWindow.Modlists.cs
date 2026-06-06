@@ -467,26 +467,15 @@ public partial class MainWindow
 
             if (confirmation != MessageBoxResult.Yes) return;
 
-            var errors = new List<string>();
-            var deletedCount = 0;
+            var deletionResult =
+                LocalModlistFileService.Delete(entries);
 
-            foreach (var entry in entries)
+            if (deletionResult.Errors.Count > 0)
             {
-                try
-                {
-                    if (!File.Exists(entry.FilePath)) continue;
-                    File.Delete(entry.FilePath);
-                    deletedCount++;
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                {
-                    errors.Add($"{entry.DisplayName}: {ex.Message}");
-                }
-            }
+                var summary = string.Join(
+                    "\n",
+                    deletionResult.Errors.Select(error => $"• {error}"));
 
-            if (errors.Count > 0)
-            {
-                var summary = string.Join("\n", errors.Select(err => $"• {err}"));
                 WpfMessageBox.Show(
                     this,
                     "Some modlists could not be deleted:\n" + summary,
@@ -494,11 +483,13 @@ public partial class MainWindow
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
-            else if (deletedCount > 0)
+            else if (deletionResult.DeletedCount > 0)
             {
-                var statusMessage = deletedCount == 1
-                    ? "Deleted local modlist."
-                    : $"Deleted {deletedCount} local modlists.";
+                var statusMessage =
+                    deletionResult.DeletedCount == 1
+                        ? "Deleted local modlist."
+                        : $"Deleted {deletionResult.DeletedCount} local modlists.";
+
                 _viewModel?.ReportStatus(statusMessage);
             }
 
@@ -517,63 +508,46 @@ public partial class MainWindow
             var dialogResult = dialog.ShowDialog();
             if (dialogResult != true) return;
 
-            string json;
-            try
-            {
-                json = File.ReadAllText(entry.FilePath);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                WpfMessageBox.Show(
-                    this,
-                    $"Failed to read the modlist:\n{ex.Message}",
-                    "Modify Modlist",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return;
-            }
+            var updatedName = dialog.ModlistName?.Trim();
+            var updatedDescription =
+                string.IsNullOrWhiteSpace(dialog.ModlistDescription)
+                    ? null
+                    : dialog.ModlistDescription!.Trim();
+            var updatedVersion =
+                string.IsNullOrWhiteSpace(dialog.ModlistVersion)
+                    ? null
+                    : dialog.ModlistVersion!.Trim();
+            var updatedGameVersion =
+                string.IsNullOrWhiteSpace(dialog.ModlistGameVersion)
+                    ? null
+                    : dialog.ModlistGameVersion!.Trim();
 
-            if (!PdfModlistSerializer.TryDeserializeFromJson(json, out var preset, out var errorMessage) || preset is null)
+            var updateResult =
+                LocalModlistFileService.UpdateMetadata(
+                    entry.FilePath,
+                    updatedName,
+                    updatedDescription,
+                    updatedVersion,
+                    updatedGameVersion);
+
+            if (!updateResult.Success)
             {
-                var message = string.IsNullOrWhiteSpace(errorMessage)
-                    ? "The modlist could not be read."
-                    : errorMessage!;
+                var errorMessage =
+                    updateResult.ErrorMessage ??
+                    "The modlist could not be updated.";
+
+                var message =
+                    updateResult.FailureStage ==
+                    LocalModlistUpdateFailureStage.Read
+                        ? $"Failed to read the modlist:\n{errorMessage}"
+                        : updateResult.FailureStage ==
+                          LocalModlistUpdateFailureStage.Write
+                            ? $"Failed to update the modlist:\n{errorMessage}"
+                            : errorMessage;
+
                 WpfMessageBox.Show(
                     this,
                     message,
-                    "Modify Modlist",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return;
-            }
-
-            var updatedName = dialog.ModlistName?.Trim();
-            var updatedDescription = string.IsNullOrWhiteSpace(dialog.ModlistDescription)
-                ? null
-                : dialog.ModlistDescription!.Trim();
-            var updatedVersion = string.IsNullOrWhiteSpace(dialog.ModlistVersion)
-                ? null
-                : dialog.ModlistVersion!.Trim();
-            var updatedGameVersion = string.IsNullOrWhiteSpace(dialog.ModlistGameVersion)
-                ? null
-                : dialog.ModlistGameVersion!.Trim();
-
-            preset.Name = updatedName;
-            preset.Description = updatedDescription;
-            preset.Version = updatedVersion;
-            preset.GameVersion = updatedGameVersion;
-
-            try
-            {
-                var updatedJson =
-                    PdfModlistSerializer.SerializeToJson(preset);
-                File.WriteAllText(entry.FilePath, updatedJson);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                WpfMessageBox.Show(
-                    this,
-                    $"Failed to update the modlist:\n{ex.Message}",
                     "Modify Modlist",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
