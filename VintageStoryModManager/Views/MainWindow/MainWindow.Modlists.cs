@@ -846,7 +846,7 @@ public partial class MainWindow
                     try
                     {
                         json = await store.LoadAsync(slotKey);
-                        metadata = ExtractModlistMetadata(json);
+                        metadata = ModlistMetadataParser.ExtractModlistMetadata(json);
                     }
                     catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException
                                                    or TaskCanceledException)
@@ -1056,7 +1056,7 @@ public partial class MainWindow
                 return false;
             }
 
-            var metadata = ExtractModlistMetadata(json);
+            var metadata = ModlistMetadataParser.ExtractModlistMetadata(json);
             var mods = metadata.Mods ?? Array.Empty<string>();
             var lastWriteUtc = File.GetLastWriteTimeUtc(filePath);
             DateTimeOffset? lastModified = lastWriteUtc == DateTime.MinValue
@@ -1121,7 +1121,7 @@ public partial class MainWindow
                 if (!seen.Add(entry.RegistryKey)) continue;
 
                 var slotLabel = FormatCloudSlotLabel(entry.SlotKey);
-                var metadata = ExtractModlistMetadata(entry.ContentJson);
+                var metadata = ModlistMetadataParser.ExtractModlistMetadata(entry.ContentJson);
                 list.Add(new CloudModlistListEntry(
                     entry.OwnerId,
                     entry.SlotKey,
@@ -1171,7 +1171,7 @@ public partial class MainWindow
                 return null;
             }
 
-            var metadata = ExtractModlistMetadata(registryEntry.ContentJson);
+            var metadata = ModlistMetadataParser.ExtractModlistMetadata(registryEntry.ContentJson);
             var refreshedEntry = new CloudModlistListEntry(
                 registryEntry.OwnerId,
                 registryEntry.SlotKey,
@@ -1354,7 +1354,7 @@ public partial class MainWindow
 
     private static string? ExtractModlistName(string? json)
         {
-            return ExtractModlistMetadata(json).Name;
+            return ModlistMetadataParser.ExtractModlistMetadata(json).Name;
         }
 
 }

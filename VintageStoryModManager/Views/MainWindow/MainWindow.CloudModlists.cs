@@ -311,7 +311,7 @@ public partial class MainWindow
                     string.Equals(entry.OwnerId, currentUserId, StringComparison.Ordinal))
                     continue;
 
-                var metadata = ExtractModlistMetadata(entry.ContentJson);
+                var metadata = ModlistMetadataParser.ExtractModlistMetadata(entry.ContentJson);
                 if (metadata.Uploader is not null &&
                     string.Equals(metadata.Uploader, trimmedUploader, StringComparison.OrdinalIgnoreCase))
                     return false;
