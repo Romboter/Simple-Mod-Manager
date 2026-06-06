@@ -1003,4 +1003,23 @@ public partial class MainWindow
             }
         }
 
+    private void SavePresetMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            var presetDirectory = EnsurePresetDirectory();
+            TrySaveSnapshot(
+                presetDirectory,
+                "Save Mod Preset",
+                "Preset files (*.json)|*.json|All files (*.*)|*.*",
+                "Presets must be saved inside the Presets folder.",
+                "Preset",
+                () => _userConfiguration.GetLastSelectedPresetName(),
+                name =>
+                {
+                    _userConfiguration.SetLastSelectedPresetName(name);
+                    _viewModel?.ReportStatus($"Saved preset \"{name}\".");
+                },
+                "preset",
+                false,
+                false);
+        }
 }
