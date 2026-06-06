@@ -534,33 +534,61 @@ public partial class MainWindow
             return true;
         }
 
-    private async Task<bool> DeleteCloudModlistAsync(FirebaseModlistStore store, CloudModlistManagementEntry entry)
+    private async Task<bool> DeleteCloudModlistAsync(
+            FirebaseModlistStore store,
+            CloudModlistManagementEntry entry)
         {
-            try
+            var result =
+                await CloudModlistManagementService.DeleteAsync(
+                    store,
+                    entry);
+
+            switch (result.Status)
             {
-                await store.DeleteAsync(entry.SlotKey);
-            }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-            {
-                StatusLogService.AppendStatus($"Failed to delete cloud modlist: {ex.Message}", true);
-                WpfMessageBox.Show($"Failed to delete the cloud modlist:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return false;
-            }
-            catch (InvalidOperationException ex)
-            {
-                StatusLogService.AppendStatus($"Invalid request while deleting cloud modlist: {ex.Message}", true);
-                WpfMessageBox.Show($"Failed to delete the cloud modlist:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return false;
+                case CloudModlistDeleteStatus.NetworkFailed:
+                    StatusLogService.AppendStatus(
+                        $"Failed to delete cloud modlist: " +
+                        $"{result.ErrorMessage}",
+                        true);
+
+                    WpfMessageBox.Show(
+                        $"Failed to delete the cloud modlist:\n" +
+                        result.ErrorMessage,
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    return false;
+
+                case CloudModlistDeleteStatus.InvalidRequest:
+                    StatusLogService.AppendStatus(
+                        $"Invalid request while deleting cloud modlist: " +
+                        $"{result.ErrorMessage}",
+                        true);
+
+                    WpfMessageBox.Show(
+                        $"Failed to delete the cloud modlist:\n" +
+                        result.ErrorMessage,
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    return false;
+
+                case CloudModlistDeleteStatus.Success:
+                    break;
+
+                default:
+                    throw new InvalidOperationException(
+                        "Unexpected cloud modlist delete result.");
             }
 
-            var slotLabel = CloudModlistHelper.FormatCloudSlotLabel(entry.SlotKey);
-            _viewModel?.ReportStatus($"Deleted cloud modlist from {slotLabel}.");
+            var slotLabel =
+                CloudModlistHelper.FormatCloudSlotLabel(
+                    entry.SlotKey);
+
+            _viewModel?.ReportStatus(
+                $"Deleted cloud modlist from {slotLabel}.");
 
             await UpdateCloudModlistsAfterChangeAsync();
             return true;

@@ -127,6 +127,37 @@ internal static class CloudModlistManagementService
             trimmedName,
             null);
     }
+
+    internal static async Task<CloudModlistDeleteResult> DeleteAsync(
+        FirebaseModlistStore store,
+        CloudModlistManagementEntry entry)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        ArgumentNullException.ThrowIfNull(entry);
+
+        try
+        {
+            await store.DeleteAsync(entry.SlotKey);
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException or
+            TaskCanceledException)
+        {
+            return new CloudModlistDeleteResult(
+                CloudModlistDeleteStatus.NetworkFailed,
+                ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CloudModlistDeleteResult(
+                CloudModlistDeleteStatus.InvalidRequest,
+                ex.Message);
+        }
+
+        return new CloudModlistDeleteResult(
+            CloudModlistDeleteStatus.Success,
+            null);
+    }
 }
 
 internal enum CloudModlistRenameStatus
@@ -142,4 +173,15 @@ internal enum CloudModlistRenameStatus
 internal sealed record CloudModlistRenameResult(
     CloudModlistRenameStatus Status,
     string? Name,
+    string? ErrorMessage);
+
+internal enum CloudModlistDeleteStatus
+{
+    Success,
+    NetworkFailed,
+    InvalidRequest
+}
+
+internal sealed record CloudModlistDeleteResult(
+    CloudModlistDeleteStatus Status,
     string? ErrorMessage);
