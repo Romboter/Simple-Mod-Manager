@@ -460,192 +460,122 @@ public partial class MainWindow
         }
 
     private async Task ImportPresetConfigsAsync(ModPreset preset)
+    {
+        if (preset.ModStates.Count == 0) return;
+
+        var configurations =
+            PresetConfigurationImportService.CollectConfigurations(preset);
+
+        if (configurations.Count == 0) return;
+
+        var modDisplayNames =
+            new Dictionary<string, string>(
+                StringComparer.OrdinalIgnoreCase);
+        var promptNames = new List<string>(configurations.Count);
+
+        foreach (var configuration in configurations)
         {
-            if (preset.ModStates.Count == 0) return;
+            var displayName = configuration.ModId;
 
-            var configs = new List<(string ModId, string? FileName, string? RelativePath, string Content)>();
-            var seenConfigs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var state in preset.ModStates)
+            if (_viewModel?.TryGetInstalledModDisplayName(
+                    configuration.ModId,
+                    out var resolvedName) == true &&
+                !string.IsNullOrWhiteSpace(resolvedName))
             {
-                if (state is null || string.IsNullOrWhiteSpace(state.ModId)) continue;
-
-                var trimmedId = state.ModId.Trim();
-
-                if (state.Configurations is not null && state.Configurations.Count > 0)
-                {
-                    foreach (var config in state.Configurations)
-                    {
-                        if (config is null || string.IsNullOrEmpty(config.Content)) continue;
-
-                        var key = $"{trimmedId}::{config.FileName}::{config.RelativePath}::{config.Content}";
-                        if (!seenConfigs.Add(key)) continue;
-
-                        configs.Add((trimmedId, config.FileName, config.RelativePath, config.Content));
-                    }
-                }
-                else if (state.ConfigurationContent is not null)
-                {
-                    var key = $"{trimmedId}::{state.ConfigurationFileName}::{state.ConfigurationContent}";
-                    if (!seenConfigs.Add(key)) continue;
-
-                    configs.Add((trimmedId, state.ConfigurationFileName, null, state.ConfigurationContent!));
-                }
+                displayName = resolvedName.Trim();
             }
 
-            if (configs.Count == 0) return;
+            if (!modDisplayNames.ContainsKey(configuration.ModId))
+                modDisplayNames.Add(configuration.ModId, displayName);
 
-            var modDisplayNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var promptNames = new List<string>(configs.Count);
-            foreach (var config in configs)
-            {
-                var displayName = config.ModId;
-                if (_viewModel?.TryGetInstalledModDisplayName(config.ModId, out var resolvedName) == true
-                    && !string.IsNullOrWhiteSpace(resolvedName))
-                    displayName = resolvedName.Trim();
-
-                if (!modDisplayNames.ContainsKey(config.ModId)) modDisplayNames.Add(config.ModId, displayName);
-
-                promptNames.Add(displayName);
-            }
-
-            promptNames = promptNames
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            var summary = promptNames.Count == 0
-                ? ""
-                : string.Join("\n", promptNames.Select(name => $"• {name}"));
-
-            var message = "This modlist includes configuration files for the following mods:";
-            if (!string.IsNullOrEmpty(summary)) message += $"\n\n{summary}";
-
-            message +=
-                "\n\nImporting these configurations will overwrite your existing settings for these mods if they are already installed. Do you want to import them?";
-
-            var prompt = WpfMessageBox.Show(
-                this,
-                message,
-                "Import Mod Configurations",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (prompt != MessageBoxResult.Yes) return;
-
-            if (string.IsNullOrWhiteSpace(_dataDirectory))
-            {
-                WpfMessageBox.Show(
-                    "The Vintage Story data directory is not set, so the configuration files could not be imported.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            var configDirectory = Path.Combine(_dataDirectory, "ModConfig");
-            try
-            {
-                Directory.CreateDirectory(configDirectory);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                WpfMessageBox.Show(
-                    $"Failed to prepare the configuration directory:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return;
-            }
-
-            var usedRelativePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var errors = new List<string>();
-            var importedCount = 0;
-            var modConfigTargets = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-            var modConfigNames = new Dictionary<string, List<string?>>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var config in configs)
-            {
-                var fileName = ModConfigPathHelper.GetSafeConfigFileName(config.FileName, config.ModId);
-                var relativePath = ModConfigPathHelper.NormalizeRelativeConfigPath(config.RelativePath, fileName) ?? fileName;
-                var uniqueRelativePath = ModConfigPathHelper.EnsureUniqueRelativePath(relativePath, usedRelativePaths);
-                var targetPath = Path.Combine(configDirectory, uniqueRelativePath);
-
-                if (!PathRelationshipHelper.IsPathWithinDirectory(configDirectory, targetPath))
-                {
-                    uniqueRelativePath = ModConfigPathHelper.EnsureUniqueRelativePath(fileName, usedRelativePaths);
-                    targetPath = Path.Combine(configDirectory, uniqueRelativePath);
-                }
-
-                try
-                {
-                    var targetDirectory = Path.GetDirectoryName(targetPath);
-                    if (!string.IsNullOrWhiteSpace(targetDirectory)) Directory.CreateDirectory(targetDirectory);
-
-                    await File.WriteAllTextAsync(targetPath, config.Content).ConfigureAwait(true);
-                    if (!modConfigTargets.TryGetValue(config.ModId, out var pathsForMod))
-                    {
-                        pathsForMod = new List<string>();
-                        modConfigTargets[config.ModId] = pathsForMod;
-                    }
-
-                    if (!modConfigNames.TryGetValue(config.ModId, out var namesForMod))
-                    {
-                        namesForMod = new List<string?>();
-                        modConfigNames[config.ModId] = namesForMod;
-                    }
-
-                    pathsForMod.Add(targetPath);
-                    namesForMod.Add(config.FileName);
-                    importedCount++;
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
-                                                   or NotSupportedException or PathTooLongException)
-                {
-                    var displayName = modDisplayNames.TryGetValue(config.ModId, out var name) &&
-                                      !string.IsNullOrWhiteSpace(name)
-                        ? name
-                        : config.ModId;
-                    errors.Add($"{displayName}: {ex.Message}");
-                }
-            }
-
-            if (importedCount > 0)
-            {
-                foreach (var pair in modConfigTargets)
-                {
-                    var modId = pair.Key;
-                    var paths = pair.Value;
-                    var names = modConfigNames.TryGetValue(modId, out var configNames)
-                        ? configNames
-                        : null;
-
-                    try
-                    {
-                        _userConfiguration.SetModConfigPaths(modId, paths, names);
-                    }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
-                                                   or NotSupportedException or PathTooLongException)
-                    {
-                        var displayName = modDisplayNames.TryGetValue(modId, out var name) && !string.IsNullOrWhiteSpace(name)
-                            ? name
-                            : modId;
-                        errors.Add($"{displayName}: {ex.Message}");
-                    }
-                }
-
-                _viewModel?.ReportStatus($"Imported configuration files for {importedCount} mod(s).");
-                UpdateSelectedModButtons();
-            }
-
-            if (errors.Count > 0)
-                WpfMessageBox.Show(
-                    "Some configuration files could not be imported:\n" + string.Join("\n", errors),
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+            promptNames.Add(displayName);
         }
+
+        promptNames = promptNames
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var summary = promptNames.Count == 0
+            ? string.Empty
+            : string.Join(
+                "\n",
+                promptNames.Select(name => $"• {name}"));
+
+        var message =
+            "This modlist includes configuration files for the following mods:";
+
+        if (!string.IsNullOrEmpty(summary))
+            message += $"\n\n{summary}";
+
+        message +=
+            "\n\nImporting these configurations will overwrite your existing " +
+            "settings for these mods if they are already installed. " +
+            "Do you want to import them?";
+
+        var prompt = WpfMessageBox.Show(
+            this,
+            message,
+            "Import Mod Configurations",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (prompt != MessageBoxResult.Yes) return;
+
+        if (string.IsNullOrWhiteSpace(_dataDirectory))
+        {
+            WpfMessageBox.Show(
+                "The Vintage Story data directory is not set, so the " +
+                "configuration files could not be imported.",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        PresetConfigurationImportResult importResult;
+
+        try
+        {
+            importResult =
+                await PresetConfigurationImportService.ImportAsync(
+                        configurations,
+                        _dataDirectory,
+                        _userConfiguration,
+                        modDisplayNames)
+                    .ConfigureAwait(true);
+        }
+        catch (Exception ex) when (
+            ex is IOException or UnauthorizedAccessException)
+        {
+            WpfMessageBox.Show(
+                $"Failed to prepare the configuration directory:\n{ex.Message}",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return;
+        }
+
+        if (importResult.ImportedCount > 0)
+        {
+            _viewModel?.ReportStatus(
+                $"Imported configuration files for " +
+                $"{importResult.ImportedCount} mod(s).");
+
+            UpdateSelectedModButtons();
+        }
+
+        if (importResult.Errors.Count > 0)
+        {
+            WpfMessageBox.Show(
+                "Some configuration files could not be imported:\n" +
+                string.Join("\n", importResult.Errors),
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
 
     private async Task<bool> ApplyPresetModVersionsAsync(ModPreset preset)
         {
