@@ -214,7 +214,7 @@ public partial class MainWindow
                 mods.Add(serializableState);
             }
 
-            var configList = BuildSerializableConfigList(includedConfigurations);
+            var configList = PresetConfigurationSerializer.BuildSerializableConfigList(includedConfigurations);
 
             return new SerializablePreset
             {
@@ -234,56 +234,6 @@ public partial class MainWindow
 
             var installed = _viewModel?.InstalledGameVersion;
             return string.IsNullOrWhiteSpace(installed) ? null : installed!.Trim();
-        }
-
-    private static SerializableConfigList? BuildSerializableConfigList(
-            IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations)
-        {
-            if (includedConfigurations is null || includedConfigurations.Count == 0) return null;
-
-            var configurations = new List<SerializableModConfiguration>();
-
-            foreach (var pair in includedConfigurations)
-            {
-                if (pair.Key is null || pair.Value is null || pair.Value.Count == 0) continue;
-
-                var trimmedId = pair.Key.Trim();
-                if (string.IsNullOrWhiteSpace(trimmedId)) continue;
-
-                foreach (var snapshot in pair.Value)
-                {
-                    if (snapshot is null) continue;
-
-                    var fileName = string.IsNullOrWhiteSpace(snapshot.FileName)
-                        ? null
-                        : snapshot.FileName.Trim();
-
-                    var content = snapshot.Content ?? string.Empty;
-
-                    configurations.Add(new SerializableModConfiguration
-                    {
-                        ModId = trimmedId,
-                        FileName = fileName,
-                        RelativePath = snapshot.RelativePath,
-                        Content = content
-                    });
-                }
-            }
-
-            if (configurations.Count == 0) return null;
-
-            configurations.Sort((left, right) =>
-            {
-                var modComparison = string.Compare(left?.ModId, right?.ModId, StringComparison.OrdinalIgnoreCase);
-                if (modComparison != 0) return modComparison;
-
-                return string.Compare(left?.FileName, right?.FileName, StringComparison.OrdinalIgnoreCase);
-            });
-
-            return new SerializableConfigList
-            {
-                Configurations = configurations
-            };
         }
 
     private void LoadPresetMenuItem_OnSubmenuOpened(object sender, RoutedEventArgs e)
@@ -724,7 +674,7 @@ public partial class MainWindow
                     return false;
                 }
 
-                ApplyConfigListToPreset(serializable, configList);
+                PresetConfigurationSerializer.ApplyConfigListToPreset(serializable, configList);
             }
 
             return TryBuildPresetFromSerializable(serializable, fallbackName, options, out preset, out errorMessage,
@@ -845,41 +795,6 @@ public partial class MainWindow
 
             preset = new ModPreset(name, disabledEntries, modStates, includeStatus, includeVersions, exclusive);
             return true;
-        }
-
-    private static void ApplyConfigListToPreset(SerializablePreset preset, SerializableConfigList? configList)
-        {
-            if (preset is null || configList?.Configurations is null || configList.Configurations.Count == 0) return;
-
-            preset.Configurations ??= new List<SerializableModConfiguration>();
-
-            var existingKeys = new HashSet<string>(preset.Configurations.Select(BuildConfigKey),
-                StringComparer.OrdinalIgnoreCase);
-
-            foreach (var configuration in configList.Configurations)
-            {
-                if (configuration is null || string.IsNullOrWhiteSpace(configuration.ModId) ||
-                    configuration.Content is null) continue;
-
-                var key = BuildConfigKey(configuration);
-                if (!existingKeys.Add(key)) continue;
-
-                preset.Configurations.Add(configuration);
-            }
-        }
-
-    private static string BuildConfigKey(SerializableModConfiguration configuration)
-        {
-            var modId = string.IsNullOrWhiteSpace(configuration.ModId) ? string.Empty : configuration.ModId.Trim();
-            var fileName = string.IsNullOrWhiteSpace(configuration.FileName)
-                ? string.Empty
-                : configuration.FileName.Trim();
-            var relativePath = string.IsNullOrWhiteSpace(configuration.RelativePath)
-                ? string.Empty
-                : configuration.RelativePath.Trim();
-            var content = configuration.Content ?? string.Empty;
-
-            return $"{modId}::{relativePath}::{fileName}::{content}";
         }
 
     private async Task ApplyPresetAsync(ModPreset preset, bool importConfigurations = true)

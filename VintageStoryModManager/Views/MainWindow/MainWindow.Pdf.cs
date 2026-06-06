@@ -219,7 +219,7 @@ public partial class MainWindow
             serializable.Uploader = string.IsNullOrWhiteSpace(uploaderName) ? null : uploaderName.Trim();
             if (!string.IsNullOrWhiteSpace(listName)) serializable.Name = listName.Trim();
 
-            var serializableConfigList = BuildSerializableConfigList(includedConfigurations);
+            var serializableConfigList = PresetConfigurationSerializer.BuildSerializableConfigList(includedConfigurations);
 
             var normalizedUploader = string.IsNullOrWhiteSpace(uploaderName)
                 ? GetUploaderNameForPdf()
