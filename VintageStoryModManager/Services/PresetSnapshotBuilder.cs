@@ -5,6 +5,44 @@ namespace VintageStoryModManager.Services;
 
 internal static class PresetSnapshotBuilder
 {
+    internal static SerializablePreset BuildModlistPreset(
+        IReadOnlyList<ModPresetModState> states,
+        string name,
+        string? description,
+        string? version,
+        string? uploader,
+        IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations = null,
+        string? gameVersion = null)
+    {
+        ArgumentNullException.ThrowIfNull(states);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        var serializable = BuildSerializablePreset(
+            states,
+            name.Trim(),
+            true,
+            true,
+            includedConfigurations,
+            gameVersion);
+
+        serializable.Description =
+            string.IsNullOrWhiteSpace(description)
+                ? null
+                : description.Trim();
+
+        serializable.Version =
+            string.IsNullOrWhiteSpace(version)
+                ? null
+                : version.Trim();
+
+        serializable.Uploader =
+            string.IsNullOrWhiteSpace(uploader)
+                ? null
+                : uploader.Trim();
+
+        return serializable;
+    }
+
     internal static SerializablePreset BuildSerializablePreset(
             IReadOnlyList<ModPresetModState> states,
             string entryName,

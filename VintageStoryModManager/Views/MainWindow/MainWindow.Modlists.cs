@@ -344,16 +344,14 @@ public partial class MainWindow
             var trimmedName = string.IsNullOrWhiteSpace(modlistName) ? null : modlistName.Trim();
             if (string.IsNullOrEmpty(trimmedName) || _viewModel is null) return false;
 
-            var serializable = PresetSnapshotBuilder.BuildSerializablePreset(
+            var serializable = PresetSnapshotBuilder.BuildModlistPreset(
                 _viewModel!.GetCurrentModStates(),
                 trimmedName,
-                true,
-                true,
+                description,
+                version,
+                uploader,
                 includedConfigurations,
                 gameVersion);
-            serializable.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
-            serializable.Version = string.IsNullOrWhiteSpace(version) ? null : version.Trim();
-            serializable.Uploader = string.IsNullOrWhiteSpace(uploader) ? null : uploader.Trim();
 
             json =
                 PdfModlistSerializer.SerializeToJson(serializable);
