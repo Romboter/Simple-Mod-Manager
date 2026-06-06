@@ -176,7 +176,7 @@ public partial class MainWindow
             try
             {
                 var modListDirectory = EnsureModListDirectory();
-                var entryName = BuildSuggestedFileName(listName, "Modlist");
+                var entryName = FileNameHelper.BuildSuggestedFileName(listName, "Modlist");
                 filePath = Path.Combine(modListDirectory, entryName + ".pdf");
 
                 if (File.Exists(filePath))

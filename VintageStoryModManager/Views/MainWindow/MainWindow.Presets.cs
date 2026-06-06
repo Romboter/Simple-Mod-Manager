@@ -121,13 +121,13 @@ public partial class MainWindow
 
             var suggestedName = suggestedNameProvider?.Invoke();
             if (!string.IsNullOrWhiteSpace(suggestedName))
-                dialog.FileName = BuildSuggestedFileName(suggestedName, fallbackName);
+                dialog.FileName = FileNameHelper.BuildSuggestedFileName(suggestedName, fallbackName);
 
             var result = dialog.ShowDialog(this);
             if (result != true) return false;
 
             var filePath = dialog.FileName;
-            var entryName = BuildSuggestedFileName(Path.GetFileNameWithoutExtension(filePath), fallbackName);
+            var entryName = FileNameHelper.BuildSuggestedFileName(Path.GetFileNameWithoutExtension(filePath), fallbackName);
             if (!string.Equals(entryName, Path.GetFileNameWithoutExtension(filePath), StringComparison.Ordinal))
                 filePath = Path.Combine(directory, entryName + ".json");
 
@@ -581,7 +581,7 @@ public partial class MainWindow
 
                 if (!PdfModlistSerializer.TryDeserializeFromJson(json, out var data, out errorMessage)) return false;
 
-                var snapshotName = GetSnapshotNameFromFilePath(filePath, fallbackName);
+                var snapshotName = FileNameHelper.GetSnapshotNameFromFilePath(filePath, fallbackName);
                 return TryBuildPresetFromSerializable(data!, fallbackName, options, out preset, out errorMessage,
                     snapshotName);
             }
@@ -675,7 +675,7 @@ public partial class MainWindow
                         return false;
                     }
 
-                var snapshotName = GetSnapshotNameFromFilePath(filePath, fallbackName);
+                var snapshotName = FileNameHelper.GetSnapshotNameFromFilePath(filePath, fallbackName);
                 return TryLoadPresetFromJson(json!, fallbackName, options, out preset, out errorMessage, snapshotName,
                     configJson);
             }

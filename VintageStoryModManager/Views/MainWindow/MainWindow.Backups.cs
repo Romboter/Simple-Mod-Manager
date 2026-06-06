@@ -625,7 +625,7 @@ public partial class MainWindow
                     return;
                 }
 
-                var fileName = SanitizeFileName(displayName, fallbackFileName);
+                var fileName = FileNameHelper.SanitizeFileName(displayName, fallbackFileName);
                 var filePath = Path.Combine(directory, $"{fileName}.json");
 
                 var includedConfigurations =

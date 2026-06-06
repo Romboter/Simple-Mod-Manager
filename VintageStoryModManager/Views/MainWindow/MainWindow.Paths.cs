@@ -627,11 +627,11 @@ public partial class MainWindow
             var releaseFileName = release.FileName;
             if (!string.IsNullOrWhiteSpace(releaseFileName)) releaseFileName = Path.GetFileName(releaseFileName);
 
-            var sanitizedFileName = SanitizeFileName(releaseFileName, fallbackFileName);
+            var sanitizedFileName = FileNameHelper.SanitizeFileName(releaseFileName, fallbackFileName);
             if (string.IsNullOrWhiteSpace(Path.GetExtension(sanitizedFileName))) sanitizedFileName += ".zip";
 
             var candidatePath = Path.Combine(modsDirectory, sanitizedFileName);
-            fullPath = EnsureUniqueFilePath(candidatePath);
+            fullPath = FileNameHelper.EnsureUniqueFilePath(candidatePath);
             return true;
         }
 
@@ -668,11 +668,11 @@ public partial class MainWindow
             var releaseFileName = release.FileName;
             if (!string.IsNullOrWhiteSpace(releaseFileName)) releaseFileName = Path.GetFileName(releaseFileName);
 
-            var sanitizedFileName = SanitizeFileName(releaseFileName, fallbackFileName);
+            var sanitizedFileName = FileNameHelper.SanitizeFileName(releaseFileName, fallbackFileName);
             if (string.IsNullOrWhiteSpace(Path.GetExtension(sanitizedFileName))) sanitizedFileName += ".zip";
 
             var candidatePath = Path.Combine(modsDirectory, sanitizedFileName);
-            fullPath = EnsureUniqueFilePath(candidatePath);
+            fullPath = FileNameHelper.EnsureUniqueFilePath(candidatePath);
             return true;
         }
 
@@ -716,7 +716,7 @@ public partial class MainWindow
             var releaseFileName = release.FileName;
             if (!string.IsNullOrWhiteSpace(releaseFileName)) releaseFileName = Path.GetFileName(releaseFileName);
 
-            var sanitizedFileName = SanitizeFileName(releaseFileName, fallbackFileName);
+            var sanitizedFileName = FileNameHelper.SanitizeFileName(releaseFileName, fallbackFileName);
             if (string.IsNullOrWhiteSpace(Path.GetExtension(sanitizedFileName))) sanitizedFileName += ".zip";
 
             fullPath = Path.Combine(directory, sanitizedFileName);
@@ -773,39 +773,6 @@ public partial class MainWindow
             {
                 return false;
             }
-        }
-
-    private static string SanitizeFileName(string? fileName, string fallback)
-        {
-            var name = string.IsNullOrWhiteSpace(fileName) ? fallback : fileName;
-            var invalidChars = Path.GetInvalidFileNameChars();
-            var builder = new StringBuilder(name.Length);
-
-            foreach (var c in name) builder.Append(Array.IndexOf(invalidChars, c) >= 0 ? '_' : c);
-
-            var sanitized = builder.ToString().Trim();
-            return string.IsNullOrWhiteSpace(sanitized) ? fallback : sanitized;
-        }
-
-    private static string EnsureUniqueFilePath(string path)
-        {
-            if (!File.Exists(path)) return path;
-
-            var directory = Path.GetDirectoryName(path);
-            var fileName = Path.GetFileNameWithoutExtension(path);
-            var extension = Path.GetExtension(path);
-
-            if (string.IsNullOrWhiteSpace(directory)) directory = Directory.GetCurrentDirectory();
-
-            var counter = 1;
-            string candidate;
-            do
-            {
-                candidate = Path.Combine(directory, $"{fileName} ({counter}){extension}");
-                counter++;
-            } while (File.Exists(candidate));
-
-            return candidate;
         }
 
     private bool TryEnsureManagedModTargetIsSafe(string fullPath, out string? errorMessage)
@@ -884,24 +851,9 @@ public partial class MainWindow
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
             var sessionName = $"Local Mods {timestamp}";
             var sessionDirectory = Path.Combine(rootDirectory, sessionName);
-            sessionDirectory = EnsureUniqueDirectoryPath(sessionDirectory);
+            sessionDirectory = FileNameHelper.EnsureUniqueDirectoryPath(sessionDirectory);
             Directory.CreateDirectory(sessionDirectory);
             return sessionDirectory;
-        }
-
-    private static string EnsureUniqueDirectoryPath(string path)
-        {
-            if (!Directory.Exists(path) && !File.Exists(path)) return path;
-
-            var basePath = path;
-            var counter = 1;
-            string candidate;
-            do
-            {
-                candidate = $"{basePath} ({counter++})";
-            } while (Directory.Exists(candidate) || File.Exists(candidate));
-
-            return candidate;
         }
 
     private static void CopyDirectoryContents(string sourceDirectory, string destinationDirectory)
@@ -930,9 +882,9 @@ public partial class MainWindow
         {
             var fallbackName = string.IsNullOrWhiteSpace(mod.ModId) ? "Mod" : mod.ModId;
             var displayName = string.IsNullOrWhiteSpace(mod.DisplayName) ? fallbackName : mod.DisplayName;
-            var sanitized = SanitizeFileName(displayName, fallbackName);
+            var sanitized = FileNameHelper.SanitizeFileName(displayName, fallbackName);
             var entryDirectory = Path.Combine(sessionDirectory, sanitized);
-            return EnsureUniqueDirectoryPath(entryDirectory);
+            return FileNameHelper.EnsureUniqueDirectoryPath(entryDirectory);
         }
 
     private static void BackupLocalModAtPath(string sourcePath, string destinationDirectory)
@@ -948,7 +900,7 @@ public partial class MainWindow
                 Directory.CreateDirectory(destinationDirectory);
                 var fileName = Path.GetFileName(sourcePath);
                 var targetPath = Path.Combine(destinationDirectory, fileName);
-                targetPath = EnsureUniqueFilePath(targetPath);
+                targetPath = FileNameHelper.EnsureUniqueFilePath(targetPath);
                 File.Copy(sourcePath, targetPath, false);
             }
         }
@@ -992,38 +944,4 @@ public partial class MainWindow
             }
         }
 
-    private static string BuildSuggestedFileName(string? name, string fallback)
-        {
-            if (string.IsNullOrWhiteSpace(name)) return fallback;
-
-            var invalid = Path.GetInvalidFileNameChars();
-            var builder = new StringBuilder(name.Length);
-            foreach (var ch in name) builder.Append(Array.IndexOf(invalid, ch) >= 0 ? '_' : ch);
-
-            var sanitized = builder.ToString().Trim();
-            return string.IsNullOrWhiteSpace(sanitized) ? fallback : sanitized;
-        }
-
-    private static string GetUniqueFilePath(string directory, string baseFileName, string extension)
-        {
-            var safeBaseName = string.IsNullOrWhiteSpace(baseFileName) ? "Modlist" : baseFileName;
-            var fileName = safeBaseName + extension;
-            var path = Path.Combine(directory, fileName);
-            var counter = 1;
-
-            while (File.Exists(path))
-            {
-                fileName = $"{safeBaseName} ({counter}){extension}";
-                path = Path.Combine(directory, fileName);
-                counter++;
-            }
-
-            return path;
-        }
-
-    private static string GetSnapshotNameFromFilePath(string filePath, string fallback)
-        {
-            var name = Path.GetFileNameWithoutExtension(filePath);
-            return string.IsNullOrWhiteSpace(name) ? fallback : name.Trim();
-        }
 }

@@ -157,7 +157,7 @@ public partial class MainWindow
                 var suggestedEntryName = !string.IsNullOrWhiteSpace(listName)
                     ? listName
                     : suggestedName;
-                var entryName = BuildSuggestedFileName(suggestedEntryName, "Modlist");
+                var entryName = FileNameHelper.BuildSuggestedFileName(suggestedEntryName, "Modlist");
                 var filePath = Path.Combine(modListDirectory, entryName + ".json");
 
                 if (File.Exists(filePath))
@@ -215,7 +215,7 @@ public partial class MainWindow
             if (_viewModel is null) return false;
 
             var modListDirectory = EnsureRebuiltModListDirectory();
-            savedName = BuildSuggestedFileName(requestedName, "Modlist");
+            savedName = FileNameHelper.BuildSuggestedFileName(requestedName, "Modlist");
             filePath = Path.Combine(modListDirectory, savedName + ".json");
 
             var serializable = BuildSerializablePreset(savedName, true, true, gameVersion: ResolveGameVersion(null));
@@ -627,8 +627,8 @@ public partial class MainWindow
                 return;
             }
 
-            var cacheFileName = BuildSuggestedFileName(entry.Name ?? entry.DisplayName, "Cloud Modlist");
-            var cacheFilePath = GetUniqueFilePath(cacheDirectory, cacheFileName, ".json");
+            var cacheFileName = FileNameHelper.BuildSuggestedFileName(entry.Name ?? entry.DisplayName, "Cloud Modlist");
+            var cacheFilePath = FileNameHelper.GetUniqueFilePath(cacheDirectory, cacheFileName, ".json");
 
             try
             {

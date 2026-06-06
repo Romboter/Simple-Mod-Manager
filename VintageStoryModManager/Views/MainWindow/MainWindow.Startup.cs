@@ -134,14 +134,14 @@ public partial class MainWindow
                     if (Directory.Exists(entry))
                     {
                         var targetPath = Path.Combine(rebuiltDirectory, Path.GetFileName(entry));
-                        targetPath = EnsureUniqueDirectoryPath(targetPath);
+                        targetPath = FileNameHelper.EnsureUniqueDirectoryPath(targetPath);
                         Directory.Move(entry, targetPath);
                         movedAny = true;
                     }
                     else if (File.Exists(entry))
                     {
                         var targetPath = Path.Combine(rebuiltDirectory, Path.GetFileName(entry));
-                        targetPath = EnsureUniqueFilePath(targetPath);
+                        targetPath = FileNameHelper.EnsureUniqueFilePath(targetPath);
                         File.Move(entry, targetPath);
                         movedAny = true;
                     }
