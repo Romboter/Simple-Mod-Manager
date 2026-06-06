@@ -162,7 +162,7 @@ public partial class MainWindow
 
                 if (missingMods.Count == 0) return assigned;
 
-                var configFiles = GetSupportedConfigFiles(configDirectory);
+                var configFiles = ModConfigPathHelper.GetSupportedConfigFiles(configDirectory);
                 if (configFiles.Length == 0) return assigned;
 
                 var matches =

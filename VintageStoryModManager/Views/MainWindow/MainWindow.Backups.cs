@@ -694,7 +694,7 @@ public partial class MainWindow
                     try
                     {
                         var content = File.ReadAllText(path);
-                        var fileName = GetSafeConfigFileName(Path.GetFileName(path), normalizedId);
+                        var fileName = ModConfigPathHelper.GetSafeConfigFileName(Path.GetFileName(path), normalizedId);
                         var relativePath = TryGetRelativeConfigPath(path, fileName);
 
                         if (!includedConfigurations.TryGetValue(normalizedId, out var snapshots))

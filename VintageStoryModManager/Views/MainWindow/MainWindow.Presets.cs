@@ -205,7 +205,7 @@ public partial class MainWindow
                     else if (state.ConfigurationContent is not null)
                     {
                         serializableState.ConfigurationFileName =
-                            GetSafeConfigFileName(state.ConfigurationFileName, normalizedId);
+                            ModConfigPathHelper.GetSafeConfigFileName(state.ConfigurationFileName, normalizedId);
                         serializableState.ConfigurationContent = ModConfigurationEncoding.Encode(
                             ModConfigurationEncoding.Decode(state.ConfigurationContent));
                     }
@@ -816,8 +816,8 @@ public partial class MainWindow
                     {
                         if (string.IsNullOrEmpty(content)) return;
 
-                        var safeName = GetSafeConfigFileName(fileName, modId);
-                        var normalizedRelativePath = NormalizeRelativeConfigPath(relativePath, safeName);
+                        var safeName = ModConfigPathHelper.GetSafeConfigFileName(fileName, modId);
+                        var normalizedRelativePath = ModConfigPathHelper.NormalizeRelativeConfigPath(relativePath, safeName);
                         var key = $"{safeName}::{normalizedRelativePath}::{content}";
                         if (!seenConfigs.Add(key)) return;
 
@@ -1032,14 +1032,14 @@ public partial class MainWindow
 
             foreach (var config in configs)
             {
-                var fileName = GetSafeConfigFileName(config.FileName, config.ModId);
-                var relativePath = NormalizeRelativeConfigPath(config.RelativePath, fileName) ?? fileName;
-                var uniqueRelativePath = EnsureUniqueRelativePath(relativePath, usedRelativePaths);
+                var fileName = ModConfigPathHelper.GetSafeConfigFileName(config.FileName, config.ModId);
+                var relativePath = ModConfigPathHelper.NormalizeRelativeConfigPath(config.RelativePath, fileName) ?? fileName;
+                var uniqueRelativePath = ModConfigPathHelper.EnsureUniqueRelativePath(relativePath, usedRelativePaths);
                 var targetPath = Path.Combine(configDirectory, uniqueRelativePath);
 
                 if (!IsPathWithinDirectory(configDirectory, targetPath))
                 {
-                    uniqueRelativePath = EnsureUniqueRelativePath(fileName, usedRelativePaths);
+                    uniqueRelativePath = ModConfigPathHelper.EnsureUniqueRelativePath(fileName, usedRelativePaths);
                     targetPath = Path.Combine(configDirectory, uniqueRelativePath);
                 }
 

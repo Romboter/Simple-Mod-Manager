@@ -155,12 +155,6 @@ public partial class MainWindow : Window
             "External Origins in load order:"
         };
 
-    private static readonly string[] SupportedConfigExtensions =
-        {
-            ".json",
-            ".yaml",
-            ".yml"
-        };
 
     private static readonly string[] SummarizableLinePrefixes =
         {
