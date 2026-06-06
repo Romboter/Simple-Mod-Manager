@@ -631,7 +631,8 @@ public partial class MainWindow
                 var includedConfigurations =
                     CaptureConfigurationsForBackup(mods);
 
-                var serializable = BuildSerializablePreset(
+                var serializable = PresetSnapshotBuilder.BuildSerializablePreset(
+                    _viewModel!.GetCurrentModStates(),
                     displayName,
                     true,
                     true,

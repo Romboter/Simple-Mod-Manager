@@ -207,7 +207,8 @@ public partial class MainWindow
                 ? "Installed Mods"
                 : listName.Trim();
             var resolvedGameVersion = ResolveGameVersion(gameVersion);
-            var serializable = BuildSerializablePreset(
+            var serializable = PresetSnapshotBuilder.BuildSerializablePreset(
+                _viewModel!.GetCurrentModStates(),
                 presetName,
                 true,
                 true,

@@ -174,7 +174,13 @@ public partial class MainWindow
                     if (confirmation != MessageBoxResult.Yes) return false;
                 }
 
-                var serializable = BuildSerializablePreset(entryName, true, true, includedConfigurations, gameVersion);
+                var serializable = PresetSnapshotBuilder.BuildSerializablePreset(
+                    _viewModel!.GetCurrentModStates(),
+                    entryName,
+                    true,
+                    true,
+                    includedConfigurations,
+                    gameVersion);
                 if (!string.IsNullOrWhiteSpace(listName)) serializable.Name = listName.Trim();
                 serializable.Description = description;
                 serializable.Version = version;
@@ -218,7 +224,12 @@ public partial class MainWindow
             savedName = FileNameHelper.BuildSuggestedFileName(requestedName, "Modlist");
             filePath = Path.Combine(modListDirectory, savedName + ".json");
 
-            var serializable = BuildSerializablePreset(savedName, true, true, gameVersion: ResolveGameVersion(null));
+            var serializable = PresetSnapshotBuilder.BuildSerializablePreset(
+                _viewModel!.GetCurrentModStates(),
+                savedName,
+                true,
+                true,
+                gameVersion: ResolveGameVersion(null));
 
             try
             {
@@ -345,7 +356,13 @@ public partial class MainWindow
             var trimmedName = string.IsNullOrWhiteSpace(modlistName) ? null : modlistName.Trim();
             if (string.IsNullOrEmpty(trimmedName) || _viewModel is null) return false;
 
-            var serializable = BuildSerializablePreset(trimmedName, true, true, includedConfigurations, gameVersion);
+            var serializable = PresetSnapshotBuilder.BuildSerializablePreset(
+                _viewModel!.GetCurrentModStates(),
+                trimmedName,
+                true,
+                true,
+                includedConfigurations,
+                gameVersion);
             serializable.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
             serializable.Version = string.IsNullOrWhiteSpace(version) ? null : version.Trim();
             serializable.Uploader = string.IsNullOrWhiteSpace(uploader) ? null : uploader.Trim();
