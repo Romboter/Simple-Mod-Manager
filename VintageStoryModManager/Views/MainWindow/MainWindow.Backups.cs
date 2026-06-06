@@ -425,7 +425,7 @@ public partial class MainWindow
 
             foreach (var file in files)
             {
-                var isAppStarted = IsAppStartedBackup(file);
+                var isAppStarted = BackupRetentionService.IsAppStartedBackup(file);
                 if (isAppStarted)
                 {
                     if (appStartedAdded) continue;
@@ -657,9 +657,9 @@ public partial class MainWindow
                     return;
                 }
 
-                if (pruneAutomaticBackups) PruneAutomaticBackups(directory);
+                if (pruneAutomaticBackups) BackupRetentionService.PruneAutomaticBackups(directory);
 
-                if (pruneAppStartedBackups) PruneAppStartedBackups(directory);
+                if (pruneAppStartedBackups) BackupRetentionService.PruneAppStartedBackups(directory);
             }
             finally
             {
@@ -723,74 +723,4 @@ public partial class MainWindow
                 : null;
         }
 
-    private static bool IsAppStartedBackup(string? path)
-        {
-            if (string.IsNullOrWhiteSpace(path)) return false;
-
-            var name = Path.GetFileNameWithoutExtension(path);
-            return name.EndsWith("_AppStarted", StringComparison.OrdinalIgnoreCase)
-                   || name.Contains("-- AppStarted", StringComparison.OrdinalIgnoreCase);
-        }
-
-    private static void PruneAutomaticBackups(string directory)
-        {
-            try
-            {
-                var files = Directory.GetFiles(directory, "*.json");
-                var regularBackups = files
-                    .Where(file => !IsAppStartedBackup(file))
-                    .OrderByDescending(File.GetLastWriteTimeUtc)
-                    .ToArray();
-
-                if (regularBackups.Length <= 10) return;
-
-                for (var index = 10; index < regularBackups.Length; index++)
-                {
-                    var candidate = regularBackups[index];
-                    try
-                    {
-                        File.Delete(candidate);
-                    }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                    {
-                        Trace.TraceWarning("Failed to delete backup {0}: {1}", candidate, ex.Message);
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                Trace.TraceWarning("Failed to prune backups in {0}: {1}", directory, ex.Message);
-            }
-        }
-
-    private static void PruneAppStartedBackups(string directory)
-        {
-            try
-            {
-                var files = Directory.GetFiles(directory, "*.json");
-                var appStartedBackups = files
-                    .Where(IsAppStartedBackup)
-                    .OrderByDescending(File.GetLastWriteTimeUtc)
-                    .ToArray();
-
-                if (appStartedBackups.Length <= 10) return;
-
-                for (var index = 10; index < appStartedBackups.Length; index++)
-                {
-                    var candidate = appStartedBackups[index];
-                    try
-                    {
-                        File.Delete(candidate);
-                    }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                    {
-                        Trace.TraceWarning("Failed to delete backup {0}: {1}", candidate, ex.Message);
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                Trace.TraceWarning("Failed to prune backups in {0}: {1}", directory, ex.Message);
-            }
-        }
 }
