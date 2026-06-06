@@ -597,8 +597,10 @@ public partial class MainWindow
     private async Task DeleteAllCloudModlistsAndAuthorizationAsync(FirebaseModlistStore store,
             bool showCompletionMessage = true)
         {
-            await store.DeleteAllUserDataAsync();
-            await store.Authenticator.DeleteAccountAsync(CancellationToken.None);
+            await CloudModlistManagementService
+                .DeleteAllUserDataAndAuthorizationAsync(
+                    store,
+                    CancellationToken.None);
 
             DeleteFirebaseAuthFiles();
 

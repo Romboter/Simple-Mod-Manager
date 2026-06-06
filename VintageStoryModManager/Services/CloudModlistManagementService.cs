@@ -158,6 +158,19 @@ internal static class CloudModlistManagementService
             CloudModlistDeleteStatus.Success,
             null);
     }
+
+    internal static async Task DeleteAllUserDataAndAuthorizationAsync(
+        FirebaseModlistStore store,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+
+        await store.DeleteAllUserDataAsync(
+            cancellationToken);
+
+        await store.Authenticator.DeleteAccountAsync(
+            cancellationToken);
+    }
 }
 
 internal enum CloudModlistRenameStatus
