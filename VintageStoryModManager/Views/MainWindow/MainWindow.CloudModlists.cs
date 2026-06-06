@@ -116,7 +116,11 @@ public partial class MainWindow
                         gameVersion,
                         out var json)) return;
 
-                var slots = await GetCloudModlistSlotsAsync(store, true, false);
+                var slots =
+                    await CloudModlistSlotService.LoadSlotsAsync(
+                        store,
+                        true,
+                        false);
                 var trimmedModlistName = modlistName.Trim();
 
                 CloudModlistSlot? replacementSlot = null;
@@ -489,7 +493,11 @@ public partial class MainWindow
     private async Task<IReadOnlyList<CloudModlistManagementEntry>> BuildCloudModlistManagementEntriesAsync(
             FirebaseModlistStore store)
         {
-            var slots = await GetCloudModlistSlotsAsync(store, false, true);
+            var slots =
+                await CloudModlistSlotService.LoadSlotsAsync(
+                    store,
+                    false,
+                    true);
             var list = new List<CloudModlistManagementEntry>(slots.Count);
 
             foreach (var slot in slots)
