@@ -12,6 +12,28 @@ internal static class FirebaseAuthFileService
             return !string.IsNullOrWhiteSpace(stateFilePath) && File.Exists(stateFilePath);
         }
 
+    internal static FirebaseAuthRestoreResult RestoreFirebaseAuthBackup()
+    {
+        var backupPath = FirebaseAnonymousAuthenticator.GetBackupFilePath();
+        if (string.IsNullOrWhiteSpace(backupPath))
+            return FirebaseAuthRestoreResult.BackupLocationUnavailable;
+
+        if (!File.Exists(backupPath))
+            return FirebaseAuthRestoreResult.BackupNotFound;
+
+        var stateFilePath = FirebaseAnonymousAuthenticator.GetStateFilePath();
+        if (string.IsNullOrWhiteSpace(stateFilePath))
+            return FirebaseAuthRestoreResult.StateLocationUnavailable;
+
+        var stateDirectory = Path.GetDirectoryName(stateFilePath);
+        if (!string.IsNullOrWhiteSpace(stateDirectory))
+            Directory.CreateDirectory(stateDirectory);
+
+        File.Copy(backupPath, stateFilePath, true);
+
+        return FirebaseAuthRestoreResult.Restored;
+    }
+
     internal static void TryDeleteFirebaseAuthFile(string path)
         {
             if (string.IsNullOrWhiteSpace(path)) return;
@@ -26,4 +48,12 @@ internal static class FirebaseAuthFileService
                 StatusLogService.AppendStatus($"Failed to delete Firebase auth file {path}: {ex.Message}", true);
             }
         }
+}
+
+internal enum FirebaseAuthRestoreResult
+{
+    Restored,
+    BackupLocationUnavailable,
+    BackupNotFound,
+    StateLocationUnavailable
 }
