@@ -230,7 +230,11 @@ public partial class MainWindow
             {
                 WpfMessageBox.Show(
                     "Some configuration files could not be included:\n" +
-                    string.Join("\n", captureResult.Errors),
+                    string.Join(
+                        "\n",
+                        captureResult.Errors.Select(
+                            error =>
+                                $"{error.DisplayName}: {error.Message}")),
                     "Simple VS Manager",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -245,23 +249,6 @@ public partial class MainWindow
                         StringComparer.OrdinalIgnoreCase);
         }
 
-    private string? TryGetRelativeConfigPath(string path, string sanitizedFileName)
-        {
-            if (string.IsNullOrWhiteSpace(_dataDirectory)) return null;
-
-            var configDirectory = Path.Combine(_dataDirectory, "ModConfig");
-            if (!PathRelationshipHelper.IsPathWithinDirectory(configDirectory, path)) return null;
-
-            try
-            {
-                var relativePath = Path.GetRelativePath(Path.GetFullPath(configDirectory), Path.GetFullPath(path));
-                return ModConfigPathHelper.NormalizeRelativeConfigPath(relativePath, sanitizedFileName);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
 
     private async void SaveModlistToCloudMenuItem_OnClick(object sender, RoutedEventArgs e)
         {

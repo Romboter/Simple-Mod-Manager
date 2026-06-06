@@ -20,7 +20,8 @@ internal static class ModConfigurationCaptureService
             new Dictionary<string, List<ModConfigurationSnapshot>>(
                 StringComparer.OrdinalIgnoreCase);
 
-        var errors = new List<string>();
+        var errors =
+            new List<ModConfigurationCaptureError>();
 
         foreach (var request in requests)
         {
@@ -79,7 +80,11 @@ internal static class ModConfigurationCaptureService
                     PathTooLongException)
                 {
                     errors.Add(
-                        $"{displayName}: {ex.Message}");
+                        new ModConfigurationCaptureError(
+                            modId,
+                            displayName,
+                            path,
+                            ex.Message));
                 }
             }
         }
@@ -142,14 +147,20 @@ internal sealed record ModConfigurationCaptureRequest(
     string DisplayName,
     IReadOnlyList<string> ConfigPaths);
 
+internal sealed record ModConfigurationCaptureError(
+    string ModId,
+    string DisplayName,
+    string Path,
+    string Message);
+
 internal sealed record ModConfigurationCaptureResult(
     IReadOnlyDictionary<
         string,
         IReadOnlyList<ModConfigurationSnapshot>>? Configurations,
-    IReadOnlyList<string> Errors)
+    IReadOnlyList<ModConfigurationCaptureError> Errors)
 {
     internal static ModConfigurationCaptureResult Empty { get; } =
         new(
             null,
-            Array.Empty<string>());
+            Array.Empty<ModConfigurationCaptureError>());
 }

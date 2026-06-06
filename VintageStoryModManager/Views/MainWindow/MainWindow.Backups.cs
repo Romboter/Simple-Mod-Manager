@@ -662,60 +662,62 @@ public partial class MainWindow
             }
         }
 
-    private IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>?
+    private IReadOnlyDictionary<
+            string,
+            IReadOnlyList<ModConfigurationSnapshot>>?
             CaptureConfigurationsForBackup(
                 IReadOnlyList<ModListItemViewModel> mods)
         {
-            if (mods is null || mods.Count == 0) return null;
+            if (mods is null || mods.Count == 0)
+                return null;
 
-            var includedConfigurations = new Dictionary<string, List<ModConfigurationSnapshot>>(StringComparer.OrdinalIgnoreCase);
+            var requests =
+                mods
+                    .Where(mod =>
+                        mod is not null &&
+                        !string.IsNullOrWhiteSpace(mod.ModId))
+                    .GroupBy(
+                        mod => mod.ModId.Trim(),
+                        StringComparer.OrdinalIgnoreCase)
+                    .Select(group =>
+                    {
+                        var mod = group.First();
+                        var modId = group.Key;
 
-            foreach (var mod in mods)
-            {
-                if (mod is null || string.IsNullOrWhiteSpace(mod.ModId)) continue;
+                        var configPaths =
+                            _userConfiguration
+                                .GetModConfigPaths(modId)
+                                .Where(path =>
+                                    !string.IsNullOrWhiteSpace(path))
+                                .Select(path => path.Trim())
+                                .Where(File.Exists)
+                                .ToList();
 
-                var normalizedId = mod.ModId.Trim();
-                if (includedConfigurations.ContainsKey(normalizedId)) continue;
-
-                var configPaths = _userConfiguration.GetModConfigPaths(normalizedId)
-                    .Where(path => !string.IsNullOrWhiteSpace(path))
-                    .Select(path => path.Trim())
-                    .Where(File.Exists)
+                        return new ModConfigurationCaptureRequest(
+                            modId,
+                            mod.DisplayName,
+                            configPaths);
+                    })
+                    .Where(request =>
+                        request.ConfigPaths.Count > 0)
                     .ToList();
 
-                if (configPaths.Count == 0) continue;
+            var captureResult =
+                ModConfigurationCaptureService.Capture(
+                    requests,
+                    _dataDirectory);
 
-                foreach (var path in configPaths)
-                    try
-                    {
-                        var content = File.ReadAllText(path);
-                        var fileName = ModConfigPathHelper.GetSafeConfigFileName(Path.GetFileName(path), normalizedId);
-                        var relativePath = TryGetRelativeConfigPath(path, fileName);
-
-                        if (!includedConfigurations.TryGetValue(normalizedId, out var snapshots))
-                        {
-                            snapshots = new List<ModConfigurationSnapshot>();
-                            includedConfigurations[normalizedId] = snapshots;
-                        }
-
-                        snapshots.Add(new ModConfigurationSnapshot(fileName, content, relativePath));
-                    }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
-                                                   or NotSupportedException or PathTooLongException)
-                    {
-                        Trace.TraceWarning(
-                            "Failed to include configuration file {0} for mod {1} in backup: {2}",
-                            path,
-                            normalizedId,
-                            ex.Message);
-                    }
+            foreach (var error in captureResult.Errors)
+            {
+                Trace.TraceWarning(
+                    "Failed to include configuration file {0} " +
+                    "for mod {1} in backup: {2}",
+                    error.Path,
+                    error.ModId,
+                    error.Message);
             }
 
-            return includedConfigurations.Count > 0
-                ? includedConfigurations.ToDictionary(pair => pair.Key,
-                    pair => (IReadOnlyList<ModConfigurationSnapshot>)pair.Value,
-                    StringComparer.OrdinalIgnoreCase)
-                : null;
+            return captureResult.Configurations;
         }
 
 }
