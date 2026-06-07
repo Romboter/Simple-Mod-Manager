@@ -227,21 +227,6 @@ public partial class MainWindow
             e.Handled = true;
         }
 
-    private void UpdateServerOptionsState(bool isEnabled)
-        {
-            if (EnableServerOptionsMenuItem is not null) EnableServerOptionsMenuItem.IsChecked = isEnabled;
-
-            // Control visibility of server-related menu items
-            var visibility = isEnabled ? Visibility.Visible : Visibility.Collapsed;
-            if (ManageServerTargetsMenuItem is not null) ManageServerTargetsMenuItem.Visibility = visibility;
-            if (SyncToServerMenuItem is not null) SyncToServerMenuItem.Visibility = visibility;
-            if (ServerOptionsSeparator1 is not null) ServerOptionsSeparator1.Visibility = visibility;
-            if (ServerOptionsSeparator2 is not null) ServerOptionsSeparator2.Visibility = visibility;
-
-            var singleSelection = _selectedMods.Count == 1 ? _selectedMods[0] : null;
-            UpdateSelectedModCopyForServerButton(isEnabled ? singleSelection : null);
-        }
-
     private bool ShouldIgnoreRowSelection(DependencyObject? source)
         {
             while (source != null)
