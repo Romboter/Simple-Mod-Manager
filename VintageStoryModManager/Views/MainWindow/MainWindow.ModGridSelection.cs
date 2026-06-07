@@ -410,4 +410,10 @@ public partial class MainWindow
                 ? $"Edit Config for {context.DisplayName}"
                 : $"Set Config for {context.DisplayName}";
         }
+
+    private void CloseModInfoButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ClearSelection(resetAnchor: true);
+        e.Handled = true;
+    }
 }
