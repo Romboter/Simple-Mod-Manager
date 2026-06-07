@@ -468,4 +468,14 @@ public partial class MainWindow
 
             _modBrowserViewModel.InvalidateUserReport(parsedId, e.Summary);
         }
+
+    private void ModDatabasePageButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is WpfButton { DataContext: ModListItemViewModel mod }
+                && mod.OpenModDatabasePageCommand is ICommand command
+                && command.CanExecute(null))
+                command.Execute(null);
+
+            e.Handled = true;
+        }
 }

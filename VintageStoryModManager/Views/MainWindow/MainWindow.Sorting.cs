@@ -270,4 +270,24 @@ public partial class MainWindow
 
             foreach (var column in ModsDataGrid.Columns) column.SortDirection = null;
         }
+
+    private void ModsDataGrid_OnSorting(object sender, DataGridSortingEventArgs e)
+        {
+            if (_viewModel is null) return;
+
+            var sortMemberPath = e.Column.SortMemberPath;
+            if (string.IsNullOrWhiteSpace(sortMemberPath))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            e.Handled = true;
+
+            var direction = e.Column.SortDirection == ListSortDirection.Ascending
+                ? ListSortDirection.Descending
+                : ListSortDirection.Ascending;
+
+            ApplyModListSort(sortMemberPath, direction, true);
+        }
 }
