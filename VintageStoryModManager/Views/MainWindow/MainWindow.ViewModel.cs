@@ -441,4 +441,29 @@ public partial class MainWindow
                 await RefreshDeleteCachedModsMenuHeaderAsync();
             }
 
+    private async Task RefreshModsWithErrorHandlingAsync()
+    {
+        if (_viewModel == null) return;
+
+        if (Dispatcher.CheckAccess())
+            await Dispatcher.Yield(DispatcherPriority.Background);
+        else
+            await Task.Yield();
+
+        if (_userConfiguration.DisableAutoRefresh)
+            _viewModel.EnableUserReportFetching(true);
+
+        try
+        {
+            RefreshModDetailsOnly();
+        }
+        catch (Exception ex)
+        {
+            WpfMessageBox.Show(
+                $"Failed to refresh mod details:\n{ex.Message}",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
 }
