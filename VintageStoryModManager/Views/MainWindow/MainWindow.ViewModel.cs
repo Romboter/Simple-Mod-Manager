@@ -350,4 +350,95 @@ public partial class MainWindow
             // Keep ModBrowser in sync with installed mods
             SyncInstalledModsToModBrowser();
         }
+
+    private void RefreshModDetailsOnly()
+            {
+                if (_viewModel == null) return;
+
+                _viewModel.ForceNextRefreshToLoadDetails();
+                _viewModel.RefreshInstalledModDetails();
+            }
+
+    private void HandleViewModelInitializationFailure(Exception exception)
+            {
+                _modActivityLoggingService.LogError("Failed to initialize view model", exception);
+                DisposeCurrentViewModel();
+
+                if (_dataDirectory != null) _userConfiguration.ClearDataDirectory();
+
+                _dataDirectory = null;
+
+                var message = $"Failed to initialize the mod manager:\n{exception.Message}\n\n" +
+                              "You can set the Vintage Story folders from the File menu once the application has loaded.";
+
+                WpfMessageBox.Show(message,
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+
+    private async Task ReloadViewModelAsync()
+            {
+                if (string.IsNullOrWhiteSpace(_dataDirectory))
+                {
+                    await RefreshDeleteCachedModsMenuHeaderAsync();
+                    return;
+                }
+
+                StopModsWatcher();
+                StopGameSessionMonitor();
+
+                var previousViewModel = _viewModel;
+                if (previousViewModel is not null)
+                {
+                    previousViewModel.PropertyChanged -= ViewModelOnPropertyChanged;
+                    previousViewModel.UserReportVoteSubmitted -= OnUserReportVoteSubmitted;
+                }
+
+                MainViewModel? newViewModel = null;
+
+                try
+                {
+                    newViewModel = new MainViewModel(
+                        _dataDirectory,
+                        _userConfiguration,
+                        _gameDirectory);
+                    newViewModel.IsCompactView = _userConfiguration.IsCompactView;
+                    newViewModel.UseModDbDesignView = _userConfiguration.UseModDbDesignView;
+                    newViewModel.PropertyChanged += ViewModelOnPropertyChanged;
+                    newViewModel.UserReportVoteSubmitted += OnUserReportVoteSubmitted;
+                    _viewModel = newViewModel;
+                    ApplyColumnVisibilityPreferencesToViewModel();
+                    UpdateGameVersionMenuItem(newViewModel.InstalledGameVersion);
+                    DataContext = newViewModel;
+                    ApplyPlayerIdentityToUiAndCloudStore();
+                    AttachToModsView(newViewModel.CurrentModsView);
+                    await InitializeViewModelAsync(newViewModel);
+
+                    DisposeViewModel(previousViewModel);
+                }
+                catch (Exception ex)
+                {
+                    DisposeViewModel(newViewModel);
+
+                    if (previousViewModel is not null)
+                    {
+                        _viewModel = previousViewModel;
+                        previousViewModel.PropertyChanged += ViewModelOnPropertyChanged;
+                        previousViewModel.UserReportVoteSubmitted += OnUserReportVoteSubmitted;
+                        DataContext = previousViewModel;
+                        ApplyPlayerIdentityToUiAndCloudStore();
+                        AttachToModsView(previousViewModel.CurrentModsView);
+                        StartModsWatcher();
+                    }
+
+                    WpfMessageBox.Show($"Failed to reload mods:\n{ex.Message}",
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+
+                await RefreshDeleteCachedModsMenuHeaderAsync();
+            }
+
 }
