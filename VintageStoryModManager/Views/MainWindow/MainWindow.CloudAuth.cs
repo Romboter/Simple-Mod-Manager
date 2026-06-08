@@ -194,4 +194,84 @@ public partial class MainWindow
             FirebaseAuthFileService.TryDeleteFirebaseAuthFile(backupPath);
         }
 
+    private void RestoreFirebaseAuthBackupMenuItem_OnClick(
+        object sender,
+        RoutedEventArgs e)
+    {
+        const string confirmationMessage =
+            "This will copy the firebase-auth.json file from the SVSM Backup folder " +
+            "(AppData/Local/SVSM Backup) into the Simple VS Manager folder and replace the current file.\n\n" +
+            "Use this if you lost access to online modlists or votes after moving or deleting files.\n\n" +
+            "Continue?";
+
+        var confirmation = WpfMessageBox.Show(
+            this,
+            confirmationMessage,
+            "Simple VS Manager",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Question);
+
+        if (confirmation != MessageBoxResult.OK) return;
+
+        try
+        {
+            var restoreResult =
+                FirebaseAuthFileService.RestoreFirebaseAuthBackup();
+
+            switch (restoreResult)
+            {
+                case FirebaseAuthRestoreResult.BackupLocationUnavailable:
+                    WpfMessageBox.Show(
+                        this,
+                        "Could not determine the location of the firebase-auth.json backup.",
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    break;
+
+                case FirebaseAuthRestoreResult.BackupNotFound:
+                    WpfMessageBox.Show(
+                        this,
+                        "No firebase-auth.json backup was found in the SVSM Backup folder.",
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    break;
+
+                case FirebaseAuthRestoreResult.StateLocationUnavailable:
+                    WpfMessageBox.Show(
+                        this,
+                        "Could not determine the Simple VS Manager folder for firebase-auth.json.",
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    break;
+
+                case FirebaseAuthRestoreResult.Restored:
+                    WpfMessageBox.Show(
+                        this,
+                        "Restored firebase-auth.json from the SVSM Backup folder.",
+                        "Simple VS Manager",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+        catch (Exception ex) when (
+            ex is IOException or
+            UnauthorizedAccessException or
+            NotSupportedException or
+            SecurityException)
+        {
+            WpfMessageBox.Show(
+                this,
+                $"Failed to restore firebase-auth.json: {ex.Message}",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
 }
