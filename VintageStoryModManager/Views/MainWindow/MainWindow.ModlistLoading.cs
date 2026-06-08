@@ -118,4 +118,36 @@ public partial class MainWindow
 
         e.Effects = DragDropEffects.None;
     }
+
+    private void SwitchToInstalledModsTab()
+    {
+        if (_viewModel?.ShowMainTabCommand?.CanExecute(null) == true)
+            _viewModel.ShowMainTabCommand.Execute(null);
+    }
+
+    private void PrepareForModlistLoad()
+    {
+        SwitchToInstalledModsTab();
+        ClearSelection(true);
+    }
+
+    private void UpdateModlistLoadingUiState()
+    {
+        var isEnabled = !_isApplyingPreset;
+
+        if (UpdateAllButton != null) UpdateAllButton.IsEnabled = isEnabled;
+
+        if (LaunchGameButton != null) LaunchGameButton.IsEnabled = isEnabled;
+
+        if (PresetsAndModlistsMenuItem != null) PresetsAndModlistsMenuItem.IsEnabled = isEnabled;
+
+        if (ModsDataGrid != null)
+        {
+            if (isEnabled)
+                ModsDataGrid.ClearValue(IsEnabledProperty);
+            else
+                ModsDataGrid.IsEnabled = false;
+        }
+
+    }
 }
