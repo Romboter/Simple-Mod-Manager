@@ -466,4 +466,31 @@ public partial class MainWindow
                 MessageBoxImage.Error);
         }
     }
+
+    private void InitializeViewModel()
+    {
+        if (string.IsNullOrWhiteSpace(_dataDirectory))
+            throw new InvalidOperationException("The data directory is not set.");
+
+        _viewModel = new MainViewModel(
+            _dataDirectory,
+            _userConfiguration,
+            _gameDirectory)
+        {
+            IsCompactView = _userConfiguration.IsCompactView,
+            UseModDbDesignView = _userConfiguration.UseModDbDesignView,
+        };
+        _viewModel.PropertyChanged += ViewModelOnPropertyChanged;
+        _viewModel.UserReportVoteSubmitted += OnUserReportVoteSubmitted;
+        DataContext = _viewModel;
+        ApplyPlayerIdentityToUiAndCloudStore();
+        _cloudModlistsLoaded = false;
+        _localModlistsLoaded = false;
+        _selectedCloudModlist = null;
+        AttachToModsView(_viewModel.CurrentModsView);
+        RestoreSortPreference();
+        UpdateGameVersionMenuItem(_viewModel.InstalledGameVersion);
+        ApplyColumnVisibilityPreferencesToViewModel();
+        SubscribeModBrowserToDirectoryWatcher();
+    }
 }
