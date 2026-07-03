@@ -235,51 +235,6 @@ public partial class MainWindow
             _modsWatcherTimer.Start();
         }
 
-    private void StartGameSessionMonitor()
-        {
-            if (string.IsNullOrWhiteSpace(_dataDirectory) || _viewModel is null) return;
-
-            if (!_userConfiguration.IsModUsageTrackingEnabled) return;
-
-            StopGameSessionMonitor();
-
-            var logsDirectory = Path.Combine(_dataDirectory, "Logs");
-
-            try
-            {
-                _gameSessionMonitor = new GameSessionMonitor(
-                    logsDirectory,
-                    Dispatcher,
-                    _userConfiguration,
-                    () => _viewModel.GetActiveModUsageSnapshot());
-                _gameSessionMonitor.PromptRequired += GameSessionMonitor_OnPromptRequired;
-                _gameSessionMonitor.RefreshPromptState();
-
-                if (_userConfiguration.HasPendingModUsagePrompt)
-                    _ = Dispatcher.BeginInvoke(DispatcherPriority.Background, new Func<Task>(TryShowModUsagePromptAsync));
-            }
-            catch (Exception ex)
-            {
-                StatusLogService.AppendStatus(
-                    string.Format(CultureInfo.CurrentCulture, "Failed to initialize log monitor: {0}", ex.Message),
-                    true);
-            }
-        }
-
-    private void StopGameSessionMonitor()
-        {
-            if (_gameSessionMonitor is null) return;
-
-            _gameSessionMonitor.PromptRequired -= GameSessionMonitor_OnPromptRequired;
-            _gameSessionMonitor.Dispose();
-            _gameSessionMonitor = null;
-        }
-
-    private void GameSessionMonitor_OnPromptRequired(object? sender, EventArgs e)
-        {
-            _ = Dispatcher.BeginInvoke(DispatcherPriority.Background, new Func<Task>(TryShowModUsagePromptAsync));
-        }
-
     private void StopModsWatcher()
         {
             if (_modsWatcherTimer is null) return;
