@@ -255,23 +255,4 @@ public partial class MainWindow
             }
         }
 
-    private async void DeleteCloudAuthMenuItem_OnClick(object sender, RoutedEventArgs e)
-        {
-            const string confirmationMessage =
-                "This will remove all your online modlists and delete your authorization - good for resetting if something has gone wrong. Visit the Modlists (Beta) tab again to get a fresh firebase-auth";
-
-            var result = WpfMessageBox.Show(
-                this,
-                confirmationMessage,
-                "Simple VS Manager",
-                MessageBoxButton.OKCancel,
-                MessageBoxImage.Warning);
-
-            if (result != MessageBoxResult.OK) return;
-
-            await ExecuteCloudOperationAsync(
-                store => DeleteAllCloudModlistsAndAuthorizationAsync(store),
-                "delete all cloud modlists and Firebase authorization");
-        }
-
 }
