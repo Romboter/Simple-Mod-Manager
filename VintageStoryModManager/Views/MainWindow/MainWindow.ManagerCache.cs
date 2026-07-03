@@ -144,6 +144,11 @@ public partial class MainWindow
         }
     }
 
+    private async void ModsMenuItem_OnSubmenuOpened(object sender, RoutedEventArgs e)
+    {
+        await RefreshDeleteCachedModsMenuHeaderAsync();
+    }
+
     private async Task RefreshDeleteCachedModsMenuHeaderAsync()
     {
         if (DeleteCachedModsMenuItem is null) return;
