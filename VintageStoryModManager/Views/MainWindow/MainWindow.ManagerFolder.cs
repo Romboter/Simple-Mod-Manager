@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
 
@@ -41,7 +42,7 @@ public partial class MainWindow
             return;
         }
 
-        OpenFolder(directory, "manager data");
+        FolderOpeningHelper.OpenFolder(directory, "manager data");
     }
 
     private void ChangeManagerFolderMenuItem_OnClick(object sender, RoutedEventArgs e)

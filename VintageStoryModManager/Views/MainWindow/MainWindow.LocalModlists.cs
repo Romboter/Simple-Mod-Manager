@@ -7,6 +7,7 @@ using System.Linq;
 using System.Security;
 using System.Windows;
 using System.Windows.Controls;
+using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
@@ -82,7 +83,7 @@ public partial class MainWindow
                 return;
             }
 
-            OpenFolder(directory, "Modlists");
+            FolderOpeningHelper.OpenFolder(directory, "Modlists");
         }
 
     private void DeleteLocalModlistsButton_OnClick(object sender, RoutedEventArgs e)
