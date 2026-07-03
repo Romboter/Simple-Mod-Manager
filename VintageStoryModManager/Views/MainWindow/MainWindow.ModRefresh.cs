@@ -79,4 +79,69 @@ public partial class MainWindow
                 MessageBoxImage.Error);
         }
     }
+
+    private static bool ShouldRefreshAfterDependencyResolution(string? statusMessage)
+    {
+        return !string.IsNullOrWhiteSpace(statusMessage)
+               && statusMessage.StartsWith("Resolved dependencies for ", StringComparison.Ordinal);
+    }
+
+    private async Task RefreshModsAfterDependencyResolutionAsync()
+    {
+        if (_isDependencyResolutionRefreshPending) return;
+
+        if (_viewModel?.RefreshCommand == null) return;
+
+        _isDependencyResolutionRefreshPending = true;
+
+        try
+        {
+            await RefreshModsAsync(true).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            WpfMessageBox.Show(
+                $"The mod list could not be refreshed after resolving dependencies:{Environment.NewLine}{ex.Message}",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            _isDependencyResolutionRefreshPending = false;
+        }
+    }
+
+    private void ScheduleRefreshAfterModlistLoadIfReady()
+    {
+        if (!_refreshAfterModlistLoadPending || _isRefreshingAfterModlistLoad) return;
+
+        var viewModel = _viewModel;
+        if (viewModel?.RefreshCommand == null) return;
+
+        if (viewModel.IsLoadingMods || viewModel.IsLoadingModDetails) return;
+
+        _isRefreshingAfterModlistLoad = true;
+
+        Dispatcher.InvokeAsync(async () =>
+        {
+            try
+            {
+                await RefreshModsAsync(true).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                WpfMessageBox.Show(
+                    $"Failed to refresh mods after loading the modlist:{Environment.NewLine}{ex.Message}",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                _refreshAfterModlistLoadPending = false;
+                _isRefreshingAfterModlistLoad = false;
+            }
+        }, DispatcherPriority.Background);
+    }
 }
