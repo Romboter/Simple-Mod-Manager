@@ -8,14 +8,6 @@ namespace VintageStoryModManager.Views;
 public partial class MainWindow
 {
 
-    private void UseFasterThumbnailsMenuItem_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem menuItem) return;
-
-        _userConfiguration.SetUseFasterThumbnails(menuItem.IsChecked);
-        menuItem.IsChecked = _userConfiguration.UseFasterThumbnails;
-    }
-
     private void LogModUpdateMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         if (sender is not MenuItem menuItem) return;

@@ -213,4 +213,12 @@ public partial class MainWindow
             GameVersionMenuItem.Header = $"Vintage Story: {gameVersion}";
             GameVersionMenuItem.Visibility = Visibility.Visible;
         }
+
+    private void UseFasterThumbnailsMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem menuItem) return;
+
+            _userConfiguration.SetUseFasterThumbnails(menuItem.IsChecked);
+            menuItem.IsChecked = _userConfiguration.UseFasterThumbnails;
+        }
 }
