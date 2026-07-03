@@ -68,9 +68,4 @@ public partial class MainWindow
 
         e.Handled = true;
     }
-
-    private void ManagerModDbPageMenuItem_OnClick(object sender, RoutedEventArgs e)
-    {
-        OpenManagerModDatabasePage();
-    }
 }

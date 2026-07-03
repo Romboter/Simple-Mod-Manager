@@ -20,6 +20,11 @@ public partial class MainWindow
         OpenManagerModDatabasePage();
     }
 
+    private void ManagerModDbPageMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        OpenManagerModDatabasePage();
+    }
+
     private void OpenManagerModDatabasePage()
     {
         if (InternetAccessManager.IsInternetAccessDisabled)
