@@ -14,6 +14,42 @@ namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
+    private async void SelectDataFolderMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        var selected = PromptForDirectory(
+            "Select your VintagestoryData folder",
+            _dataDirectory,
+            InstallationPathValidator.TryValidateDataDirectory,
+            true);
+
+        if (selected is null) return;
+
+        if (string.Equals(selected, _dataDirectory, StringComparison.OrdinalIgnoreCase)) return;
+
+        _dataDirectory = selected;
+        _userConfiguration.SetDataDirectory(selected);
+        DeveloperProfileManager.UpdateOriginalProfile(selected);
+        RefreshDeveloperProfilesMenuEntries();
+        await ReloadViewModelAsync();
+    }
+
+    private void SelectGameFolderMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        var selected = PromptForDirectory(
+            "Select your Vintage Story installation folder",
+            _gameDirectory,
+            InstallationPathValidator.TryValidateGameDirectory,
+            true);
+
+        if (selected is null) return;
+
+        if (string.Equals(selected, _gameDirectory, StringComparison.OrdinalIgnoreCase)) return;
+
+        _gameDirectory = selected;
+        _userConfiguration.SetGameDirectory(selected);
+        UpdateGameVersionMenuItem(VintageStoryVersionLocator.GetInstalledVersion(_gameDirectory));
+    }
+
     private string? PromptForDirectory(string description, string? initialPath, PathValidator validator,
             bool allowCancel)
     {
