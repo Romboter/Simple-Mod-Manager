@@ -11,12 +11,6 @@ namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
-
-    private void UpdateSearchColumnVisibility(bool isSearchingModDatabase)
-    {
-        UpdateSearchSortingBehavior(isSearchingModDatabase);
-    }
-
     private async Task InitializeViewModelAsync(MainViewModel viewModel)
     {
         if (_isInitializing) return;
