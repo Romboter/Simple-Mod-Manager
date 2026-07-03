@@ -3,15 +3,116 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
+using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
+    private async void ScanForModConfigsMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel is null)
+        {
+            WpfMessageBox.Show(
+                "Mods have not been loaded yet. Load mods before scanning for configuration files.",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        if (_viewModel.IsBusy)
+        {
+            WpfMessageBox.Show(
+                "Please wait for the current operation to finish before scanning for configuration files.",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_dataDirectory))
+        {
+            WpfMessageBox.Show(
+                "The Vintage Story data directory is not set, so mod configuration files cannot be located.",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var configDirectory = Path.Combine(_dataDirectory, "ModConfig");
+        if (!Directory.Exists(configDirectory))
+        {
+            WpfMessageBox.Show(
+                $"No mod configuration directory was found at:\n{configDirectory}",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            var results =
+                await ScanForModConfigFilesAsync(_viewModel).ConfigureAwait(true);
+
+            if (results.Count == 0)
+            {
+                _viewModel.ReportStatus("No missing mod configuration files were found.");
+                WpfMessageBox.Show(
+                    "No missing mod configuration files were found.",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            _viewModel.ReportStatus($"Assigned configuration files for {results.Count} mod(s).");
+
+            var builder = new StringBuilder();
+            builder.AppendLine("Assigned configuration files for the following mods:");
+            foreach (var result in results
+                         .OrderBy(r => r.DisplayName, StringComparer.CurrentCultureIgnoreCase))
+            {
+                builder.Append(" • ");
+                builder.Append(result.DisplayName);
+                if (!string.Equals(result.DisplayName, result.ModId, StringComparison.OrdinalIgnoreCase))
+                {
+                    builder.Append(" (");
+                    builder.Append(result.ModId);
+                    builder.Append(')');
+                }
+
+                builder.AppendLine();
+                builder.Append("    ");
+                var configFileName = Path.GetFileName(result.ConfigPath);
+                builder.AppendLine(string.IsNullOrEmpty(configFileName) ? result.ConfigPath : configFileName);
+            }
+
+            WpfMessageBox.Show(
+                builder.ToString(),
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            WpfMessageBox.Show(
+                $"Failed to scan for mod configuration files:\n{ex.Message}",
+                "Simple VS Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
     private Task<IReadOnlyList<(string ModId, string DisplayName, string ConfigPath)>> ScanForModConfigFilesAsync(
         MainViewModel viewModel)
     {
