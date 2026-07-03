@@ -151,6 +151,13 @@ public partial class MainWindow
             SetUsernameDisplay(uploader);
         }
 
+    private string DetermineUploaderName(FirebaseModlistStore store)
+        {
+            var uploader = ResolveUploaderName(store?.CurrentUserId);
+            SetUsernameDisplay(uploader);
+            return uploader;
+        }
+
     private void EnableServerOptionsMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
             if (sender is not MenuItem menuItem) return;
