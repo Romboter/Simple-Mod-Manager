@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Windows;
+using System.Windows.Controls;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 using VintageStoryModManager.Views.Dialogs;
@@ -95,5 +96,14 @@ public partial class MainWindow
 
         var singleSelection = _selectedMods.Count == 1 ? _selectedMods[0] : null;
         UpdateSelectedModCopyForServerButton(isEnabled ? singleSelection : null);
+    }
+
+    private void EnableServerOptionsMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menuItem) return;
+
+        _userConfiguration.SetEnableServerOptions(menuItem.IsChecked);
+        var isEnabled = _userConfiguration.EnableServerOptions;
+        UpdateServerOptionsState(isEnabled);
     }
 }

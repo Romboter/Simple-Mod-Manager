@@ -30,6 +30,18 @@ public partial class MainWindow
         }
     }
 
+    private void SaveWindowDimensions()
+    {
+        if (_userConfiguration is null) return;
+
+        var bounds = WindowState == WindowState.Normal
+            ? new Rect(Left, Top, ActualWidth, ActualHeight)
+            : RestoreBounds;
+
+        _userConfiguration.SetWindowDimensions(bounds.Width, bounds.Height);
+        _userConfiguration.SetWindowPosition(bounds.Left, bounds.Top);
+    }
+
     private static bool IsWindowPositionOnScreen(double left, double top)
     {
         // Check if the position is within the bounds of any screen
