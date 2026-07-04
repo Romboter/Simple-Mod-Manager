@@ -263,7 +263,7 @@ public partial class MainWindow : Window
 
     private readonly ModUpdateService _modUpdateService = new();
 
-    private DataBackupService _dataBackupService;
+    private readonly DataFolderBackupCoordinator _dataFolderBackupCoordinator;
 
     private readonly ModActivityLoggingService _modActivityLoggingService;
 
@@ -368,9 +368,9 @@ public partial class MainWindow : Window
                 AsyncRelayCommandOptions.AllowConcurrentExecutions);
 
             _userConfiguration = new UserConfigurationService();
-            _dataBackupService = new DataBackupService(
+            _dataFolderBackupCoordinator = new DataFolderBackupCoordinator(new DataBackupService(
                 _userConfiguration.GetConfigurationDirectory(),
-                _userConfiguration.CustomDataBackupLocation);
+                _userConfiguration.CustomDataBackupLocation));
             _modActivityLoggingService = new ModActivityLoggingService(_userConfiguration);
             _serverTargetService = new ServerTargetService(_userConfiguration.GetConfigurationDirectory());
             _modSelection = new ModGridSelectionService(

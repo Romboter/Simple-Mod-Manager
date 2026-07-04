@@ -107,7 +107,7 @@ public partial class MainWindow
         IReadOnlyList<DataFolderBackupSummary> backups;
         try
         {
-            backups = _dataBackupService.GetAvailableBackups();
+            backups = _dataFolderBackupCoordinator.GetAvailableBackups();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -211,7 +211,7 @@ public partial class MainWindow
 
     private void OpenDataBackupDirectoryMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
-        var directory = _dataBackupService.GetBackupRootDirectory();
+        var directory = _dataFolderBackupCoordinator.GetBackupRootDirectory();
         try
         {
             if (string.IsNullOrWhiteSpace(directory))
@@ -251,7 +251,7 @@ public partial class MainWindow
 
     private void ChangeBackupLocationMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
-        var currentLocation = _dataBackupService.GetBackupRootDirectory();
+        var currentLocation = _dataFolderBackupCoordinator.GetBackupRootDirectory();
 
         using var dialog = new WinForms.FolderBrowserDialog
         {
@@ -277,7 +277,7 @@ public partial class MainWindow
             Directory.CreateDirectory(selectedPath);
 
             _userConfiguration.SetCustomDataBackupLocation(selectedPath);
-            _dataBackupService = new DataBackupService(
+            _dataFolderBackupCoordinator.ChangeLocation(
                 _userConfiguration.GetConfigurationDirectory(),
                 _userConfiguration.CustomDataBackupLocation);
 
@@ -328,7 +328,7 @@ public partial class MainWindow
 
         try
         {
-            var deleted = _dataBackupService.DeleteBackups(_dataDirectory!, displayVersion);
+            var deleted = _dataFolderBackupCoordinator.DeleteBackups(_dataDirectory!, displayVersion);
             if (deleted == 0)
             {
                 WpfMessageBox.Show(
@@ -399,7 +399,7 @@ public partial class MainWindow
 
         try
         {
-            await _dataBackupService.RestoreBackupAsync(summary, _dataDirectory!, progress, CancellationToken.None)
+            await _dataFolderBackupCoordinator.RestoreBackupAsync(summary, _dataDirectory!, progress, CancellationToken.None)
                 .ConfigureAwait(true);
             await RefreshModsAsync(true).ConfigureAwait(true);
             _viewModel?.ReportStatus($"Restored VintagestoryData backup \"{summary.Id}\".");

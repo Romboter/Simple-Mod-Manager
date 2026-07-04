@@ -23,7 +23,7 @@ public partial class MainWindow
 
         try
         {
-            await _dataBackupService
+            await _dataFolderBackupCoordinator
                 .CreateBackupAsync(_dataDirectory!, installedGameVersion, progress, CancellationToken.None)
                 .ConfigureAwait(true);
             return true;
