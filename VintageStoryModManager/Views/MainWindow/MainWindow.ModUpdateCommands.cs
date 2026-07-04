@@ -1,14 +1,7 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
@@ -198,7 +191,7 @@ public partial class MainWindow
                 var previousResultCount = results.Count;
                 var release = hasOverride
                     ? overrideRelease
-                    : SelectReleaseForMod(mod, isBulk, ref bulkPreference, results, ref abortRequested);
+                    : ModReleaseSelectionHelper.SelectReleaseForMod(mod, isBulk, ref bulkPreference, results, ref abortRequested);
                 if (abortRequested)
                 {
                     requiresRefresh = true;
@@ -321,9 +314,9 @@ public partial class MainWindow
 
             if (results.Count > 0 && showSummary)
             {
-                if (isBulk) ShowBulkUpdateChangelogDialog(results);
+                if (isBulk) ModUpdateDialogHelper.ShowBulkUpdateChangelogDialog(this, results);
 
-                ShowUpdateSummary(results, isBulk, abortRequested);
+                ModUpdateDialogHelper.ShowUpdateSummary(results, isBulk, abortRequested);
             }
             else if (abortRequested && showSummary)
             {
@@ -344,104 +337,4 @@ public partial class MainWindow
         await RefreshDeleteCachedModsMenuHeaderAsync();
     }
 
-    private ModReleaseInfo? SelectReleaseForMod(
-        ModListItemViewModel mod,
-        bool isBulk,
-        ref ModUpdateReleasePreference? bulkPreference,
-        List<ModUpdateOperationResult> results,
-        ref bool abortRequested)
-    {
-        var latest = mod.LatestRelease;
-        if (latest is null)
-        {
-            results.Add(ModUpdateOperationResult.SkippedResult(mod, "No downloadable release was found."));
-            return null;
-        }
-
-        if (bulkPreference.HasValue && bulkPreference.Value == ModUpdateReleasePreference.LatestCompatible)
-            if (mod.LatestCompatibleRelease != null)
-                return mod.LatestCompatibleRelease;
-
-        // No compatible release is available; fall back to installing the latest release.
-        return latest;
-    }
-
-    private void ShowBulkUpdateChangelogDialog(IReadOnlyList<ModUpdateOperationResult> results)
-    {
-        if (results is not { Count: > 0 }) return;
-
-        var items = new List<BulkUpdateChangelogWindow.BulkUpdateChangelogItem>();
-
-        foreach (var result in results)
-        {
-            if (!result.Success) continue;
-
-            var fromVersion = string.IsNullOrWhiteSpace(result.OldVersion)
-                ? "Unknown"
-                : result.OldVersion!;
-            var toVersion = string.IsNullOrWhiteSpace(result.NewVersion)
-                ? "Unknown"
-                : result.NewVersion!;
-            var title = $"{result.Mod.DisplayName} ({fromVersion} → {toVersion})";
-            var changelog = string.IsNullOrWhiteSpace(result.ChangelogSummary)
-                ? "No changelog entries were provided for this update."
-                : result.ChangelogSummary!;
-            items.Add(new BulkUpdateChangelogWindow.BulkUpdateChangelogItem(title, changelog));
-        }
-
-        if (items.Count == 0) return;
-
-        var dialog = new BulkUpdateChangelogWindow(items)
-        {
-            Owner = this
-        };
-
-        dialog.ShowDialog();
-    }
-
-    private static void ShowUpdateSummary(IReadOnlyList<ModUpdateOperationResult> results, bool isBulk, bool aborted)
-    {
-        if (results.Count == 0) return;
-
-        var successCount = results.Count(result => result.Success);
-        var failureCount = results.Count(result => !result.Success && !result.Skipped);
-        var skippedCount = results.Count(result => result.Skipped);
-
-        if (!isBulk && failureCount == 0 && skippedCount == 0) return;
-
-        if (isBulk && failureCount == 0 && skippedCount == 0 && !aborted) return;
-
-        var builder = new StringBuilder();
-        builder.AppendLine(isBulk ? "Bulk update completed." : "Update completed.");
-        if (aborted) builder.AppendLine("The operation was cancelled.");
-
-        builder.AppendLine($"Updated: {successCount}");
-
-        if (failureCount > 0) builder.AppendLine($"Failed: {failureCount}");
-
-        if (skippedCount > 0) builder.AppendLine($"Skipped: {skippedCount}");
-
-        if (failureCount > 0)
-        {
-            builder.AppendLine();
-            builder.AppendLine("Failures:");
-            foreach (var failure in results.Where(result => !result.Success && !result.Skipped))
-                builder.AppendLine($" • {failure.Mod.DisplayName}: {failure.Message}");
-        }
-
-        if (skippedCount > 0)
-        {
-            builder.AppendLine();
-            builder.AppendLine("Skipped:");
-            foreach (var skipped in results.Where(result => result.Skipped))
-                builder.AppendLine($" • {skipped.Mod.DisplayName}: {skipped.Message}");
-        }
-
-        MessageBoxImage icon;
-        if (isBulk)
-            icon = MessageBoxImage.None;
-        else
-            icon = failureCount > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information;
-        WpfMessageBox.Show(builder.ToString(), "Simple VS Manager", MessageBoxButton.OK, icon);
-    }
 }

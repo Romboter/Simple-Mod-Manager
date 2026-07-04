@@ -55,7 +55,7 @@ public partial class MainWindow
             return;
         }
 
-        var release = SelectReleaseForInstall(modViewModel);
+        var release = ModReleaseSelectionHelper.SelectReleaseForInstall(modViewModel);
         if (release is null)
         {
             WpfMessageBox.Show("No downloadable releases are available for this mod.",

@@ -1,10 +1,7 @@
 #nullable enable
 
-using System;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
-using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 
@@ -32,7 +29,7 @@ public partial class MainWindow
             return;
         }
 
-        var release = SelectReleaseForInstall(mod);
+        var release = ModReleaseSelectionHelper.SelectReleaseForInstall(mod);
         if (release is null)
         {
             WpfMessageBox.Show("No downloadable releases are available for this mod.",
@@ -117,14 +114,5 @@ public partial class MainWindow
             _isModUpdateInProgress = false;
             UpdateSelectedModButtons();
         }
-    }
-
-    private static ModReleaseInfo? SelectReleaseForInstall(ModListItemViewModel mod)
-    {
-        if (mod.LatestRelease?.IsCompatibleWithInstalledGame == true) return mod.LatestRelease;
-
-        if (mod.LatestCompatibleRelease != null) return mod.LatestCompatibleRelease;
-
-        return mod.LatestRelease;
     }
 }
