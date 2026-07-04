@@ -275,15 +275,11 @@ public partial class MainWindow : Window
 
     private ModManagerTraceListener? _traceListener;
 
-    private readonly Dictionary<ModListItemViewModel, PropertyChangedEventHandler> _selectedModPropertyHandlers = new();
-
-    private readonly List<ModListItemViewModel> _selectedMods = new();
+    private readonly ModGridSelectionService _modSelection;
 
     private readonly List<LocalModlistListEntry> _selectedLocalModlists = new();
 
     private CloudModlistListEntry? _selectedCloudModlist;
-
-    private ModListItemViewModel? _selectionAnchor;
 
     private bool _cloudModlistsLoaded;
 
@@ -377,6 +373,11 @@ public partial class MainWindow : Window
                 _userConfiguration.CustomDataBackupLocation);
             _modActivityLoggingService = new ModActivityLoggingService(_userConfiguration);
             _serverTargetService = new ServerTargetService(_userConfiguration.GetConfigurationDirectory());
+            _modSelection = new ModGridSelectionService(
+                Dispatcher,
+                UpdateSelectedModButtons,
+                UpdateSelectedModFixButton,
+                UpdateSelectedModCopyForServerButton);
 
             InitializeComponent();
 
