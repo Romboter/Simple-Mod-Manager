@@ -8,9 +8,44 @@ using Microsoft.CodeAnalysis.MSBuild;
 
 MSBuildLocator.RegisterDefaults();
 
-string solutionPath = args.Length > 0
-    ? Path.GetFullPath(args[0])
+string? focusArg = null;
+List<string> positionalArgs = [];
+
+for (int i = 0; i < args.Length; i++)
+{
+    if (string.Equals(args[i], "--focus", StringComparison.Ordinal))
+    {
+        if (i + 1 >= args.Length)
+        {
+            Console.Error.WriteLine("--focus requires a value (e.g. --focus MainWindow.DataFolderBackups.cs).");
+            return 2;
+        }
+
+        focusArg = args[++i];
+        continue;
+    }
+
+    positionalArgs.Add(args[i]);
+}
+
+string solutionPath = positionalArgs.Count > 0
+    ? Path.GetFullPath(positionalArgs[0])
     : Path.GetFullPath("./ImprovedModMenu.sln");
+
+string? focusFileName = null;
+
+if (focusArg is not null)
+{
+    string name = focusArg;
+
+    if (!name.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+        name += ".cs";
+
+    if (!name.StartsWith("MainWindow", StringComparison.OrdinalIgnoreCase))
+        name = "MainWindow." + name;
+
+    focusFileName = name;
+}
 
 if (!File.Exists(solutionPath))
 {
@@ -85,6 +120,27 @@ if (partialParts.Count == 0)
 }
 
 partialParts = [.. partialParts.OrderBy(p => p.FileName, StringComparer.OrdinalIgnoreCase)];
+
+PartialPart? focusPart = null;
+
+if (focusFileName is not null)
+{
+    focusPart = partialParts.FirstOrDefault(p =>
+        string.Equals(p.FileName, focusFileName, StringComparison.OrdinalIgnoreCase));
+
+    if (focusPart is null)
+    {
+        Console.Error.WriteLine($"--focus target not found: {focusFileName}");
+        Console.Error.WriteLine("Available MainWindow partial files:");
+
+        foreach (PartialPart part in partialParts)
+        {
+            Console.Error.WriteLine($"  {part.FileName}");
+        }
+
+        return 2;
+    }
+}
 
 Dictionary<SyntaxTree, SemanticModel> models = partialParts
     .Select(p => p.Tree)
@@ -237,6 +293,12 @@ WriteCrossPartialCallsCsv(reportsDir, methodRows);
 WriteExtractionCandidatesReport(reportsDir, candidates);
 WriteXamlEventHandlersCsv(reportsDir, xamlHandlers);
 
+if (focusPart is not null)
+{
+    WriteFocusedReport(reportsDir, focusPart, methodRows, fieldUsages);
+    Console.WriteLine($"Focused report written for: {focusPart.FileName}");
+}
+
 Console.WriteLine();
 Console.WriteLine($"Partial files analyzed: {partialParts.Count}");
 Console.WriteLine($"Methods analyzed:       {methodRows.Count}");
@@ -309,9 +371,17 @@ static void AnalyzeSimpleName(
         return;
 
     if (symbol is IFieldSymbol fieldSymbol &&
-        SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingType, mainWindowSymbol) &&
-        fieldUsages.TryGetValue(fieldSymbol, out FieldUsage? usage))
+        SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingType, mainWindowSymbol))
     {
+        if (!fieldUsages.TryGetValue(fieldSymbol, out FieldUsage? usage))
+        {
+            // A MainWindow field the analyzer never declared as a tracked source field —
+            // e.g. an x:Name-generated control field from MainWindow.g.cs, which lives
+            // outside the Views/MainWindow partials this tool scans.
+            row.UntrackedMainWindowMembersUsed.Add(fieldSymbol.Name);
+            return;
+        }
+
         ExpressionSyntax referenceExpression =
             node.Parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == node
                 ? memberAccess
@@ -335,6 +405,20 @@ static void AnalyzeSimpleName(
             usage.WriteCount++;
         }
 
+        return;
+    }
+
+    if (symbol is IPropertySymbol propertySymbol &&
+        SymbolEqualityComparer.Default.Equals(propertySymbol.ContainingType, mainWindowSymbol))
+    {
+        row.UntrackedMainWindowMembersUsed.Add(propertySymbol.Name);
+        return;
+    }
+
+    if (symbol is IEventSymbol eventSymbol &&
+        SymbolEqualityComparer.Default.Equals(eventSymbol.ContainingType, mainWindowSymbol))
+    {
+        row.UntrackedMainWindowMembersUsed.Add(eventSymbol.Name);
         return;
     }
 
@@ -933,6 +1017,315 @@ static void WriteXamlEventHandlersCsv(string reportsDir, List<XamlHandlerRow> xa
     File.WriteAllText(Path.Combine(reportsDir, "xaml-event-handlers.csv"), sb.ToString());
 }
 
+static void WriteFocusedReport(
+    string reportsDir,
+    PartialPart focusPart,
+    List<MethodRow> methodRows,
+    Dictionary<IFieldSymbol, FieldUsage> fieldUsages)
+{
+    string focusFile = focusPart.FileName;
+
+    List<MethodRow> focusMethods = [.. methodRows
+        .Where(m => m.PartialFile == focusFile)
+        .OrderBy(m => m.MethodName, StringComparer.Ordinal)];
+
+    StringBuilder sb = new();
+
+    // 1. Header
+    sb.AppendLine($"# Focused Report: {focusFile}");
+    sb.AppendLine();
+    sb.AppendLine("## Header");
+    sb.AppendLine();
+    sb.AppendLine($"- **Focused partial file:** {focusFile}");
+    sb.AppendLine($"- **Line count:** {focusPart.Tree.GetText().Lines.Count}");
+    sb.AppendLine($"- **Method count:** {focusMethods.Count}");
+    sb.AppendLine($"- **Event handler count:** {focusMethods.Count(m => m.IsEventHandlerLike)}");
+
+    // 2. Method inventory
+    sb.AppendLine();
+    sb.AppendLine("## Method Inventory");
+
+    foreach (MethodRow row in focusMethods)
+    {
+        sb.AppendLine();
+        sb.AppendLine($"### {row.MethodName}");
+        sb.AppendLine();
+        sb.AppendLine($"- **Async:** {(row.IsAsync ? "yes" : "no")}");
+        sb.AppendLine($"- **Event-handler-like:** {(row.IsEventHandlerLike ? "yes" : "no")}");
+        sb.AppendLine($"- **XAML events:** {DescribeOrNone(row.XamlEvents)}");
+        sb.AppendLine($"- **Fields read:** {DescribeOrNone(row.FieldsRead)}");
+        sb.AppendLine($"- **Fields written:** {DescribeOrNone(row.FieldsWritten)}");
+        sb.AppendLine($"- **Untracked MainWindow members used:** {DescribeOrNone(row.UntrackedMainWindowMembersUsed)}");
+        sb.AppendLine($"- **MainWindow methods called:** {DescribeOrNone(row.MethodsCalled)}");
+        sb.AppendLine($"- **Awaited calls:** {DescribeOrNone(row.AwaitedCalls)}");
+        sb.AppendLine($"- **External types used:** {DescribeOrNone(row.ExternalTypes)}");
+    }
+
+    // 3. Incoming dependencies
+    List<(string CallerFile, string CallerMethod, string CalleeMethod)> incoming = [.. methodRows
+        .Where(r => r.PartialFile != focusFile)
+        .SelectMany(r => r.CalledRows
+            .Where(c => c.PartialFile == focusFile)
+            .Select(c => (CallerFile: r.PartialFile, CallerMethod: r.MethodName, CalleeMethod: c.MethodName)))
+        .Distinct()
+        .OrderBy(t => t.CallerFile, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(t => t.CallerMethod, StringComparer.Ordinal)
+        .ThenBy(t => t.CalleeMethod, StringComparer.Ordinal)];
+
+    sb.AppendLine();
+    sb.AppendLine("## Incoming Dependencies");
+    sb.AppendLine();
+    sb.AppendLine("Methods in other MainWindow partials that call methods in this focused partial.");
+    sb.AppendLine();
+
+    if (incoming.Count == 0)
+    {
+        sb.AppendLine("(none)");
+    }
+    else
+    {
+        sb.AppendLine("| Caller file | Caller method | Called method (this partial) |");
+        sb.AppendLine("|---|---|---|");
+
+        foreach ((string callerFile, string callerMethod, string calleeMethod) in incoming)
+        {
+            sb.AppendLine($"| {callerFile} | {callerMethod} | {calleeMethod} |");
+        }
+    }
+
+    // 4. Outgoing dependencies
+    List<(string CallerMethod, string CalleeFile, string CalleeMethod)> outgoing = [.. focusMethods
+        .SelectMany(r => r.CalledRows
+            .Where(c => c.PartialFile != focusFile)
+            .Select(c => (CallerMethod: r.MethodName, CalleeFile: c.PartialFile, CalleeMethod: c.MethodName)))
+        .Distinct()
+        .OrderBy(t => t.CallerMethod, StringComparer.Ordinal)
+        .ThenBy(t => t.CalleeFile, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(t => t.CalleeMethod, StringComparer.Ordinal)];
+
+    sb.AppendLine();
+    sb.AppendLine("## Outgoing Dependencies");
+    sb.AppendLine();
+    sb.AppendLine("Methods in this focused partial that call methods in other MainWindow partials.");
+    sb.AppendLine();
+
+    if (outgoing.Count == 0)
+    {
+        sb.AppendLine("(none)");
+    }
+    else
+    {
+        sb.AppendLine("| Method (this partial) | Called file | Called method |");
+        sb.AppendLine("|---|---|---|");
+
+        foreach ((string callerMethod, string calleeFile, string calleeMethod) in outgoing)
+        {
+            sb.AppendLine($"| {callerMethod} | {calleeFile} | {calleeMethod} |");
+        }
+    }
+
+    // 5. Field ownership notes
+    List<FocusFieldInfo> relevantFields = [];
+
+    foreach ((IFieldSymbol field, FieldUsage usage) in fieldUsages)
+    {
+        HashSet<string> usedByFiles = usage.ReadBy
+            .Concat(usage.WrittenBy)
+            .Select(id => id.Split("::", 2)[0])
+            .ToHashSet(StringComparer.Ordinal);
+
+        bool relevant = usedByFiles.Contains(focusFile) ||
+            string.Equals(usage.DeclaredInFile, focusFile, StringComparison.Ordinal);
+
+        if (!relevant)
+            continue;
+
+        Dictionary<string, int> fileWeights = usage.ReadBy
+            .Concat(usage.WrittenBy)
+            .GroupBy(id => id.Split("::", 2)[0], StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+
+        string dominantFile = fileWeights.Count == 0
+            ? usage.DeclaredInFile
+            : fileWeights.OrderByDescending(kv => kv.Value).ThenBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase).First().Key;
+
+        string bucket = usedByFiles.Count <= 1
+            ? "only"
+            : dominantFile == focusFile
+                ? "mostly"
+                : "shared";
+
+        relevantFields.Add(new FocusFieldInfo(field.Name, bucket));
+    }
+
+    relevantFields = [.. relevantFields.OrderBy(f => f.Name, StringComparer.Ordinal)];
+
+    sb.AppendLine();
+    sb.AppendLine("## Field Ownership Notes");
+
+    sb.AppendLine();
+    sb.AppendLine("**Used only by this focused partial:**");
+    sb.AppendLine();
+    AppendFieldBucket(sb, relevantFields, "only");
+
+    sb.AppendLine();
+    sb.AppendLine("**Used mostly by this focused partial:**");
+    sb.AppendLine();
+    AppendFieldBucket(sb, relevantFields, "mostly");
+
+    sb.AppendLine();
+    sb.AppendLine("**Shared broadly across MainWindow:**");
+    sb.AppendLine();
+    AppendFieldBucket(sb, relevantFields, "shared");
+
+    // 6. Extraction seam suggestions
+    HashSet<string> sharedFieldNames = relevantFields
+        .Where(f => f.Bucket == "shared")
+        .Select(f => f.Name)
+        .ToHashSet(StringComparer.Ordinal);
+
+    Dictionary<string, List<MethodRow>> methodsByCategory = new()
+    {
+        ["safe helper extraction"] = [],
+        ["possible service extraction"] = [],
+        ["keep in MainWindow because UI/XAML-bound"] = [],
+        ["keep in MainWindow because it touches UI/generated MainWindow members"] = [],
+        ["high-risk due to shared state"] = [],
+    };
+
+    foreach (MethodRow row in focusMethods)
+    {
+        bool isXamlBound = row.IsEventHandlerLike || row.XamlEvents.Count > 0;
+        bool touchesUntrackedMembers = row.UntrackedMainWindowMembersUsed.Count > 0;
+        bool touchesSharedField = row.FieldsRead.Concat(row.FieldsWritten).Any(sharedFieldNames.Contains);
+        bool touchesAnyField = row.FieldsRead.Count > 0 || row.FieldsWritten.Count > 0 || row.MethodsCalled.Count > 0;
+
+        string category = isXamlBound
+            ? "keep in MainWindow because UI/XAML-bound"
+            : touchesUntrackedMembers
+                ? "keep in MainWindow because it touches UI/generated MainWindow members"
+                : touchesSharedField
+                    ? "high-risk due to shared state"
+                    : !touchesAnyField
+                        ? "safe helper extraction"
+                        : "possible service extraction";
+
+        methodsByCategory[category].Add(row);
+    }
+
+    sb.AppendLine();
+    sb.AppendLine("## Extraction Seam Suggestions");
+
+    foreach (string category in new[]
+    {
+        "safe helper extraction",
+        "possible service extraction",
+        "keep in MainWindow because UI/XAML-bound",
+        "keep in MainWindow because it touches UI/generated MainWindow members",
+        "high-risk due to shared state",
+    })
+    {
+        List<MethodRow> members = [.. methodsByCategory[category].OrderBy(m => m.MethodName, StringComparer.Ordinal)];
+
+        sb.AppendLine();
+        sb.AppendLine($"### {category} ({members.Count})");
+        sb.AppendLine();
+
+        if (members.Count == 0)
+        {
+            sb.AppendLine("(none)");
+            continue;
+        }
+
+        foreach (MethodRow row in members)
+        {
+            List<string> fieldsInvolved = [.. row.FieldsRead
+                .Concat(row.FieldsWritten)
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(f => f, StringComparer.Ordinal)];
+
+            List<string> untrackedMembersInvolved = [.. row.UntrackedMainWindowMembersUsed];
+
+            string why = category switch
+            {
+                "safe helper extraction" =>
+                    "touches no tracked MainWindow fields, generated members, or MainWindow methods; a pure " +
+                    "function of its parameters, safe to move as a static helper.",
+                "possible service extraction" =>
+                    $"touches field(s) owned mostly by this partial ({DescribeOrNone(fieldsInvolved)}); " +
+                    "candidate for a scoped service once similar methods are grouped.",
+                "keep in MainWindow because UI/XAML-bound" =>
+                    "wired to a XAML event or shaped like an event handler; stays in MainWindow until the view itself is extracted.",
+                "keep in MainWindow because it touches UI/generated MainWindow members" =>
+                    $"references untracked MainWindow member(s) ({DescribeOrNone(untrackedMembersInvolved)}) — " +
+                    "likely XAML-generated controls or bound UI properties; not safe to call \"pure\" or extract " +
+                    "as a plain helper until those are abstracted behind an interface.",
+                "high-risk due to shared state" =>
+                    $"touches field(s) shared broadly across MainWindow ({DescribeOrNone(fieldsInvolved)}); " +
+                    "moving it risks splitting shared state across files.",
+                _ => string.Empty,
+            };
+
+            sb.AppendLine($"- **{row.MethodName}** — fields: {DescribeOrNone(fieldsInvolved)} — {why}");
+        }
+    }
+
+    // 7. Risk summary
+    int highRiskCount = methodsByCategory["high-risk due to shared state"].Count;
+    int serviceCount = methodsByCategory["possible service extraction"].Count;
+    int uiMemberCount = methodsByCategory["keep in MainWindow because it touches UI/generated MainWindow members"].Count;
+
+    string overallRisk = highRiskCount > 0
+        ? "high"
+        : serviceCount > 0 || uiMemberCount > 0
+            ? "medium"
+            : "low";
+
+    string reason = overallRisk switch
+    {
+        "high" =>
+            $"{highRiskCount} method(s) touch fields shared broadly across MainWindow; extracting this partial " +
+            "requires resolving that shared state first.",
+        "medium" =>
+            $"{serviceCount} method(s) are plausible service candidates and {uiMemberCount} method(s) touch " +
+            "UI/generated MainWindow members; a scoped extraction pass is warranted before moving anything.",
+        _ =>
+            "no methods touch broadly-shared fields or UI/generated members, and none are plausible service " +
+            "candidates beyond safe helpers; this partial looks low-risk to extract from.",
+    };
+
+    sb.AppendLine();
+    sb.AppendLine("## Risk Summary");
+    sb.AppendLine();
+    sb.AppendLine($"- **Risk level:** {overallRisk}");
+    sb.AppendLine($"- **Reasons:** {reason}");
+
+    string outputName = $"focus-{StripPartialName(focusFile)}.md";
+    File.WriteAllText(Path.Combine(reportsDir, outputName), sb.ToString());
+}
+
+static string DescribeOrNone(IEnumerable<string> items)
+{
+    List<string> list = [.. items];
+    return list.Count == 0 ? "(none)" : JoinList(list);
+}
+
+static void AppendFieldBucket(StringBuilder sb, List<FocusFieldInfo> fields, string bucket)
+{
+    List<string> names = [.. fields.Where(f => f.Bucket == bucket).Select(f => f.Name)];
+
+    if (names.Count == 0)
+    {
+        sb.AppendLine("(none)");
+        return;
+    }
+
+    foreach (string name in names)
+    {
+        sb.AppendLine($"- {name}");
+    }
+}
+
 // ===========================================================================
 // Types
 // ===========================================================================
@@ -952,6 +1345,7 @@ internal sealed class MethodRow(string PartialFile, string MethodName, bool IsPu
     public SortedSet<string> ExternalTypes { get; } = new(StringComparer.Ordinal);
     public SortedSet<string> AwaitedCalls { get; } = new(StringComparer.Ordinal);
     public SortedSet<string> XamlEvents { get; } = new(StringComparer.Ordinal);
+    public SortedSet<string> UntrackedMainWindowMembersUsed { get; } = new(StringComparer.Ordinal);
     public List<MethodRow> CalledRows { get; } = [];
 }
 
@@ -967,6 +1361,8 @@ internal sealed class FieldUsage(string DeclaredInFile)
 }
 
 internal sealed record XamlHandlerRow(string XamlFile, string ElementName, string EventName, string HandlerName, string HandlerPartialFile);
+
+internal sealed record FocusFieldInfo(string Name, string Bucket);
 
 internal sealed record ExtractionCandidate(
     string Name,
