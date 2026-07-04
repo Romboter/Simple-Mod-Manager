@@ -10,14 +10,6 @@ namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
-    private string EnsurePresetDirectory()
-    {
-        var baseDirectory = _userConfiguration.GetConfigurationDirectory();
-        var presetDirectory = Path.Combine(baseDirectory, PresetDirectoryName);
-        Directory.CreateDirectory(presetDirectory);
-        return presetDirectory;
-    }
-
     private string EnsureBackupDirectory()
     {
         var baseDirectory = _userConfiguration.GetConfigurationDirectory();
