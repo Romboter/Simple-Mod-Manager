@@ -39,7 +39,8 @@ public partial class MainWindow
             return;
         }
 
-        if (!TryGetInstallTargetPath(mod, release, out var targetPath, out var errorMessage))
+        if (!ModInstallTargetPathHelper.TryGetInstallTargetPath(_dataDirectory, mod, release, out var targetPath,
+                out var errorMessage))
         {
             if (!string.IsNullOrWhiteSpace(errorMessage))
                 WpfMessageBox.Show(errorMessage!,

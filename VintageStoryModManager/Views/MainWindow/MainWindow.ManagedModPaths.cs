@@ -91,47 +91,6 @@ public partial class MainWindow
         return true;
     }
 
-    private bool TryGetInstallTargetPath(ModListItemViewModel mod, ModReleaseInfo release, out string fullPath,
-        out string? errorMessage)
-    {
-        fullPath = string.Empty;
-        errorMessage = null;
-
-        if (_dataDirectory is null)
-        {
-            errorMessage =
-                "The VintagestoryData folder is not available. Please verify it from File > Set Data Folder.";
-            return false;
-        }
-
-        var modsDirectory = Path.Combine(_dataDirectory, "Mods");
-
-        try
-        {
-            Directory.CreateDirectory(modsDirectory);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
-                                       or NotSupportedException)
-        {
-            errorMessage = $"The Mods folder could not be accessed:{Environment.NewLine}{ex.Message}";
-            return false;
-        }
-
-        var defaultName = string.IsNullOrWhiteSpace(mod.ModId) ? "mod" : mod.ModId;
-        var versionPart = string.IsNullOrWhiteSpace(release.Version) ? "latest" : release.Version!;
-        var fallbackFileName = $"{defaultName}-{versionPart}.zip";
-
-        var releaseFileName = release.FileName;
-        if (!string.IsNullOrWhiteSpace(releaseFileName)) releaseFileName = Path.GetFileName(releaseFileName);
-
-        var sanitizedFileName = FileNameHelper.SanitizeFileName(releaseFileName, fallbackFileName);
-        if (string.IsNullOrWhiteSpace(Path.GetExtension(sanitizedFileName))) sanitizedFileName += ".zip";
-
-        var candidatePath = Path.Combine(modsDirectory, sanitizedFileName);
-        fullPath = FileNameHelper.EnsureUniqueFilePath(candidatePath);
-        return true;
-    }
-
     private bool IsPathWithinManagedMods(string fullPath)
     {
         if (_dataDirectory is null) return false;
