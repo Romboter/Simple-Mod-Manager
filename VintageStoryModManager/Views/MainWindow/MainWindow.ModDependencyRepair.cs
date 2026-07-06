@@ -168,8 +168,8 @@ public partial class MainWindow
 
                 if (!targetIsDirectory)
                 {
-                    if (!TryGetUpdateTargetPath(installedMod, release, targetPath, out var resolvedPath,
-                            out var targetError))
+                    if (!ModUpdateTargetPathHelper.TryGetUpdateTargetPath(installedMod, release, targetPath,
+                            out var resolvedPath, out var targetError))
                         return (false, targetError ?? "The mod path could not be determined.");
 
                     existingPath = targetPath;

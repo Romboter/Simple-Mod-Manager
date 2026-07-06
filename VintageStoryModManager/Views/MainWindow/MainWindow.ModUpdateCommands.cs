@@ -214,7 +214,8 @@ public partial class MainWindow
 
                 if (!targetIsDirectory)
                 {
-                    if (!TryGetUpdateTargetPath(mod, release, modPath, out var resolvedPath, out var targetError))
+                    if (!ModUpdateTargetPathHelper.TryGetUpdateTargetPath(mod, release, modPath, out var resolvedPath,
+                            out var targetError))
                     {
                         var failureMessage = string.IsNullOrWhiteSpace(targetError)
                             ? "The mod location could not be determined."
