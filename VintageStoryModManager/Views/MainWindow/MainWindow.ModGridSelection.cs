@@ -123,16 +123,11 @@ public partial class MainWindow
     {
         if (SelectedModCopyForServerButton is null) return;
 
-        if (!_userConfiguration.EnableServerOptions || mod is null)
-        {
-            SelectedModCopyForServerButton.DataContext = null;
-            SelectedModCopyForServerButton.Visibility = Visibility.Collapsed;
-            SelectedModCopyForServerButton.IsEnabled = false;
-            return;
-        }
+        var canCopy = mod is not null
+                      && ServerCommandBuilder.CanCopyInstallCommand(_userConfiguration.EnableServerOptions, mod.ModId,
+                          mod.Version);
 
-        var command = ServerCommandBuilder.TryBuildInstallCommand(mod.ModId, mod.Version);
-        if (string.IsNullOrWhiteSpace(command))
+        if (!canCopy)
         {
             SelectedModCopyForServerButton.DataContext = null;
             SelectedModCopyForServerButton.Visibility = Visibility.Collapsed;
