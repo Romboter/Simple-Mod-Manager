@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Windows.Threading;
 using VintageStoryModManager.Services;
 
@@ -85,20 +83,8 @@ public partial class MainWindow
         if (_modBrowserViewModel == null || _viewModel == null) return;
 
         var installedMods = _viewModel.GetInstalledModsSnapshot();
-        var installedModIds = new List<string>();
-        var numericInstalledModIds = new List<int>();
-
-        foreach (var mod in installedMods)
-        {
-            if (string.IsNullOrWhiteSpace(mod.ModId)) continue;
-
-            installedModIds.Add(mod.ModId);
-
-            if (int.TryParse(mod.ModId, out var modId) && !numericInstalledModIds.Contains(modId))
-            {
-                numericInstalledModIds.Add(modId);
-            }
-        }
+        var (installedModIds, numericInstalledModIds) =
+            InstalledModIdListBuilder.Build(installedMods.Select(mod => mod.ModId));
 
         _modBrowserViewModel.UpdateInstalledMods(installedModIds, numericInstalledModIds);
     }
