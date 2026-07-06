@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -17,7 +16,7 @@ public partial class MainWindow
 {
     private void ManagerDataFolderMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        var directory = GetManagerDataDirectory();
+        var directory = ModCacheLocator.GetManagerDataDirectory();
         if (string.IsNullOrWhiteSpace(directory))
         {
             WpfMessageBox.Show(
@@ -293,8 +292,4 @@ public partial class MainWindow
         }
     }
 
-    private static string? GetManagerDataDirectory()
-    {
-        return ModCacheLocator.GetManagerDataDirectory();
-    }
 }

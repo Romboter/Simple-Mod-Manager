@@ -1,9 +1,6 @@
 #nullable enable
 
-using System;
 using System.Diagnostics;
-using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Navigation;
 using VintageStoryModManager.Helpers;
@@ -65,7 +62,7 @@ public partial class MainWindow
             return;
         }
 
-        var currentVersion = GetManagerInformationalVersion();
+        var currentVersion = ManagerVersionHelper.GetManagerInformationalVersion();
         if (string.IsNullOrWhiteSpace(currentVersion))
         {
             ManagerUpdateLinkTextBlock.Visibility = Visibility.Collapsed;
@@ -94,29 +91,4 @@ public partial class MainWindow
         }
     }
 
-    private static string? GetManagerInformationalVersion()
-    {
-        try
-        {
-            var assembly = typeof(MainWindow).Assembly;
-            if (assembly is null) return null;
-
-            var informationalVersion = assembly
-                                           .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                                           .InformationalVersion
-                                       ?? assembly.GetName().Version?.ToString();
-
-            if (string.IsNullOrWhiteSpace(informationalVersion)) return null;
-
-            var buildMetadataSeparatorIndex = informationalVersion.IndexOf('+');
-            if (buildMetadataSeparatorIndex >= 0)
-                informationalVersion = informationalVersion[..buildMetadataSeparatorIndex];
-
-            return informationalVersion.Trim();
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
 }
