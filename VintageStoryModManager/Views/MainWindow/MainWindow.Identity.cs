@@ -1,5 +1,6 @@
 #nullable enable
 using SimpleVsManager.Cloud;
+using VintageStoryModManager.Services;
 
 namespace VintageStoryModManager.Views;
 
@@ -14,30 +15,12 @@ public partial class MainWindow
 
     private string ResolveUploaderName(string? fallbackUserId = null)
     {
-        var playerName = _viewModel?.PlayerName;
-        if (!string.IsNullOrWhiteSpace(playerName)) return playerName.Trim();
-
         var suffixSource = _viewModel?.PlayerUid;
         if (string.IsNullOrWhiteSpace(suffixSource)) suffixSource = fallbackUserId;
 
         if (string.IsNullOrWhiteSpace(suffixSource)) suffixSource = _cloudModlistStore?.CurrentUserId;
 
-        if (!string.IsNullOrWhiteSpace(suffixSource))
-        {
-            var trimmedSpan = suffixSource.AsSpan().Trim();
-            if (!trimmedSpan.IsEmpty)
-            {
-                var suffix = trimmedSpan.Length <= 4
-                    ? trimmedSpan.ToString()
-                    : trimmedSpan.Slice(trimmedSpan.Length - 4, 4).ToString();
-
-                if (string.IsNullOrWhiteSpace(suffix)) suffix = "0000";
-
-                return $"Anonymous{suffix}";
-            }
-        }
-
-        return "Anonymous0000";
+        return UploaderNameResolver.Resolve(_viewModel?.PlayerName, suffixSource);
     }
 
     private void ApplyPlayerIdentityToUiAndCloudStore()

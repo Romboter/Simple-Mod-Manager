@@ -34,6 +34,21 @@ internal static class FirebaseAuthFileService
         return FirebaseAuthRestoreResult.Restored;
     }
 
+    internal static string GetDataDirectoryBackupPath(string dataDirectory)
+    {
+        return Path.Combine(dataDirectory, "ModData", "SimpleVSManager", "firebase-auth.json");
+    }
+
+    internal static void BackupAuthStateToDataDirectory(string stateFilePath, string dataDirectory)
+    {
+        var backupPath = GetDataDirectoryBackupPath(dataDirectory);
+        var backupDirectory = Path.GetDirectoryName(backupPath);
+        if (!string.IsNullOrWhiteSpace(backupDirectory))
+            Directory.CreateDirectory(backupDirectory);
+
+        File.Copy(stateFilePath, backupPath, true);
+    }
+
     internal static void TryDeleteFirebaseAuthFile(string path)
         {
             if (string.IsNullOrWhiteSpace(path)) return;

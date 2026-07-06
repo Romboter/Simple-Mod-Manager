@@ -71,26 +71,11 @@ public partial class MainWindow
         var dataDirectory = _dataDirectory;
         if (string.IsNullOrWhiteSpace(dataDirectory)) return;
 
-        var modDataDirectory = Path.Combine(dataDirectory, "ModData");
-        var backupDirectory = Path.Combine(modDataDirectory, "SimpleVSManager");
-        var backupPath = Path.Combine(backupDirectory, "firebase-auth.json");
-
         try
         {
-            Directory.CreateDirectory(backupDirectory);
-            File.Copy(stateFilePath, backupPath, true);
+            FirebaseAuthFileService.BackupAuthStateToDataDirectory(stateFilePath, dataDirectory);
         }
-        catch (IOException ex)
-        {
-            _modActivityLoggingService.LogError("Failed to back up Firebase auth state", ex);
-            StatusLogService.AppendStatus($"Failed to back up Firebase auth state: {ex.Message}", true);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _modActivityLoggingService.LogError("Failed to back up Firebase auth state", ex);
-            StatusLogService.AppendStatus($"Failed to back up Firebase auth state: {ex.Message}", true);
-        }
-        catch (NotSupportedException ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
         {
             _modActivityLoggingService.LogError("Failed to back up Firebase auth state", ex);
             StatusLogService.AppendStatus($"Failed to back up Firebase auth state: {ex.Message}", true);
@@ -105,8 +90,7 @@ public partial class MainWindow
         var dataDirectory = _dataDirectory;
         if (string.IsNullOrWhiteSpace(dataDirectory)) return;
 
-        var backupDirectory = Path.Combine(dataDirectory, "ModData", "SimpleVSManager");
-        var backupPath = Path.Combine(backupDirectory, "firebase-auth.json");
+        var backupPath = FirebaseAuthFileService.GetDataDirectoryBackupPath(dataDirectory);
         FirebaseAuthFileService.TryDeleteFirebaseAuthFile(backupPath);
     }
 
