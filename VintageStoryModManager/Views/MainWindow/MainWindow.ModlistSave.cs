@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using VintageStoryModManager.Helpers;
@@ -98,23 +96,24 @@ public partial class MainWindow
                 if (confirmation != MessageBoxResult.Yes) return false;
             }
 
-            var serializable = PresetSnapshotBuilder.BuildSerializablePreset(
+            var serializable = PresetSnapshotBuilder.BuildModlistPreset(
                 _viewModel!.GetCurrentModStates(),
-                entryName,
-                true,
-                true,
+                string.IsNullOrWhiteSpace(listName) ? entryName : listName,
+                description,
+                version,
+                createdBy,
                 includedConfigurations,
                 gameVersion);
-            if (!string.IsNullOrWhiteSpace(listName)) serializable.Name = listName.Trim();
-            serializable.Description = description;
-            serializable.Version = version;
-            serializable.Uploader = string.IsNullOrWhiteSpace(createdBy)
-                ? null
-                : createdBy.Trim();
 
-            var json =
-                PdfModlistSerializer.SerializeToJson(serializable);
-            File.WriteAllText(filePath, json);
+            var saveResult = LocalModlistFileService.Save(filePath, serializable);
+            if (!saveResult.Success)
+            {
+                WpfMessageBox.Show($"Failed to save the modlist:\n{saveResult.ErrorMessage}",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return false;
+            }
 
             _viewModel?.ReportStatus($"Saved modlist \"{entryName}\".");
             savedFilePath = filePath;
@@ -149,18 +148,10 @@ public partial class MainWindow
             true,
             gameVersion: ResolveGameVersion(null));
 
-        try
+        var saveResult = LocalModlistFileService.Save(filePath, serializable);
+        if (!saveResult.Success)
         {
-            var json =
-                PdfModlistSerializer.SerializeToJson(serializable);
-            File.WriteAllText(filePath, json);
-
-            _viewModel.ReportStatus($"Saved modlist \"{savedName}\".");
-            return true;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            WpfMessageBox.Show($"Failed to save the modlist:\n{ex.Message}",
+            WpfMessageBox.Show($"Failed to save the modlist:\n{saveResult.ErrorMessage}",
                 "Simple VS Manager",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
@@ -168,6 +159,9 @@ public partial class MainWindow
             filePath = string.Empty;
             return false;
         }
+
+        _viewModel.ReportStatus($"Saved modlist \"{savedName}\".");
+        return true;
     }
 
     private bool TryBuildCurrentModlistJson(

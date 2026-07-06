@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security;
 using System.Windows;
@@ -143,18 +141,14 @@ public partial class MainWindow
             ? "Installed Mods"
             : listName.Trim();
         var resolvedGameVersion = ResolveGameVersion(gameVersion);
-        var serializable = PresetSnapshotBuilder.BuildSerializablePreset(
+        var serializable = PresetSnapshotBuilder.BuildModlistPreset(
             _viewModel!.GetCurrentModStates(),
             presetName,
-            true,
-            true,
+            description,
+            version,
+            uploaderName,
             includedConfigurations,
             resolvedGameVersion);
-
-        serializable.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
-        serializable.Version = string.IsNullOrWhiteSpace(version) ? null : version.Trim();
-        serializable.Uploader = string.IsNullOrWhiteSpace(uploaderName) ? null : uploaderName.Trim();
-        if (!string.IsNullOrWhiteSpace(listName)) serializable.Name = listName.Trim();
 
         var serializableConfigList = PresetConfigurationSerializer.BuildSerializableConfigList(includedConfigurations);
 

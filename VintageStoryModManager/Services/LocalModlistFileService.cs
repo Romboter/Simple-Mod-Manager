@@ -98,6 +98,25 @@ internal static class LocalModlistFileService
 
         return LocalModlistUpdateResult.Succeeded;
     }
+
+    internal static LocalModlistSaveResult Save(string filePath, SerializablePreset preset)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ArgumentNullException.ThrowIfNull(preset);
+
+        try
+        {
+            var json = PdfModlistSerializer.SerializeToJson(preset);
+            File.WriteAllText(filePath, json);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
+                                      or PathTooLongException)
+        {
+            return LocalModlistSaveResult.Failed(ex.Message);
+        }
+
+        return LocalModlistSaveResult.Succeeded;
+    }
 }
 
 internal sealed record LocalModlistDeletionResult(
@@ -130,6 +149,23 @@ internal sealed record LocalModlistUpdateResult(
         return new LocalModlistUpdateResult(
             false,
             failureStage,
+            errorMessage);
+    }
+}
+
+internal sealed record LocalModlistSaveResult(
+    bool Success,
+    string? ErrorMessage)
+{
+    internal static LocalModlistSaveResult Succeeded { get; } =
+        new(
+            true,
+            null);
+
+    internal static LocalModlistSaveResult Failed(string errorMessage)
+    {
+        return new LocalModlistSaveResult(
+            false,
             errorMessage);
     }
 }
