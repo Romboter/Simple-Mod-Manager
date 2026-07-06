@@ -1,10 +1,6 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
@@ -24,60 +20,21 @@ public partial class MainWindow
 
         if (configurations.Count == 0) return;
 
-        var modDisplayNames =
-            new Dictionary<string, string>(
-                StringComparer.OrdinalIgnoreCase);
-        var promptNames = new List<string>(configurations.Count);
+        var prompt = PresetConfigurationImportService.BuildImportPrompt(
+            configurations,
+            modId => _viewModel?.TryGetInstalledModDisplayName(modId, out var resolvedName) == true
+                     && !string.IsNullOrWhiteSpace(resolvedName)
+                ? resolvedName.Trim()
+                : null);
 
-        foreach (var configuration in configurations)
-        {
-            var displayName = configuration.ModId;
-
-            if (_viewModel?.TryGetInstalledModDisplayName(
-                    configuration.ModId,
-                    out var resolvedName) == true &&
-                !string.IsNullOrWhiteSpace(resolvedName))
-            {
-                displayName = resolvedName.Trim();
-            }
-
-            if (!modDisplayNames.ContainsKey(configuration.ModId))
-                modDisplayNames.Add(configuration.ModId, displayName);
-
-            promptNames.Add(displayName);
-        }
-
-        promptNames = promptNames
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        var summary = promptNames.Count == 0
-            ? string.Empty
-            : string.Join(
-                "\n",
-                promptNames.Select(name => $"• {name}"));
-
-        var message =
-            "This modlist includes configuration files for the following mods:";
-
-        if (!string.IsNullOrEmpty(summary))
-            message += $"\n\n{summary}";
-
-        message +=
-            "\n\nImporting these configurations will overwrite your existing " +
-            "settings for these mods if they are already installed. " +
-            "Do you want to import them?";
-
-        var prompt = WpfMessageBox.Show(
+        var promptResult = WpfMessageBox.Show(
             this,
-            message,
+            prompt.Message,
             "Import Mod Configurations",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
-        if (prompt != MessageBoxResult.Yes) return;
+        if (promptResult != MessageBoxResult.Yes) return;
 
         if (string.IsNullOrWhiteSpace(_dataDirectory))
         {
@@ -99,7 +56,7 @@ public partial class MainWindow
                         configurations,
                         _dataDirectory,
                         _userConfiguration,
-                        modDisplayNames)
+                        prompt.ModDisplayNames)
                     .ConfigureAwait(true);
         }
         catch (Exception ex) when (

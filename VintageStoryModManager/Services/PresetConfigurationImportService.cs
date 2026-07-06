@@ -213,6 +213,58 @@ internal static class PresetConfigurationImportService
             errors);
     }
 
+    internal static PresetConfigurationImportPrompt BuildImportPrompt(
+        IReadOnlyList<PresetConfigurationImportEntry> configurations,
+        Func<string, string?> resolveDisplayName)
+    {
+        ArgumentNullException.ThrowIfNull(configurations);
+        ArgumentNullException.ThrowIfNull(resolveDisplayName);
+
+        var modDisplayNames =
+            new Dictionary<string, string>(
+                StringComparer.OrdinalIgnoreCase);
+        var promptNames = new List<string>(configurations.Count);
+
+        foreach (var configuration in configurations)
+        {
+            var displayName = configuration.ModId;
+
+            var resolvedName = resolveDisplayName(configuration.ModId);
+            if (!string.IsNullOrWhiteSpace(resolvedName))
+                displayName = resolvedName;
+
+            if (!modDisplayNames.ContainsKey(configuration.ModId))
+                modDisplayNames.Add(configuration.ModId, displayName);
+
+            promptNames.Add(displayName);
+        }
+
+        promptNames = promptNames
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var summary = promptNames.Count == 0
+            ? string.Empty
+            : string.Join(
+                "\n",
+                promptNames.Select(name => $"• {name}"));
+
+        var message =
+            "This modlist includes configuration files for the following mods:";
+
+        if (!string.IsNullOrEmpty(summary))
+            message += $"\n\n{summary}";
+
+        message +=
+            "\n\nImporting these configurations will overwrite your existing " +
+            "settings for these mods if they are already installed. " +
+            "Do you want to import them?";
+
+        return new PresetConfigurationImportPrompt(message, modDisplayNames);
+    }
+
     private static string GetDisplayName(
         string modId,
         IReadOnlyDictionary<string, string> modDisplayNames)
@@ -233,3 +285,7 @@ internal sealed record PresetConfigurationImportEntry(
 internal sealed record PresetConfigurationImportResult(
     int ImportedCount,
     IReadOnlyList<string> Errors);
+
+internal sealed record PresetConfigurationImportPrompt(
+    string Message,
+    IReadOnlyDictionary<string, string> ModDisplayNames);

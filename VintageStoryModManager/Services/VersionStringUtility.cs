@@ -315,4 +315,18 @@ internal static class VersionStringUtility
 
             return false;
         }
+
+    internal static bool MatchesDesiredVersion(
+        string? desiredVersion,
+        string? desiredNormalized,
+        string? candidateVersion,
+        string? candidateNormalized)
+    {
+        return (!string.IsNullOrWhiteSpace(desiredVersion)
+                && !string.IsNullOrWhiteSpace(candidateVersion)
+                && string.Equals(candidateVersion, desiredVersion, StringComparison.OrdinalIgnoreCase))
+               || (!string.IsNullOrWhiteSpace(desiredNormalized)
+                   && !string.IsNullOrWhiteSpace(candidateNormalized)
+                   && string.Equals(candidateNormalized, desiredNormalized, StringComparison.OrdinalIgnoreCase));
+    }
 }

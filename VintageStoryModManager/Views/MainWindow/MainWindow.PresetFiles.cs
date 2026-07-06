@@ -1,10 +1,7 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using VintageStoryModManager.Helpers;
@@ -85,23 +82,18 @@ public partial class MainWindow
             ResolveGameVersion(null));
         configureSerializable?.Invoke(serializable);
 
-        try
+        var saveResult = LocalModlistFileService.Save(filePath, serializable);
+        if (!saveResult.Success)
         {
-            var json =
-                PdfModlistSerializer.SerializeToJson(serializable);
-            File.WriteAllText(filePath, json);
-
-            onSuccess?.Invoke(entryName);
-            return true;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            WpfMessageBox.Show($"Failed to save the {failureContext}:\n{ex.Message}",
+            WpfMessageBox.Show($"Failed to save the {failureContext}:\n{saveResult.ErrorMessage}",
                 "Simple VS Manager",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             return false;
         }
+
+        onSuccess?.Invoke(entryName);
+        return true;
     }
 
     private string? ResolveGameVersion(string? requestedVersion)

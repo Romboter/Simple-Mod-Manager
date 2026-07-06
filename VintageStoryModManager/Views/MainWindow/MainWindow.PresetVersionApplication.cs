@@ -1,10 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
@@ -46,11 +41,7 @@ public partial class MainWindow
             var desiredNormalized = VersionStringUtility.Normalize(desiredVersion);
 
             var option = mod.VersionOptions.FirstOrDefault(opt =>
-                (!string.IsNullOrWhiteSpace(desiredVersion)
-                 && string.Equals(opt.Version, desiredVersion, StringComparison.OrdinalIgnoreCase))
-                || (!string.IsNullOrWhiteSpace(desiredNormalized)
-                    && !string.IsNullOrWhiteSpace(opt.NormalizedVersion)
-                    && string.Equals(opt.NormalizedVersion, desiredNormalized, StringComparison.OrdinalIgnoreCase)));
+                VersionStringUtility.MatchesDesiredVersion(desiredVersion, desiredNormalized, opt.Version, opt.NormalizedVersion));
 
             if (option is null)
             {
@@ -187,60 +178,13 @@ public partial class MainWindow
 
         if (missingMods.Count > 0 || missingVersions.Count > 0 || installFailures.Count > 0)
         {
-            var builder = new StringBuilder();
+            var message = PresetApplicationSummaryBuilder.BuildInstallFailureSummary(
+                missingMods,
+                missingVersions,
+                installFailures,
+                _recentLocalModBackupDirectory,
+                _recentLocalModBackupModNames);
 
-            if (missingMods.Count > 0)
-            {
-                builder.AppendLine("The following mods from the preset could not be installed:");
-                foreach (var modId in missingMods.Distinct(StringComparer.OrdinalIgnoreCase))
-                    builder.AppendLine($" • {modId}");
-            }
-
-            if (missingVersions.Count > 0)
-            {
-                if (builder.Length > 0) builder.AppendLine();
-
-                builder.AppendLine("The following mod versions could not be located:");
-                foreach (var entry in missingVersions.Distinct(StringComparer.OrdinalIgnoreCase))
-                    builder.AppendLine($" • {entry}");
-            }
-
-            if (installFailures.Count > 0)
-            {
-                if (builder.Length > 0) builder.AppendLine();
-
-                builder.AppendLine("Some mods failed to install:");
-                foreach (var failure in installFailures.Distinct(StringComparer.OrdinalIgnoreCase))
-                    builder.AppendLine($" • {failure}");
-            }
-
-            if (missingMods.Count > 0
-                && !string.IsNullOrWhiteSpace(_recentLocalModBackupDirectory)
-                && _recentLocalModBackupModNames is { Count: > 0 })
-            {
-                if (builder.Length > 0)
-                {
-                    builder.AppendLine();
-                    builder.AppendLine();
-                }
-
-                builder.AppendLine("Local copies of mods that are not on the mod database were saved to:");
-                builder.AppendLine($" • {_recentLocalModBackupDirectory}");
-
-                var distinctBackups = _recentLocalModBackupModNames
-                    .Where(name => !string.IsNullOrWhiteSpace(name))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-
-                if (distinctBackups.Count > 0)
-                {
-                    builder.AppendLine("Backed up mods:");
-                    foreach (var backupName in distinctBackups) builder.AppendLine($"   • {backupName}");
-                }
-            }
-
-            var message = builder.ToString().Trim();
             if (!string.IsNullOrWhiteSpace(message))
                 WpfMessageBox.Show(message,
                     "Simple VS Manager",
@@ -275,11 +219,7 @@ public partial class MainWindow
         var desiredNormalized = VersionStringUtility.Normalize(desiredVersion);
         var releases = info.Releases ?? Array.Empty<ModReleaseInfo>();
         var release = releases.FirstOrDefault(r =>
-            (!string.IsNullOrWhiteSpace(r.Version)
-             && string.Equals(r.Version.Trim(), desiredVersion, StringComparison.OrdinalIgnoreCase))
-            || (!string.IsNullOrWhiteSpace(desiredNormalized)
-                && !string.IsNullOrWhiteSpace(r.NormalizedVersion)
-                && string.Equals(r.NormalizedVersion, desiredNormalized, StringComparison.OrdinalIgnoreCase)));
+            VersionStringUtility.MatchesDesiredVersion(desiredVersion, desiredNormalized, r.Version?.Trim(), r.NormalizedVersion));
 
         if (release is null)
             return new PresetModInstallResult(false, false, true,
