@@ -159,22 +159,12 @@ public partial class MainWindow
 
             if (installedMod != null)
             {
-                if (!TryGetManagedModPath(installedMod, out targetPath, out var pathError))
+                if (!TryGetManagedModPath(installedMod, out var sourcePath, out var pathError))
                     return (false, pathError ?? "The mod path could not be determined.");
 
-                targetIsDirectory = Directory.Exists(targetPath);
-                if (!targetIsDirectory && !File.Exists(targetPath) && installedMod.SourceKind == ModSourceKind.Folder)
-                    targetIsDirectory = true;
-
-                if (!targetIsDirectory)
-                {
-                    if (!ModUpdateTargetPathHelper.TryGetUpdateTargetPath(installedMod, release, targetPath,
-                            out var resolvedPath, out var targetError))
-                        return (false, targetError ?? "The mod path could not be determined.");
-
-                    existingPath = targetPath;
-                    targetPath = resolvedPath;
-                }
+                if (!ModUpdateTargetPathHelper.TryResolveUpdateTarget(installedMod, release, sourcePath,
+                        out targetPath, out targetIsDirectory, out existingPath, out var targetError))
+                    return (false, targetError ?? "The mod path could not be determined.");
             }
             else
             {

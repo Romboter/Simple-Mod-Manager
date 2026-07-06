@@ -55,4 +55,31 @@ internal static class ModUpdateTargetPathHelper
         fullPath = Path.Combine(directory, sanitizedFileName);
         return true;
     }
+
+    internal static bool TryResolveUpdateTarget(
+        ModListItemViewModel mod,
+        ModReleaseInfo release,
+        string sourcePath,
+        out string targetPath,
+        out bool targetIsDirectory,
+        out string? existingPath,
+        out string? errorMessage)
+    {
+        existingPath = null;
+        errorMessage = null;
+        targetPath = sourcePath;
+
+        targetIsDirectory = Directory.Exists(sourcePath);
+        if (!targetIsDirectory && !File.Exists(sourcePath) && mod.SourceKind == ModSourceKind.Folder)
+            targetIsDirectory = true;
+
+        if (targetIsDirectory) return true;
+
+        if (!TryGetUpdateTargetPath(mod, release, sourcePath, out var resolvedPath, out errorMessage))
+            return false;
+
+        targetPath = resolvedPath;
+        existingPath = sourcePath;
+        return true;
+    }
 }

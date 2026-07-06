@@ -1,6 +1,5 @@
 #nullable enable
 
-using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using VintageStoryModManager.Models;
@@ -204,32 +203,18 @@ public partial class MainWindow
                     continue;
                 }
 
-                var targetIsDirectory = Directory.Exists(modPath);
-
-                if (!targetIsDirectory && !File.Exists(modPath) && mod.SourceKind == ModSourceKind.Folder)
-                    targetIsDirectory = true;
-
-                var targetPath = modPath;
-                string? existingPath = null;
-
-                if (!targetIsDirectory)
+                if (!ModUpdateTargetPathHelper.TryResolveUpdateTarget(mod, release, modPath, out var targetPath,
+                        out var targetIsDirectory, out var existingPath, out var targetError))
                 {
-                    if (!ModUpdateTargetPathHelper.TryGetUpdateTargetPath(mod, release, modPath, out var resolvedPath,
-                            out var targetError))
-                    {
-                        var failureMessage = string.IsNullOrWhiteSpace(targetError)
-                            ? "The mod location could not be determined."
-                            : targetError!;
-                        results.Add(ModUpdateOperationResult.Failure(mod, failureMessage));
-                        requiresRefresh = true;
-                        completionCallback?.Invoke(mod, release, new ModUpdateResult(false, failureMessage));
-                        if (useModlistInstallUi)
-                            CompleteModlistInstallStep($"{displayName}: {failureMessage}");
-                        continue;
-                    }
-
-                    targetPath = resolvedPath;
-                    existingPath = modPath;
+                    var failureMessage = string.IsNullOrWhiteSpace(targetError)
+                        ? "The mod location could not be determined."
+                        : targetError!;
+                    results.Add(ModUpdateOperationResult.Failure(mod, failureMessage));
+                    requiresRefresh = true;
+                    completionCallback?.Invoke(mod, release, new ModUpdateResult(false, failureMessage));
+                    if (useModlistInstallUi)
+                        CompleteModlistInstallStep($"{displayName}: {failureMessage}");
+                    continue;
                 }
 
                 var descriptor = new ModUpdateDescriptor(
