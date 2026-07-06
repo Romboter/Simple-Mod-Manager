@@ -285,7 +285,8 @@ public partial class MainWindow
             return new PresetModInstallResult(false, false, true,
                 "The specified version could not be found on the mod database.");
 
-        if (!TryGetDependencyInstallTargetPath(modId, release, out var targetPath, out var pathError))
+        if (!ModInstallTargetPathHelper.TryGetDependencyInstallTargetPath(_dataDirectory, modId, release,
+                out var targetPath, out var pathError))
             return new PresetModInstallResult(false, false, false, pathError);
 
         var descriptor = new ModUpdateDescriptor(

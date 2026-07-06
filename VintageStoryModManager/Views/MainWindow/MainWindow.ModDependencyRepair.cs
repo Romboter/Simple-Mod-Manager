@@ -178,7 +178,8 @@ public partial class MainWindow
             }
             else
             {
-                if (!TryGetDependencyInstallTargetPath(dependency.ModId, release, out targetPath, out var errorMessage))
+                if (!ModInstallTargetPathHelper.TryGetDependencyInstallTargetPath(_dataDirectory, dependency.ModId,
+                        release, out targetPath, out var errorMessage))
                     return (false, errorMessage ?? "The Mods folder is not available.");
 
                 targetIsDirectory = false;
