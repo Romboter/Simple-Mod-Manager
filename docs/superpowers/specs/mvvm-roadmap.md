@@ -1,7 +1,7 @@
 # MVVM Roadmap — Living Document
 
 **Created:** 2026-07-06 (Phase 2 of `2026-07-06-mvvm-area-slice-pipeline-design.md`)
-**Status:** Draft — awaiting user approval of areas and slice order
+**Status:** Approved 2026-07-06
 **Source data:** `reports/mainwindow-responsibility/` regenerated 2026-07-06 (74 partials, 363 methods, 91 fields, 126 XAML handlers)
 
 Every `MainWindow.*.cs` partial is assigned to exactly one area (verified: counts per area sum to 74). Line counts are current as of the analyzer re-run.
@@ -56,7 +56,7 @@ Every `MainWindow.*.cs` partial is assigned to exactly one area (verified: count
 - **Hazards:** consent dialogs everywhere; `DeleteCloudAuthMenuItem_OnClick` is known dead code (unwired) — leave it; auth-file lifecycle is delicate (backup/restore of `firebase-auth.json`).
 - **Manifest estimate:** 8 partials + 1–2 `Services/` files + tests.
 
-### H. Server sync — 4 partials, ~385 lines
+### H. Server sync — DONE pending smoke test (slice 1, 2026-07-06) — was 4 partials, ~385 lines; now 3 partials, ~150 lines
 `ServerMacro` (171), `ServerSync` (109), `ServerConnection` (62), `ServerModCopy` (42)
 - **Destination:** `SyncEngine`, `ServerTargetService`, `ISftpClientWrapper`, `ServerCommandBuilder`, `ServerMacroGenerator` already exist and `ISftpClientWrapper` is already an interface — smallest gap between current state and done. Host-key verification dialog behind `IConfirmationService`.
 - **Hazards:** `GenerateServerInstallMacroMenuItem_OnClick` is known dead code (unwired) — leave it; `UpdateServerOptionsState` is part of analyzer candidate #1 (calls area-A button refresh).
@@ -116,3 +116,5 @@ Parallel-safety notes (design-doc rule: disjoint manifests only): 1+2 could run 
 ## Maintenance log
 
 - 2026-07-06 — Document created; awaiting approval.
+- 2026-07-06 — Approved by user (areas + slice order as proposed).
+- 2026-07-06 — Slice 1 (area H, Server sync) implemented: sync preflight guard chain → new `Services/ServerSyncPreflight.cs`; host-key-storing verifier + connection test + SFTP factory → new `Services/ServerConnectionHelper.cs`; `ServerConnection.cs` trimmed to the host-key dialog only; dead `ServerMacro.cs` + orphaned `Services/ServerMacroGenerator.cs` deleted (user-approved). 19 new characterization tests (79 total). Found two `TestServerConnectionAsync` call sites in `Profiles.cs` the focus report missed — the analyzer's callback-reference blind spot, same family as the field-read blind spot. Awaiting user smoke test.

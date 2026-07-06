@@ -1,8 +1,5 @@
 #nullable enable
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using VintageStoryModManager.Models;
@@ -51,7 +48,8 @@ public partial class MainWindow
         var dialog = new GameProfileDialog(
             this,
             _serverTargetService,
-            TestServerConnectionAsync,
+            (target, password, hostKeyVerifier) =>
+                ServerConnectionHelper.TestServerConnectionAsync(_serverTargetService, target, password, hostKeyVerifier),
             ShowHostKeyVerificationAsync,
             _userConfiguration.EnableServerOptions);
         var result = dialog.ShowDialog();
@@ -102,7 +100,8 @@ public partial class MainWindow
             currentProfileType,
             currentServerTargetId,
             _serverTargetService,
-            TestServerConnectionAsync,
+            (target, password, hostKeyVerifier) =>
+                ServerConnectionHelper.TestServerConnectionAsync(_serverTargetService, target, password, hostKeyVerifier),
             ShowHostKeyVerificationAsync,
             _userConfiguration.EnableServerOptions);
 

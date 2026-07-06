@@ -27,6 +27,18 @@ internal static class TestData
             initializeUserReportState: false);
     }
 
+    internal static ServerTarget CreateServerTarget(string id = "target-1")
+    {
+        return new ServerTarget
+        {
+            Id = id,
+            Name = "Test Server",
+            Host = "example.invalid",
+            Username = "tester",
+            RemoteDataPath = "/srv/vintagestory/data"
+        };
+    }
+
     internal static ModReleaseInfo CreateRelease(
         string version = "1.2.3",
         string? fileName = "testmod_1.2.3.zip")

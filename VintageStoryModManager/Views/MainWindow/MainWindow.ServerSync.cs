@@ -16,7 +16,8 @@ public partial class MainWindow
     {
         var dialog = new ManageServerTargetsDialog(
             _serverTargetService,
-            TestServerConnectionAsync,
+            (target, password, hostKeyVerifier) =>
+                ServerConnectionHelper.TestServerConnectionAsync(_serverTargetService, target, password, hostKeyVerifier),
             ShowHostKeyVerificationAsync)
         {
             Owner = this
@@ -27,45 +28,28 @@ public partial class MainWindow
 
     private void SyncToServerMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        if (!_userConfiguration.IsActiveProfileServerProfile())
-        {
-            WpfMessageBox.Show("This feature is only available for Server profiles.\n\nTo use this feature, create a new profile and set its type to 'Server'.",
-                "Sync to Server", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+        var preflight = ServerSyncPreflight.Evaluate(
+            _userConfiguration.IsActiveProfileServerProfile(),
+            _userConfiguration.GetActiveServerTargetId(),
+            _serverTargetService.GetTarget,
+            _dataDirectory);
 
-        var serverTargetId = _userConfiguration.GetActiveServerTargetId();
-        if (string.IsNullOrEmpty(serverTargetId))
+        if (preflight.Target is not { } target)
         {
-            WpfMessageBox.Show("No server target is configured for this profile.",
-                "Sync to Server", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        var target = _serverTargetService.GetTarget(serverTargetId);
-        if (target == null)
-        {
-            WpfMessageBox.Show("The configured server target was not found. It may have been deleted.",
-                "Sync to Server", MessageBoxButton.OK, MessageBoxImage.Error);
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(_dataDirectory))
-        {
-            WpfMessageBox.Show("No data directory is configured for this profile.",
-                "Sync to Server", MessageBoxButton.OK, MessageBoxImage.Warning);
+            WpfMessageBox.Show(preflight.ErrorMessage!, "Sync to Server", MessageBoxButton.OK, preflight.Icon);
             return;
         }
 
         // Wrap the host key verifier to store trusted fingerprints
-        var wrappedHostKeyVerifier = CreateHostKeyVerifierWithStorage()(target, ShowHostKeyVerificationAsync);
+        var wrappedHostKeyVerifier = ServerConnectionHelper.CreateHostKeyVerifierWithStorage(
+            _serverTargetService, target, ShowHostKeyVerificationAsync);
 
         var viewModel = new SyncToServerDialogViewModel(
             target,
-            _dataDirectory,
+            _dataDirectory!,
             _serverTargetService,
             _syncEngine,
-            CreateSftpClientWrapper,
+            ServerConnectionHelper.CreateSftpClientWrapper,
             wrappedHostKeyVerifier,
             new ConfirmationService());
 
@@ -78,9 +62,9 @@ public partial class MainWindow
 
     private void UpdateSyncToServerMenuState()
     {
-        var isServerProfile = _userConfiguration.IsActiveProfileServerProfile();
-        var hasServerTarget = !string.IsNullOrEmpty(_userConfiguration.GetActiveServerTargetId());
-        SyncToServerMenuItem.IsEnabled = isServerProfile && hasServerTarget;
+        SyncToServerMenuItem.IsEnabled = ServerSyncPreflight.CanSyncToServer(
+            _userConfiguration.IsActiveProfileServerProfile(),
+            _userConfiguration.GetActiveServerTargetId());
     }
 
     private void UpdateServerOptionsState(bool isEnabled)
