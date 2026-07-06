@@ -1,5 +1,6 @@
 using System.IO;
 using VintageStoryModManager.Services;
+using VintageStoryModManager.ViewModels;
 using VintageStoryModManager.Views.Dialogs;
 using Xunit;
 
@@ -103,5 +104,35 @@ public sealed class ModConfigCaptureHelperTests : IDisposable
         Assert.NotNull(errorMessage);
         Assert.StartsWith("Some configuration files could not be included:", errorMessage);
         Assert.Contains("Test Mod:", errorMessage);
+    }
+
+    // --- CaptureConfigurationsForMods ---
+
+    [Fact]
+    public void CaptureConfigurationsForMods_NoMods_ReturnsNull()
+    {
+        var result = ModConfigCaptureHelper.CaptureConfigurationsForMods(
+            Array.Empty<ModListItemViewModel>(), _ => Array.Empty<string>(), _dir);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void CaptureConfigurationsForMods_DeduplicatesModIdsAndSkipsMissingConfigFiles()
+    {
+        var cfg = CreateFile("testmod.json", "{\"enabled\":true}");
+        var mods = new[] { TestData.CreateMod("testmod"), TestData.CreateMod("TESTMOD") };
+
+        var result = ModConfigCaptureHelper.CaptureConfigurationsForMods(
+            mods,
+            id => id.Equals("testmod", StringComparison.OrdinalIgnoreCase)
+                ? new[] { cfg, Path.Combine(_dir, "missing.json") }
+                : Array.Empty<string>(),
+            _dir);
+
+        Assert.NotNull(result);
+        var snapshots = Assert.Single(result!);
+        Assert.Equal("testmod", snapshots.Key, StringComparer.OrdinalIgnoreCase);
+        Assert.Single(snapshots.Value);
     }
 }

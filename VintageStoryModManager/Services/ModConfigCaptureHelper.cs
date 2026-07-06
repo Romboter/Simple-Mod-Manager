@@ -1,5 +1,6 @@
 #nullable enable
 
+using System.Diagnostics;
 using System.IO;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.ViewModels;
@@ -78,5 +79,47 @@ internal static class ModConfigCaptureHelper
                     StringComparer.OrdinalIgnoreCase);
 
         return (configurations, errorMessage);
+    }
+
+    internal static IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? CaptureConfigurationsForMods(
+        IReadOnlyList<ModListItemViewModel> mods,
+        Func<string, IReadOnlyList<string>> getConfigPaths,
+        string? dataDirectory)
+    {
+        if (mods is null || mods.Count == 0)
+            return null;
+
+        var requests =
+            mods
+                .Where(mod => mod is not null && !string.IsNullOrWhiteSpace(mod.ModId))
+                .GroupBy(mod => mod.ModId.Trim(), StringComparer.OrdinalIgnoreCase)
+                .Select(group =>
+                {
+                    var mod = group.First();
+                    var modId = group.Key;
+
+                    var configPaths = getConfigPaths(modId)
+                        .Where(path => !string.IsNullOrWhiteSpace(path))
+                        .Select(path => path.Trim())
+                        .Where(File.Exists)
+                        .ToList();
+
+                    return new ModConfigurationCaptureRequest(modId, mod.DisplayName, configPaths);
+                })
+                .Where(request => request.ConfigPaths.Count > 0)
+                .ToList();
+
+        var captureResult = ModConfigurationCaptureService.Capture(requests, dataDirectory);
+
+        foreach (var error in captureResult.Errors)
+        {
+            Trace.TraceWarning(
+                "Failed to include configuration file {0} for mod {1} in backup: {2}",
+                error.Path,
+                error.ModId,
+                error.Message);
+        }
+
+        return captureResult.Configurations;
     }
 }
