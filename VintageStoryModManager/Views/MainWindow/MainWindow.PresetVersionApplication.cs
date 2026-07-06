@@ -300,17 +300,13 @@ public partial class MainWindow
 
         var progress = CreateModUpdateProgressReporter(modId, installProgress);
 
-        var result = await _modUpdateService
-            .UpdateAsync(descriptor, _userConfiguration.CacheAllVersionsLocally, progress)
+        var outcome = await ModUpdateOperationHelper.ExecuteAsync(
+                _modUpdateService, descriptor, _userConfiguration.CacheAllVersionsLocally, progress,
+                "The installation failed.")
             .ConfigureAwait(true);
 
-        if (!result.Success)
-        {
-            var message = string.IsNullOrWhiteSpace(result.ErrorMessage)
-                ? "The installation failed."
-                : result.ErrorMessage!;
-            return new PresetModInstallResult(false, false, false, message);
-        }
+        if (!outcome.Success)
+            return new PresetModInstallResult(false, false, false, outcome.ErrorMessage);
 
         var versionSuffix = string.IsNullOrWhiteSpace(release.Version) ? string.Empty : $" {release.Version}";
         _viewModel.ReportStatus($"Installed {modId}{versionSuffix}.");

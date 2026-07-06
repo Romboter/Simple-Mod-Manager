@@ -202,17 +202,12 @@ public partial class MainWindow
             var progress = new Progress<ModUpdateProgress>(p =>
                 _viewModel?.ReportStatus($"{dependency.ModId}: {p.Message}"));
 
-            var updateResult = await _modUpdateService
-                .UpdateAsync(descriptor, _userConfiguration.CacheAllVersionsLocally, progress)
+            var outcome = await ModUpdateOperationHelper.ExecuteAsync(
+                    _modUpdateService, descriptor, _userConfiguration.CacheAllVersionsLocally, progress,
+                    "The installation failed.")
                 .ConfigureAwait(true);
 
-            if (!updateResult.Success)
-            {
-                var message = string.IsNullOrWhiteSpace(updateResult.ErrorMessage)
-                    ? "The installation failed."
-                    : updateResult.ErrorMessage!;
-                return (false, message);
-            }
+            if (!outcome.Success) return (false, outcome.ErrorMessage!);
 
             if (installedMod != null && _viewModel != null)
                 await _viewModel.PreserveActivationStateAsync(

@@ -70,15 +70,14 @@ public partial class MainWindow
             var progress = new Progress<ModUpdateProgress>(p =>
                 _viewModel?.ReportStatus($"{mod.DisplayName}: {p.Message}"));
 
-            var result = await _modUpdateService
-                .UpdateAsync(descriptor, _userConfiguration.CacheAllVersionsLocally, progress)
+            var outcome = await ModUpdateOperationHelper.ExecuteAsync(
+                    _modUpdateService, descriptor, _userConfiguration.CacheAllVersionsLocally, progress,
+                    "The installation failed.")
                 .ConfigureAwait(true);
 
-            if (!result.Success)
+            if (!outcome.Success)
             {
-                var message = string.IsNullOrWhiteSpace(result.ErrorMessage)
-                    ? "The installation failed."
-                    : result.ErrorMessage!;
+                var message = outcome.ErrorMessage!;
                 _viewModel?.ReportStatus($"Failed to install {mod.DisplayName}: {message}", true);
                 WpfMessageBox.Show($"Failed to install {mod.DisplayName}:{Environment.NewLine}{message}",
                     "Simple VS Manager",
