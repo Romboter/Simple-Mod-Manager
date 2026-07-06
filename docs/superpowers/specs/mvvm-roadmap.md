@@ -44,7 +44,7 @@ Every `MainWindow.*.cs` partial is assigned to exactly one area (verified: count
 - **Hazards:** `_isApplyingPreset` flag read by grid selection (area A); version application calls the update pipeline (area B).
 - **Manifest estimate:** 5 partials + 1 `Services/` file + tests.
 
-### F. Mod configuration editing — 3 partials, ~425 lines
+### F. Mod configuration editing — DONE pending smoke test (slice 2, 2026-07-06) — was 3 partials, ~425 lines; now ~165 lines
 `ModConfigScanning` (235), `ModConfiguration` (103), `ModConfigCapture` (87)
 - **Destination:** `ModConfigurationMatcher`, `ModConfigPathHelper`, `ModConfigEditorViewModel` already exist — move scan/capture logic into a `ModConfigDiscoveryService`; editor-window launch stays a thin handler.
 - **Hazards:** part of analyzer candidate #1 (calls `UpdateSelectedModEditConfigButton`, prompts via `PathSelection` — areas A, I). YAML parse errors surface as dialogs.
@@ -117,4 +117,5 @@ Parallel-safety notes (design-doc rule: disjoint manifests only): 1+2 could run 
 
 - 2026-07-06 — Document created; awaiting approval.
 - 2026-07-06 — Approved by user (areas + slice order as proposed).
+- 2026-07-06 — Slice 2 (area F, Mod configuration) implemented: scan pipeline + preflight + result formatting → new `Services/ModConfigDiscoveryService.cs`; option-building + capture error formatting → new `Services/ModConfigCaptureHelper.cs`; `BuildModConfigOptions`/`TryReadModConfigurations` kept as thin passthroughs so `CloudSave`/`ModlistSave`/`Pdf` call sites were untouched; dead `ScanForModConfigFilesAsync(modIds)` overload deleted (user-approved, only ever called with null); `EditConfigButton_OnClick` reviewed and kept whole as dialog choreography. 18 new tests (97 total). Analyzer candidate #1 shrank 12→11 methods; its remaining edges are all thin UI handlers — closes with area A. Awaiting user smoke test.
 - 2026-07-06 — Slice 1 (area H, Server sync) implemented: sync preflight guard chain → new `Services/ServerSyncPreflight.cs`; host-key-storing verifier + connection test + SFTP factory → new `Services/ServerConnectionHelper.cs`; `ServerConnection.cs` trimmed to the host-key dialog only; dead `ServerMacro.cs` + orphaned `Services/ServerMacroGenerator.cs` deleted (user-approved). 19 new characterization tests (79 total). Found two `TestServerConnectionAsync` call sites in `Profiles.cs` the focus report missed — the analyzer's callback-reference blind spot, same family as the field-read blind spot. Awaiting user smoke test.
