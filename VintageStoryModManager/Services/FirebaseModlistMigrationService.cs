@@ -2,12 +2,8 @@ using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Security;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using SimpleVsManager.Cloud;
 using VintageStoryModManager.Models;
 

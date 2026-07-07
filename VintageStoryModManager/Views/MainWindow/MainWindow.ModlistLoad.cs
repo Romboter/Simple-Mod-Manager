@@ -1,8 +1,6 @@
 #nullable enable
 
-using System.Threading.Tasks;
 using System.Windows;
-using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
 using WpfMessageBox =

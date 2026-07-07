@@ -1,7 +1,6 @@
 using DataFormats = System.Windows.DataFormats;
 using DragEventArgs = System.Windows.DragEventArgs;
 using System.IO;
-using System.Windows;
 
 namespace VintageStoryModManager.Helpers;
 

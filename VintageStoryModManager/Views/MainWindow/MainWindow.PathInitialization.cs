@@ -2,7 +2,6 @@
 
 using System.IO;
 using System.Windows;
-using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Services;
 
 using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;

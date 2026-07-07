@@ -3,7 +3,6 @@ using System.IO;
 using System.Security.Cryptography;
 using Renci.SshNet;
 using Renci.SshNet.Common;
-using Renci.SshNet.Sftp;
 using VintageStoryModManager.Models;
 
 namespace VintageStoryModManager.Services;

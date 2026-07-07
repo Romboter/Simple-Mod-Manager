@@ -1,7 +1,5 @@
 using System.IO;
 using System.Text.RegularExpressions;
-using VintageStoryModManager;
-using VintageStoryModManager.Models;
 using VintageStoryModManager.Views.Dialogs;
 
 namespace VintageStoryModManager.Services;

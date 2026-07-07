@@ -1,5 +1,4 @@
 using System.Text.Json;
-using VintageStoryModManager;
 
 namespace VintageStoryModManager.Services;
 

@@ -1,10 +1,8 @@
 #nullable enable
 
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
 using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;

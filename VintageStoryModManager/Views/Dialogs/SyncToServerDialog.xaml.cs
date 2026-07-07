@@ -1,9 +1,6 @@
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Media;
-using VintageStoryModManager.Models;
 using VintageStoryModManager.ViewModels;
-using Color = System.Windows.Media.Color;
 using MessageBox = System.Windows.MessageBox;
 
 namespace VintageStoryModManager.Views.Dialogs;

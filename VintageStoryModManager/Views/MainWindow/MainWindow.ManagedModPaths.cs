@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using System.IO;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;

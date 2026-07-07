@@ -1,9 +1,7 @@
 #nullable enable
 
-using System;
 using System.ComponentModel;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using SimpleVsManager.Cloud;
 using VintageStoryModManager.Helpers;

@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using VintageStoryModManager.ViewModels;
 
 namespace VintageStoryModManager.Services;

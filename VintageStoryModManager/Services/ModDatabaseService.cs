@@ -1,8 +1,6 @@
 using System.Globalization;
-using System.Net;
 using System.Net.Http;
 using System.Text.Json;
-using HtmlAgilityPack;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 using HtmlEntity = HtmlAgilityPack.HtmlEntity;
 using HtmlNode = HtmlAgilityPack.HtmlNode;

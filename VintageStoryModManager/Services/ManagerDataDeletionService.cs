@@ -4,7 +4,6 @@ using System.IO;
 using System.Security;
 using Microsoft.VisualBasic.FileIO;
 using SimpleVsManager.Cloud;
-using VintageStoryModManager;
 
 namespace VintageStoryModManager.Services;
 

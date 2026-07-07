@@ -1,6 +1,5 @@
 #nullable enable
 
-using System.Threading.Tasks;
 using System.Windows;
 using VintageStoryModManager.Services;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;

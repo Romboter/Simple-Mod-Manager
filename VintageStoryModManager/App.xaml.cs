@@ -9,8 +9,6 @@ using VintageStoryModManager.Views.Dialogs;
 using Application = System.Windows.Application;
 using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 using Color = System.Windows.Media.Color;
-using System.Configuration;
-using System.Data;
 
 namespace VintageStoryModManager;
 

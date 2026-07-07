@@ -1,8 +1,6 @@
 #nullable enable
 
-using System;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using VintageStoryModManager.ViewModels;

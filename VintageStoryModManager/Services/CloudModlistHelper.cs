@@ -1,7 +1,6 @@
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using VintageStoryModManager;
 using VintageStoryModManager.Models;
 
 namespace VintageStoryModManager.Services;

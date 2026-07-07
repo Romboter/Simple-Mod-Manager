@@ -1,8 +1,6 @@
 #nullable enable
 
 using SimpleVsManager.Cloud;
-using System.Net.Http;
-using System.Threading;
 using System.Windows;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
