@@ -49,7 +49,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly TagFilterService _tagFilterService;
     private readonly ObservableCollection<TagFilterOptionViewModel> _installedTagFilters = new();
     private string[] _lastInstalledAvailableTags = Array.Empty<string>();
-    private readonly object _modDetailsBusyScopeLock = new();
     private readonly object _databaseRefreshLock = new();
     private readonly Dictionary<string, ModEntry> _modEntriesBySourcePath = new(StringComparer.OrdinalIgnoreCase);
 
@@ -82,6 +81,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private int _activeMods;
     private bool _allowModDetailsRefresh = true;
     private readonly BusyStateTracker _busyStateTracker;
+    private readonly ModDetailsProgressTracker _modDetailsProgressTracker;
     private bool _isInitialLoad = true;
     private bool _disposed;
     private Timer? _searchDebounceTimer;
@@ -101,9 +101,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _isLoadingMods;
     private bool _isModDetailsProgressVisible;
     private double _modDetailsProgress;
-    private int _modDetailsRefreshCompletedWork;
-    private int _modDetailsRefreshTotalWork;
-    private string _modDetailsProgressStage = string.Empty;
     private string _modDetailsStatusText = string.Empty;
     private double _loadingProgress;
     private string _loadingStatusText = string.Empty;
@@ -114,9 +111,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _isModInfoExpanded = true;
     private bool _isTagsColumnVisible = true;
     private bool _useModDbDesignView;
-    private IDisposable? _modDetailsBusyScope;
     private string? _modsStateFingerprint;
-    private int _pendingModDetailsRefreshCount;
     private string _searchText = string.Empty;
     private string[] _searchTokens = Array.Empty<string>();
     private ModListItemViewModel? _selectedMod;
@@ -150,6 +145,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _clientSettingsWatcher = new ClientSettingsWatcher(_settingsStore.SettingsPath);
         _busyStateTracker = new BusyStateTracker(BusyStateReleaseDelay);
         _busyStateTracker.BusyChanged += OnBusyStateTrackerBusyChanged;
+        _modDetailsProgressTracker = new ModDetailsProgressTracker(
+            BeginBusyScope,
+            BuildModDetailsLoadingStatusMessage,
+            () => _isModDetailsStatusActive,
+            UpdateIsLoadingModDetails,
+            (progress, text) =>
+            {
+                ModDetailsProgress = progress;
+                ModDetailsStatusText = text;
+            },
+            () => SetStatus(BuildModDetailsLoadingStatusMessage(), false, true),
+            () => SetStatus(BuildModDetailsReadyStatusMessage(), false));
         _userReportsCoordinator = new UserReportsCoordinator(
             Path.Combine(DataDirectory, "voteEtags.json"),
             BeginBusyScope,
@@ -541,8 +548,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
 
         _clientSettingsWatcher.Dispose();
-        _modDetailsBusyScope?.Dispose();
-        _modDetailsBusyScope = null;
+        _modDetailsProgressTracker.ReleaseBusyScope();
         _userReportsCoordinator.Dispose();
     }
 
@@ -1910,7 +1916,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private void UpdateLoadedModsStatus()
     {
-        if (IsModDetailsRefreshPending())
+        if (_modDetailsProgressTracker.IsRefreshPending)
         {
             if (!_isModDetailsStatusActive) SetStatus(BuildModDetailsLoadingStatusMessage(), false, true);
         }
@@ -1920,75 +1926,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private bool IsModDetailsRefreshPending()
-    {
-        return Interlocked.CompareExchange(ref _pendingModDetailsRefreshCount, 0, 0) > 0;
-    }
-
     private void OnModDetailsRefreshEnqueued(int count, string? statusText = null)
-    {
-        if (count <= 0) return;
-
-        var newCount = Interlocked.Add(ref _pendingModDetailsRefreshCount, count);
-        if (newCount <= 0)
-        {
-            Interlocked.Exchange(ref _pendingModDetailsRefreshCount, 0);
-            return;
-        }
-
-        if (newCount == count) ResetModDetailsProgress();
-
-        EnsureModDetailsBusyScope();
-        UpdateIsLoadingModDetails(true);
-
-        AddModDetailsWork(count, statusText);
-
-        if (newCount == count || !_isModDetailsStatusActive)
-            SetStatus(BuildModDetailsLoadingStatusMessage(), false, true);
-    }
+        => _modDetailsProgressTracker.OnRefreshEnqueued(count, statusText);
 
     private void OnModDetailsRefreshCompleted(int completedCount = 1)
-    {
-        if (completedCount <= 0) return;
-
-        var newCount = Interlocked.Add(ref _pendingModDetailsRefreshCount, -completedCount);
-        if (newCount < 0)
-        {
-            Interlocked.Exchange(ref _pendingModDetailsRefreshCount, 0);
-            newCount = 0;
-        }
-
-        Interlocked.Add(ref _modDetailsRefreshCompletedWork, completedCount);
-        UpdateModDetailsProgress();
-
-        if (newCount <= 0)
-        {
-            Interlocked.Exchange(ref _pendingModDetailsRefreshCount, 0);
-            ReleaseModDetailsBusyScope();
-            UpdateIsLoadingModDetails(false);
-
-            if (_isModDetailsStatusActive) SetStatus(BuildModDetailsReadyStatusMessage(), false);
-
-            ResetModDetailsProgress();
-        }
-    }
-
-    private void EnsureModDetailsBusyScope()
-    {
-        lock (_modDetailsBusyScopeLock)
-        {
-            _modDetailsBusyScope ??= BeginBusyScope();
-        }
-    }
-
-    private void ReleaseModDetailsBusyScope()
-    {
-        lock (_modDetailsBusyScopeLock)
-        {
-            _modDetailsBusyScope?.Dispose();
-            _modDetailsBusyScope = null;
-        }
-    }
+        => _modDetailsProgressTracker.OnRefreshCompleted(completedCount);
 
     private string BuildModDetailsLoadingStatusMessage()
     {
@@ -2000,47 +1942,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (_hasShownModDetailsLoadingStatus) return $"Loaded {TotalMods} mods. Mod details up to date.";
 
         return $"Loaded {TotalMods} mods.";
-    }
-
-    private void AddModDetailsWork(int count, string? statusText)
-    {
-        if (count <= 0) return;
-
-        Interlocked.Add(ref _modDetailsRefreshTotalWork, count);
-        UpdateModDetailsProgress(statusText);
-    }
-
-    private void UpdateModDetailsProgress(string? statusText = null)
-    {
-        if (!string.IsNullOrWhiteSpace(statusText)) _modDetailsProgressStage = statusText;
-
-        var total = Interlocked.CompareExchange(ref _modDetailsRefreshTotalWork, 0, 0);
-        if (total <= 0)
-        {
-            ModDetailsProgress = 0;
-            ModDetailsStatusText = string.Empty;
-            return;
-        }
-
-        var completed = Interlocked.CompareExchange(ref _modDetailsRefreshCompletedWork, 0, 0);
-        completed = Math.Clamp(completed, 0, total);
-
-        ModDetailsProgress = (double)completed / total * 100;
-
-        var baseText = string.IsNullOrWhiteSpace(_modDetailsProgressStage)
-            ? BuildModDetailsLoadingStatusMessage()
-            : _modDetailsProgressStage;
-
-        ModDetailsStatusText = $"{baseText} ({completed}/{total})";
-    }
-
-    private void ResetModDetailsProgress()
-    {
-        Interlocked.Exchange(ref _modDetailsRefreshCompletedWork, 0);
-        Interlocked.Exchange(ref _modDetailsRefreshTotalWork, 0);
-        _modDetailsProgressStage = string.Empty;
-        ModDetailsProgress = 0;
-        ModDetailsStatusText = string.Empty;
     }
 
     private static Task InvokeOnDispatcherAsync(Action action, CancellationToken cancellationToken,
