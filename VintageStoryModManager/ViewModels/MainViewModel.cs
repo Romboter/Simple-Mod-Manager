@@ -22,7 +22,6 @@ namespace VintageStoryModManager.ViewModels;
 /// </summary>
 public sealed class MainViewModel : ObservableObject, IDisposable
 {
-    private const string InternetAccessDisabledStatusMessage = "Enable Internet Access in the File menu to use.";
     private const string TagsColumnName = "Tags";
     private const string UserReportsColumnName = "UserReports";
     private static readonly TimeSpan InstalledModsSearchDebounceMin = TimeSpan.FromMilliseconds(100);
@@ -65,9 +64,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly HashSet<ModListItemViewModel> _searchResultSubscriptions = new();
     // Tag filtering is now handled by _tagFilterService
     private readonly ClientSettingsStore _settingsStore;
-    private readonly RelayCommand _showModlistTabCommand;
-    private readonly RelayCommand _showMainTabCommand;
-    private readonly RelayCommand _showDatabaseTabCommand;
+    private readonly TabNavigationViewModel _tabNavigation;
     private readonly ObservableCollection<SortOption> _sortOptions;
     private readonly HashSet<string> _suppressedTagEntries = new(StringComparer.OrdinalIgnoreCase);
     private readonly UserReportsCoordinator _userReportsCoordinator;
@@ -129,7 +126,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _suppressInstalledTagFilterSelectionChanges;
     private int _totalMods;
     private int _updatableModsCount;
-    private ViewSection _viewSection = ViewSection.MainTab;
 
     public event EventHandler<ModUserReportChangedEventArgs>? UserReportVoteSubmitted;
 
@@ -202,16 +198,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _clearSearchCommand = new RelayCommand(() => SearchText = string.Empty, () => HasSearchText);
         ClearSearchCommand = _clearSearchCommand;
 
-        _showMainTabCommand = new RelayCommand(() => SetViewSection(ViewSection.MainTab));
-        _showDatabaseTabCommand = new RelayCommand(
-            () => SetViewSection(ViewSection.DatabaseTab),
-            () => !InternetAccessManager.IsInternetAccessDisabled);
-        _showModlistTabCommand = new RelayCommand(
-            () => SetViewSection(ViewSection.ModlistTab),
-            () => !InternetAccessManager.IsInternetAccessDisabled);
-        ShowMainTabCommand = _showMainTabCommand;
-        ShowDatabaseTabCommand = _showDatabaseTabCommand;
-        ShowModlistTabCommand = _showModlistTabCommand;
+        _tabNavigation = new TabNavigationViewModel(
+            ModsView,
+            SearchResultsView,
+            CloudModlistsView,
+            () => InternetAccessManager.IsInternetAccessDisabled,
+            message => SetStatus(message, false),
+            OnTabSectionChanged);
+        ShowMainTabCommand = _tabNavigation.ShowMainTabCommand;
+        ShowDatabaseTabCommand = _tabNavigation.ShowDatabaseTabCommand;
+        ShowModlistTabCommand = _tabNavigation.ShowModlistTabCommand;
 
         RefreshCommand = new AsyncRelayCommand(LoadModsAsync);
         SetStatus("Ready.", false);
@@ -241,12 +237,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public ReadOnlyObservableCollection<TagFilterOptionViewModel> InstalledTagFilters { get; }
 
-    public ICollectionView CurrentModsView => _viewSection switch
-    {
-        ViewSection.DatabaseTab => SearchResultsView,
-        ViewSection.ModlistTab => CloudModlistsView,
-        _ => ModsView
-    };
+    public ICollectionView CurrentModsView => _tabNavigation.CurrentModsView;
 
     public bool CanAccessCloudModlists => !InternetAccessManager.IsInternetAccessDisabled;
 
@@ -398,11 +389,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public IRelayCommand ShowModlistTabCommand { get; }
 
-    public bool IsViewingModlistTab => _viewSection == ViewSection.ModlistTab;
+    public bool IsViewingModlistTab => _tabNavigation.IsViewingModlistTab;
 
-    public bool IsViewingMainTab => _viewSection == ViewSection.MainTab;
+    public bool IsViewingMainTab => _tabNavigation.IsViewingMainTab;
 
-    public bool SearchModDatabase => _viewSection == ViewSection.DatabaseTab;
+    public bool SearchModDatabase => _tabNavigation.SearchModDatabase;
 
     public bool UseModDbDesignView
     {
@@ -570,25 +561,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             SetUserReportsColumnVisibility(isVisible);
     }
 
-    private void SetViewSection(ViewSection section)
+    private void OnTabSectionChanged(ViewSection section)
     {
-        if (_viewSection == section) return;
-
-        if (section == ViewSection.DatabaseTab && InternetAccessManager.IsInternetAccessDisabled)
-        {
-            SetStatus(InternetAccessDisabledStatusMessage, false);
-            return;
-        }
-
-        if (section == ViewSection.ModlistTab && InternetAccessManager.IsInternetAccessDisabled)
-        {
-            SetStatus(InternetAccessDisabledStatusMessage, false);
-            return;
-        }
-
-
-        _viewSection = section;
-
         if (!string.IsNullOrEmpty(_searchText)) SearchText = string.Empty;
 
         switch (section)
@@ -616,7 +590,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         // Defer non-critical property changes to avoid blocking UI thread during tab switch
         Application.Current?.Dispatcher.BeginInvoke(() =>
         {
-            if (_viewSection == ViewSection.MainTab) FastCheck();
+            if (_tabNavigation.Current == ViewSection.MainTab) FastCheck();
         }, DispatcherPriority.Background);
     }
 
@@ -3430,21 +3404,20 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         foreach (var mod in _searchResults) mod.RefreshInternetAccessDependentState();
 
-        _showDatabaseTabCommand.NotifyCanExecuteChanged();
-        _showModlistTabCommand.NotifyCanExecuteChanged();
+        _tabNavigation.NotifyInternetAccessChanged();
         OnPropertyChanged(nameof(CanAccessCloudModlists));
 
-        if (InternetAccessManager.IsInternetAccessDisabled && _viewSection == ViewSection.DatabaseTab)
+        if (InternetAccessManager.IsInternetAccessDisabled && _tabNavigation.Current == ViewSection.DatabaseTab)
         {
-            SetStatus(InternetAccessDisabledStatusMessage, false);
-            SetViewSection(ViewSection.MainTab);
+            SetStatus(TabNavigationViewModel.InternetAccessDisabledStatusMessage, false);
+            _tabNavigation.SetViewSection(ViewSection.MainTab);
             return;
         }
 
-        if (InternetAccessManager.IsInternetAccessDisabled && _viewSection == ViewSection.ModlistTab)
+        if (InternetAccessManager.IsInternetAccessDisabled && _tabNavigation.Current == ViewSection.ModlistTab)
         {
-            SetStatus(InternetAccessDisabledStatusMessage, false);
-            SetViewSection(ViewSection.MainTab);
+            SetStatus(TabNavigationViewModel.InternetAccessDisabledStatusMessage, false);
+            _tabNavigation.SetViewSection(ViewSection.MainTab);
         }
     }
 
@@ -3585,13 +3558,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             return null;
         }
-    }
-
-    private enum ViewSection
-    {
-        MainTab,
-        DatabaseTab,
-        ModlistTab
     }
 
     private void PerformClientSettingsCleanupIfNeeded()
