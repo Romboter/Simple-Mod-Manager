@@ -5,6 +5,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using VintageStoryModManager.Helpers;
 using ButtonBase = System.Windows.Controls.Primitives.ButtonBase;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using ScrollBar = System.Windows.Controls.Primitives.ScrollBar;
@@ -108,13 +109,8 @@ public partial class MainWindow
         var panelWidth = GetModInfoPanelWidth();
         var panelHeight = GetModInfoPanelHeight();
 
-        var minLeft = -ModInfoPanelHorizontalOverhang;
-        var maxLeft = Math.Max(minLeft, containerWidth - panelWidth + ModInfoPanelHorizontalOverhang);
-        double minTop = 0;
-        var maxTop = Math.Max(minTop, containerHeight - panelHeight);
-
-        var clampedLeft = Math.Min(Math.Max(left, minLeft), maxLeft);
-        var clampedTop = Math.Min(Math.Max(top, minTop), maxTop);
+        var (clampedLeft, clampedTop) = ModInfoPanelLayoutHelper.ClampPanelPosition(
+            left, top, containerWidth, containerHeight, panelWidth, panelHeight, ModInfoPanelHorizontalOverhang);
 
         Canvas.SetLeft(MODINFO_border, clampedLeft);
         Canvas.SetTop(MODINFO_border, clampedTop);
@@ -130,20 +126,12 @@ public partial class MainWindow
 
         var panelWidth = GetModInfoPanelWidth();
 
-        var preferredLeft = DefaultModInfoPanelLeft;
-
-        if (containerWidth > 0 && panelWidth > 0)
-        {
-            var rightAlignedLeft = containerWidth - panelWidth - DefaultModInfoPanelRightMargin;
-            if (!double.IsNaN(rightAlignedLeft)) preferredLeft = Math.Min(preferredLeft, rightAlignedLeft);
-
-            var minLeft = -ModInfoPanelHorizontalOverhang;
-            var maxLeft = Math.Max(minLeft, containerWidth - panelWidth + ModInfoPanelHorizontalOverhang);
-
-            return Math.Min(Math.Max(preferredLeft, minLeft), maxLeft);
-        }
-
-        return preferredLeft;
+        return ModInfoPanelLayoutHelper.ComputeDefaultLeft(
+            containerWidth,
+            panelWidth,
+            DefaultModInfoPanelLeft,
+            DefaultModInfoPanelRightMargin,
+            ModInfoPanelHorizontalOverhang);
     }
 
     private double GetModInfoPanelWidth()

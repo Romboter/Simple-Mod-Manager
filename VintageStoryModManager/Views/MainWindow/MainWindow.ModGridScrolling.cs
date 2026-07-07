@@ -1,11 +1,11 @@
 #nullable enable
 
-using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using VintageStoryModManager.Helpers;
 using WpfToolTip = System.Windows.Controls.ToolTip;
 
 namespace VintageStoryModManager.Views;
@@ -37,13 +37,16 @@ public partial class MainWindow
 
             if (toolTip.Content is not ScrollViewer scrollViewer) return;
 
-            double lines = Math.Max(1, SystemParameters.WheelScrollLines);
-            var deltaMultiplier = e.Delta / (double)Mouse.MouseWheelDeltaForOneLine;
-            var offsetChange = deltaMultiplier * lines * GetCurrentScrollMultiplier();
-            if (Math.Abs(offsetChange) < double.Epsilon) return;
+            if (!ScrollWheelMath.TryComputeTargetOffset(
+                    e.Delta,
+                    Mouse.MouseWheelDeltaForOneLine,
+                    SystemParameters.WheelScrollLines,
+                    GetCurrentScrollMultiplier(),
+                    scrollViewer.VerticalOffset,
+                    scrollViewer.ScrollableHeight,
+                    out var clampedOffset))
+                return;
 
-            var targetOffset = scrollViewer.VerticalOffset - offsetChange;
-            var clampedOffset = Math.Max(0, Math.Min(targetOffset, scrollViewer.ScrollableHeight));
             scrollViewer.ScrollToVerticalOffset(clampedOffset);
             e.Handled = true;
         }
@@ -62,13 +65,16 @@ public partial class MainWindow
 
             if (scrollViewer is null) return;
 
-            double lines = Math.Max(1, SystemParameters.WheelScrollLines);
-            var deltaMultiplier = e.Delta / (double)Mouse.MouseWheelDeltaForOneLine;
-            var offsetChange = deltaMultiplier * lines * GetCurrentScrollMultiplier();
-            if (Math.Abs(offsetChange) < double.Epsilon) return;
+            if (!ScrollWheelMath.TryComputeTargetOffset(
+                    e.Delta,
+                    Mouse.MouseWheelDeltaForOneLine,
+                    SystemParameters.WheelScrollLines,
+                    GetCurrentScrollMultiplier(),
+                    scrollViewer.VerticalOffset,
+                    scrollViewer.ScrollableHeight,
+                    out var clampedOffset))
+                return;
 
-            var targetOffset = scrollViewer.VerticalOffset - offsetChange;
-            var clampedOffset = Math.Max(0, Math.Min(targetOffset, scrollViewer.ScrollableHeight));
             scrollViewer.ScrollToVerticalOffset(clampedOffset);
             e.Handled = true;
         }
