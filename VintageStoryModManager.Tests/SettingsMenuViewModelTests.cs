@@ -83,18 +83,23 @@ public sealed class SettingsMenuViewModelTests
         public bool ConfirmAnswer { get; set; }
         public int ConfirmCalls { get; private set; }
         public int NotifyCalls { get; private set; }
-        public List<(string Message, string Title)> NotifyMessages { get; } = new();
+        public List<(string Message, string Title, DialogSeverity Severity)> NotifyMessages { get; } = new();
+        public List<(string Message, string Title, DialogSeverity Severity, string? ConfirmText, string? CancelText)> ConfirmRequests { get; } = new();
 
-        public Task<bool> ConfirmAsync(string message, string title)
+        public Task<bool> ConfirmAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Question,
+            string? confirmText = null, string? cancelText = null)
         {
             ConfirmCalls++;
+            ConfirmRequests.Add((message, title, severity, confirmText, cancelText));
             return Task.FromResult(ConfirmAnswer);
         }
 
-        public Task NotifyAsync(string message, string title)
+        public Task NotifyAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Information)
         {
             NotifyCalls++;
-            NotifyMessages.Add((message, title));
+            NotifyMessages.Add((message, title, severity));
             return Task.CompletedTask;
         }
     }
@@ -181,6 +186,7 @@ public sealed class SettingsMenuViewModelTests
         Assert.True(fixture.Configuration.DisableAutoRefresh);
         Assert.True(fixture.Configuration.DisableAutoRefreshWarningAcknowledged);
         Assert.Equal(new[] { true }, fixture.AutoRefreshChanges);
+        Assert.Equal(DialogSeverity.Warning, fixture.Confirmation.ConfirmRequests.Single().Severity);
     }
 
     [Fact]
@@ -222,6 +228,7 @@ public sealed class SettingsMenuViewModelTests
         Assert.Equal(1, confirmation.NotifyCalls);
         Assert.False(configuration.AutomaticDataBackupsEnabled);
         Assert.False(viewModel.AutomaticDataBackupsEnabled);
+        Assert.Equal(DialogSeverity.Warning, confirmation.NotifyMessages.Single().Severity);
     }
 
     [Fact]
@@ -239,6 +246,7 @@ public sealed class SettingsMenuViewModelTests
             Assert.True(configuration.AutomaticDataBackupsWarningAcknowledged);
             Assert.True(configuration.AutomaticDataBackupsEnabled);
             Assert.True(viewModel.AutomaticDataBackupsEnabled);
+            Assert.Equal(DialogSeverity.Information, confirmation.NotifyMessages.Single().Severity);
 
             // Second cycle: disable, then re-enable - already acknowledged, so no additional notify.
             await viewModel.ToggleAutomaticDataBackupsCommand.ExecuteAsync(null);
