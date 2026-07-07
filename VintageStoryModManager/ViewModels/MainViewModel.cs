@@ -51,7 +51,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly Dictionary<string, ModEntry> _modEntriesBySourcePath = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly BatchedObservableCollection<ModListItemViewModel> _mods = new();
-    private readonly object _modsStateLock = new();
+    private readonly ModsStateFingerprintTracker _modsStateFingerprintTracker;
     private readonly ModDirectoryWatcher _modsWatcher;
 
     private readonly Dictionary<string, ModListItemViewModel> _modViewModelsBySourcePath =
@@ -108,7 +108,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _isModInfoExpanded = true;
     private bool _isTagsColumnVisible = true;
     private bool _useModDbDesignView;
-    private string? _modsStateFingerprint;
     private string _searchText = string.Empty;
     private string[] _searchTokens = Array.Empty<string>();
     private ModListItemViewModel? _selectedMod;
@@ -139,6 +138,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _tagFilterService = new TagFilterService(_tagCache);
         InstalledGameVersion = VintageStoryVersionLocator.GetInstalledVersion(gameDirectory);
         _modsWatcher = new ModDirectoryWatcher(_discoveryService);
+        _modsStateFingerprintTracker = new ModsStateFingerprintTracker(
+            () => _discoveryService.GetModsStateFingerprint(),
+            () => _modsWatcher.IsWatching);
         _clientSettingsWatcher = new ClientSettingsWatcher(_settingsStore.SettingsPath);
         _busyStateTracker = new BusyStateTracker(BusyStateReleaseDelay);
         _busyStateTracker.BusyChanged += OnBusyStateTrackerBusyChanged;
@@ -1095,7 +1097,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         TotalMods = _mods.Count;
         UpdateActiveCount();
         SelectedSortOption?.Apply(ModsView);
-        await UpdateModsStateSnapshotAsync().ConfigureAwait(true);
+        await _modsStateFingerprintTracker.RefreshSnapshotAsync().ConfigureAwait(true);
     }
 
     private async Task LoadModsAsync()
@@ -1195,7 +1197,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             TotalMods = _mods.Count;
             UpdateActiveCount();
             SelectedSortOption?.Apply(ModsView);
-            await UpdateModsStateSnapshotAsync();
+            await _modsStateFingerprintTracker.RefreshSnapshotAsync();
 
             // Defer clearing IsLoadingMods until after any queued CollectionChanged events are processed.
             // This ensures the guard in ModsView_OnCollectionChanged works correctly during the critical
@@ -1384,25 +1386,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         if (_modsWatcher.IsWatching) return false;
 
-        var fingerprint = await CaptureModsStateFingerprintAsync().ConfigureAwait(false);
-        if (fingerprint is null) return false;
-
-        lock (_modsStateLock)
-        {
-            if (_modsStateFingerprint is null)
-            {
-                _modsStateFingerprint = fingerprint;
-                return false;
-            }
-
-            if (!string.Equals(_modsStateFingerprint, fingerprint, StringComparison.Ordinal))
-            {
-                _modsStateFingerprint = fingerprint;
-                return true;
-            }
-        }
-
-        return false;
+        return await _modsStateFingerprintTracker.HasFingerprintChangedAsync().ConfigureAwait(false);
     }
 
     private async Task<(bool success, bool modStatesChanged)> ApplyClientSettingsChangesAsync()
@@ -1461,42 +1445,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             () => _configuration.RequireExactVsVersionMatch,
             _allowModDetailsRefresh,
             _timingService);
-    }
-
-    private async Task UpdateModsStateSnapshotAsync()
-    {
-        if (_modsWatcher.IsWatching)
-        {
-            lock (_modsStateLock)
-            {
-                _modsStateFingerprint = null;
-            }
-
-            return;
-        }
-
-        var fingerprint = await CaptureModsStateFingerprintAsync().ConfigureAwait(false);
-        if (fingerprint is null) return;
-
-        lock (_modsStateLock)
-        {
-            _modsStateFingerprint = fingerprint;
-        }
-    }
-
-    private Task<string?> CaptureModsStateFingerprintAsync()
-    {
-        return Task.Run(() =>
-        {
-            try
-            {
-                return _discoveryService.GetModsStateFingerprint();
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        });
     }
 
     private void UpdateActiveCount()
