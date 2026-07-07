@@ -1,10 +1,6 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
@@ -56,16 +52,9 @@ public partial class MainWindow
 
                 var installedDependency = _viewModel?.FindInstalledModById(dependency.ModId);
 
-                var isMissing = mod.MissingDependencies.Any(d =>
+                var listedAsMissing = mod.MissingDependencies.Any(d =>
                     string.Equals(d.ModId, dependency.ModId, StringComparison.OrdinalIgnoreCase));
-                if (!isMissing && installedDependency is null) isMissing = true;
-
-                if (!isMissing && installedDependency != null)
-                {
-                    var satisfies =
-                        VersionStringUtility.SatisfiesMinimumVersion(dependency.Version, installedDependency.Version);
-                    if (!satisfies) isMissing = true;
-                }
+                var isMissing = DependencyRepairHelper.IsDependencyMissing(listedAsMissing, installedDependency, dependency.Version);
 
                 if (isMissing)
                 {

@@ -20,7 +20,19 @@ public partial class MainWindow
 
         e.Handled = true;
 
-        if (!mod.HasDownloadableRelease)
+        await InstallModCoreAsync(mod, logErrorOnException: false, postInstallSuccess: () =>
+        {
+            if (mod.IsSelected) RemoveFromSelection(mod);
+            _viewModel?.RemoveSearchResult(mod);
+        });
+    }
+
+    private async Task InstallModCoreAsync(
+        ModListItemViewModel modViewModel,
+        bool logErrorOnException,
+        Action postInstallSuccess)
+    {
+        if (!modViewModel.HasDownloadableRelease)
         {
             WpfMessageBox.Show("No downloadable releases are available for this mod.",
                 "Simple VS Manager",
@@ -29,7 +41,7 @@ public partial class MainWindow
             return;
         }
 
-        var release = ModReleaseSelectionHelper.SelectReleaseForInstall(mod);
+        var release = ModReleaseSelectionHelper.SelectReleaseForInstall(modViewModel);
         if (release is null)
         {
             WpfMessageBox.Show("No downloadable releases are available for this mod.",
@@ -39,8 +51,8 @@ public partial class MainWindow
             return;
         }
 
-        if (!ModInstallTargetPathHelper.TryGetInstallTargetPath(_dataDirectory, mod, release, out var targetPath,
-                out var errorMessage))
+        if (!ModInstallTargetPathHelper.TryGetInstallTargetPath(_dataDirectory, modViewModel, release,
+                out var targetPath, out var errorMessage))
         {
             if (!string.IsNullOrWhiteSpace(errorMessage))
                 WpfMessageBox.Show(errorMessage!,
@@ -59,17 +71,17 @@ public partial class MainWindow
         try
         {
             var descriptor = new ModUpdateDescriptor(
-                mod.ModId,
-                mod.DisplayName,
+                modViewModel.ModId,
+                modViewModel.DisplayName,
                 release.DownloadUri,
                 targetPath,
                 false,
                 release.FileName,
                 release.Version,
-                mod.Version);
+                modViewModel.Version);
 
             var progress = new Progress<ModUpdateProgress>(p =>
-                _viewModel?.ReportStatus($"{mod.DisplayName}: {p.Message}"));
+                _viewModel?.ReportStatus($"{modViewModel.DisplayName}: {p.Message}"));
 
             var outcome = await ModUpdateOperationHelper.ExecuteAsync(
                     _modUpdateService, descriptor, _userConfiguration.CacheAllVersionsLocally, progress,
@@ -79,8 +91,8 @@ public partial class MainWindow
             if (!outcome.Success)
             {
                 var message = outcome.ErrorMessage!;
-                _viewModel?.ReportStatus($"Failed to install {mod.DisplayName}: {message}", true);
-                WpfMessageBox.Show($"Failed to install {mod.DisplayName}:{Environment.NewLine}{message}",
+                _viewModel?.ReportStatus($"Failed to install {modViewModel.DisplayName}: {message}", true);
+                WpfMessageBox.Show($"Failed to install {modViewModel.DisplayName}:{Environment.NewLine}{message}",
                     "Simple VS Manager",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -88,14 +100,12 @@ public partial class MainWindow
             }
 
             var versionText = string.IsNullOrWhiteSpace(release.Version) ? string.Empty : $" {release.Version}";
-            _viewModel?.ReportStatus($"Installed {mod.DisplayName}{versionText}.");
-            _modActivityLoggingService.LogModInstall(mod.DisplayName ?? mod.ModId ?? "Unknown", release.Version);
+            _viewModel?.ReportStatus($"Installed {modViewModel.DisplayName}{versionText}.");
+            _modActivityLoggingService.LogModInstall(modViewModel.DisplayName ?? modViewModel.ModId ?? "Unknown", release.Version);
 
             await RefreshModsAsync().ConfigureAwait(true);
 
-            if (mod.IsSelected) RemoveFromSelection(mod);
-
-            _viewModel?.RemoveSearchResult(mod);
+            postInstallSuccess();
         }
         catch (OperationCanceledException)
         {
@@ -103,8 +113,11 @@ public partial class MainWindow
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            _viewModel?.ReportStatus($"Failed to install {mod.DisplayName}: {ex.Message}", true);
-            WpfMessageBox.Show($"Failed to install {mod.DisplayName}:{Environment.NewLine}{ex.Message}",
+            if (logErrorOnException)
+                _modActivityLoggingService.LogError($"Failed to install {modViewModel.DisplayName}", ex);
+
+            _viewModel?.ReportStatus($"Failed to install {modViewModel.DisplayName}: {ex.Message}", true);
+            WpfMessageBox.Show($"Failed to install {modViewModel.DisplayName}:{Environment.NewLine}{ex.Message}",
                 "Simple VS Manager",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);

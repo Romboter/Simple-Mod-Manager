@@ -1,12 +1,8 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 
 using WpfButton = System.Windows.Controls.Button;
@@ -111,26 +107,8 @@ public partial class MainWindow
 
         if (deletable.Count == 0) return;
 
-        StringBuilder confirmationBuilder = new();
-        confirmationBuilder.Append(
-            $"Are you sure you want to delete {deletable.Count} mods? This will remove them from disk.");
-        confirmationBuilder.AppendLine();
-        confirmationBuilder.AppendLine();
-
-        const int maxListedMods = 10;
-        var listedCount = 0;
-        foreach (var (mod, _) in deletable)
-        {
-            if (listedCount >= maxListedMods) break;
-
-            confirmationBuilder.AppendLine($"• {mod.DisplayName}");
-            listedCount++;
-        }
-
-        if (deletable.Count > maxListedMods) confirmationBuilder.AppendLine("• …");
-
         var confirmation = WpfMessageBox.Show(
-            confirmationBuilder.ToString(),
+            ModDeletionPromptBuilder.BuildConfirmationMessage(deletable.Select(d => d.Mod.DisplayName).ToList()),
             "Simple VS Manager",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
