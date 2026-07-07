@@ -645,7 +645,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
                 if (InternetAccessManager.IsInternetAccessDisabled) break;
 
-                var updateCandidates = await CheckForNewModReleasesAsync(CancellationToken.None, false)
+                var updateCandidates = await CheckForNewModReleasesAsync(CancellationToken.None)
                     .ConfigureAwait(false);
 
                 if (updateCandidates.Count > 0) QueueDatabaseInfoRefresh(updateCandidates, true);
@@ -693,12 +693,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
 
     private async Task<IReadOnlyList<ModEntry>> CheckForNewModReleasesAsync(
-        CancellationToken cancellationToken,
-        bool showProgress = true)
+        CancellationToken cancellationToken)
     {
         var entries = new List<ModEntry>();
-        var completedChecks = 0;
-        var modDetailsCheckEnqueued = false;
 
         try
         {
@@ -722,17 +719,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             var updateCandidates = new List<ModEntry>();
             var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            if (showProgress)
-            {
-                OnModDetailsRefreshEnqueued(entries.Count, "Checking for mod updates...");
-                modDetailsCheckEnqueued = true;
-            }
-
             foreach (var entry in entries)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
-                completedChecks++;
 
                 var modId = entry.ModId;
                 if (!processed.Add(modId)) continue;
@@ -764,134 +753,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         catch
         {
             return Array.Empty<ModEntry>();
-        }
-        finally
-        {
-            if (modDetailsCheckEnqueued)
-            {
-                var remaining = Math.Max(0, entries.Count - completedChecks);
-                if (remaining > 0) completedChecks += remaining;
-
-                OnModDetailsRefreshCompleted(completedChecks);
-            }
-        }
-    }
-
-    private async Task CheckForVoteChangesAsync(CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(InstalledGameVersion)) return;
-
-        var targets = await InvokeOnDispatcherAsync(
-            () =>
-            {
-                var list = new List<VoteCheckTarget>(_mods.Count);
-                foreach (var mod in _mods)
-                {
-                    var hasUserReportSummary = mod.UserReportSummary is not null;
-                    var hasLatestReleaseSummary = mod.LatestReleaseUserReportSummary is not null;
-
-                    if (!hasUserReportSummary && !hasLatestReleaseSummary) continue;
-
-                    var latestReleaseVersion = hasLatestReleaseSummary ? mod.LatestRelease?.Version : null;
-                    list.Add(new VoteCheckTarget(
-                        mod,
-                        hasUserReportSummary ? mod.UserReportModVersion : null,
-                        hasUserReportSummary,
-                        latestReleaseVersion,
-                        hasLatestReleaseSummary));
-                }
-
-                return list;
-            },
-            cancellationToken).ConfigureAwait(false);
-
-        if (targets.Count == 0) return;
-
-        using var limiter = new SemaphoreSlim(MaxConcurrentUserReportRefreshes, MaxConcurrentUserReportRefreshes);
-        var tasks = targets
-            .Select(target => CheckVoteChangesForModAsync(target, limiter, cancellationToken))
-            .ToArray();
-
-        await Task.WhenAll(tasks).ConfigureAwait(false);
-    }
-
-    private async Task CheckVoteChangesForModAsync(
-        VoteCheckTarget target,
-        SemaphoreSlim limiter,
-        CancellationToken cancellationToken)
-    {
-        await limiter.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-        try
-        {
-            if (target.HasUserReportSummary
-                && !string.IsNullOrWhiteSpace(target.UserReportVersion)
-                && !string.IsNullOrWhiteSpace(InstalledGameVersion))
-            {
-                var key = BuildVoteEtagKey("current", target.Mod.ModId, target.UserReportVersion, InstalledGameVersion);
-                _userReportEtags.TryGetValue(key, out var etag);
-
-                var result = await _voteService
-                    .GetVoteSummaryIfChangedAsync(target.Mod.ModId, target.UserReportVersion, InstalledGameVersion!,
-                        etag, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (!result.IsNotModified)
-                {
-                    if (result.Summary is not null)
-                        await InvokeOnDispatcherAsync(
-                            () => target.Mod.ApplyUserReportSummary(result.Summary!),
-                            cancellationToken,
-                            DispatcherPriority.Background).ConfigureAwait(false);
-
-                    StoreUserReportEtag(target.Mod.ModId, target.UserReportVersion, result.ETag);
-                }
-                else if (string.IsNullOrEmpty(etag) && !string.IsNullOrEmpty(result.ETag))
-                {
-                    StoreUserReportEtag(target.Mod.ModId, target.UserReportVersion, result.ETag);
-                }
-            }
-
-            if (target.HasLatestReleaseSummary
-                && !string.IsNullOrWhiteSpace(target.LatestReleaseVersion)
-                && !string.IsNullOrWhiteSpace(InstalledGameVersion))
-            {
-                var key = BuildVoteEtagKey("latest", target.Mod.ModId, target.LatestReleaseVersion,
-                    InstalledGameVersion);
-                _latestReleaseUserReportEtags.TryGetValue(key, out var etag);
-
-                var result = await _voteService
-                    .GetVoteSummaryIfChangedAsync(target.Mod.ModId, target.LatestReleaseVersion, InstalledGameVersion!,
-                        etag, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (!result.IsNotModified)
-                {
-                    if (result.Summary is not null)
-                        await InvokeOnDispatcherAsync(
-                            () => target.Mod.ApplyLatestReleaseUserReportSummary(result.Summary!),
-                            cancellationToken,
-                            DispatcherPriority.Background).ConfigureAwait(false);
-
-                    StoreLatestReleaseUserReportEtag(target.Mod.ModId, target.LatestReleaseVersion, result.ETag);
-                }
-                else if (string.IsNullOrEmpty(etag) && !string.IsNullOrEmpty(result.ETag))
-                {
-                    StoreLatestReleaseUserReportEtag(target.Mod.ModId, target.LatestReleaseVersion, result.ETag);
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch
-        {
-            // Swallow unexpected failures for individual mods to allow other checks to continue.
-        }
-        finally
-        {
-            limiter.Release();
         }
     }
 
@@ -4348,13 +4209,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         DatabaseTab,
         ModlistTab
     }
-
-    private sealed record VoteCheckTarget(
-        ModListItemViewModel Mod,
-        string? UserReportVersion,
-        bool HasUserReportSummary,
-        string? LatestReleaseVersion,
-        bool HasLatestReleaseSummary);
 
     private sealed class UserReportOperationScope : IDisposable
     {
