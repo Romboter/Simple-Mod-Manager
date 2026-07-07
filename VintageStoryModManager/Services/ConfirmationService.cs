@@ -17,5 +17,15 @@ namespace VintageStoryModManager.Services
             var result = dialog.ShowDialog();
             return Task.FromResult(result == true && dialog.UserConfirmed);
         }
+
+        public Task NotifyAsync(string message, string title)
+        {
+            ModManagerMessageBox.Show(
+                message,
+                title,
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return Task.CompletedTask;
+        }
     }
 }

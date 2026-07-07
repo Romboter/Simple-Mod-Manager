@@ -12,7 +12,7 @@ namespace VintageStoryModManager.Services;
 /// <summary>
 ///     Stores simple user configuration values for the mod manager, such as the selected directories.
 /// </summary>
-public sealed class UserConfigurationService
+public sealed class UserConfigurationService : IUserConfigurationService
 {
     private const string ModConfigDirectoryName = "ModConfig";
     private const string ModConfigPathHistoryVersionPropertyName = "version";

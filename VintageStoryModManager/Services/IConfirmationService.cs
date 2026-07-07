@@ -8,5 +8,7 @@ namespace VintageStoryModManager.Services
     public interface IConfirmationService
     {
         Task<bool> ConfirmAsync(string message, string title);
+
+        Task NotifyAsync(string message, string title);
     }
 }
