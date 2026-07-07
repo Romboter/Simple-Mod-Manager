@@ -46,5 +46,12 @@ namespace VintageStoryModManager.Services
 
         bool LogErrorsAndExceptions { get; }
         void SetLogErrorsAndExceptions(bool value);
+
+        ColorTheme ColorTheme { get; }
+        bool TryActivateTheme(string? name);
+        IReadOnlyDictionary<string, string> GetThemePaletteColors();
+        string GetCurrentThemeName();
+        IReadOnlyList<string> GetCustomThemeNames();
+        void SetColorTheme(ColorTheme theme, IReadOnlyDictionary<string, string>? paletteOverride = null);
     }
 }

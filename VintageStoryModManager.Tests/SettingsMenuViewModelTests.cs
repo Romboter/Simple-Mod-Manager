@@ -48,6 +48,34 @@ public sealed class SettingsMenuViewModelTests
 
         public bool LogErrorsAndExceptions { get; set; }
         public void SetLogErrorsAndExceptions(bool value) => LogErrorsAndExceptions = value;
+
+        public ColorTheme ColorTheme { get; set; } = ColorTheme.VintageStory;
+        public string CurrentThemeName { get; set; } = "Vintage Story";
+        public List<string> CustomThemeNames { get; } = new();
+        public Dictionary<string, string> ThemePaletteColors { get; } = new();
+        public List<(ColorTheme Theme, IReadOnlyDictionary<string, string>? Palette)> SetColorThemeCalls { get; } = new();
+        public string? LastActivatedThemeName { get; private set; }
+        public bool TryActivateThemeResult { get; set; } = true;
+
+        public bool TryActivateTheme(string? name)
+        {
+            LastActivatedThemeName = name;
+            if (!TryActivateThemeResult) return false;
+            ColorTheme = ColorTheme.Custom;
+            if (name is not null) CurrentThemeName = name;
+            return true;
+        }
+
+        public IReadOnlyDictionary<string, string> GetThemePaletteColors() => ThemePaletteColors;
+        public string GetCurrentThemeName() => CurrentThemeName;
+        public IReadOnlyList<string> GetCustomThemeNames() => CustomThemeNames;
+
+        public void SetColorTheme(ColorTheme theme, IReadOnlyDictionary<string, string>? paletteOverride = null)
+        {
+            SetColorThemeCalls.Add((theme, paletteOverride));
+            ColorTheme = theme;
+            if (theme != ColorTheme.Custom) CurrentThemeName = theme.ToString();
+        }
     }
 
     private sealed class FakeConfirmation : IConfirmationService
