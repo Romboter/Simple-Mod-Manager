@@ -379,7 +379,7 @@ public sealed partial class SyncToServerDialogViewModel : ObservableObject
         {
             var confirmed = await _confirmationService.ConfirmAsync(
                 "You are about to delete files or folders from the server. This action cannot be undone.\n\nDo you want to proceed?",
-                "Confirm Deletions", DialogSeverity.Warning, confirmText: "Delete");
+                "Confirm Deletions", DialogSeverity.Warning, confirmText: "Delete", cancelText: "Cancel");
             if (!confirmed)
             {
                 StatusText = "Sync cancelled by user (deletion not confirmed).";
