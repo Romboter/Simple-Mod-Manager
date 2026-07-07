@@ -1,8 +1,5 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
@@ -94,28 +91,8 @@ public partial class MainWindow
         }
 
         var installedMods = _viewModel.GetInstalledModsSnapshot();
-        var modIdentifiers = new List<InstalledModLogIdentifier>();
-        var seenModIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var mod in installedMods)
-        {
-            if (mod is null) continue;
-
-            var modId = mod.ModId;
-            if (string.IsNullOrWhiteSpace(modId)) continue;
-
-            var trimmedModId = modId.Trim();
-            if (!seenModIds.Add(trimmedModId)) continue;
-
-            var displayName = mod.DisplayName;
-            if (!string.IsNullOrWhiteSpace(displayName)) displayName = displayName.Trim();
-
-            var displayLabel = string.IsNullOrWhiteSpace(displayName)
-                ? trimmedModId
-                : $"{displayName} ({trimmedModId})";
-
-            modIdentifiers.Add(new InstalledModLogIdentifier(trimmedModId, displayLabel));
-        }
+        var modIdentifiers = InstalledModLogIdentifierListBuilder.Build(
+            installedMods.Select(mod => (mod?.ModId, mod?.DisplayName)));
 
         if (modIdentifiers.Count == 0)
         {
