@@ -321,6 +321,14 @@ public partial class MainWindow : Window
                 UpdateSelectedModFixButton,
                 UpdateSelectedModCopyForServerButton);
 
+            SettingsMenu = new SettingsMenuViewModel(
+                _userConfiguration,
+                new ConfirmationService(),
+                () => _dataDirectory,
+                disable => _viewModel?.SetAutoRefreshDisabled(disable),
+                () => _viewModel?.OnInternetAccessStateChanged(),
+                InitializeTraceListener);
+
             InitializeComponent();
 
             InitializeModBrowserView();
@@ -334,17 +342,10 @@ public partial class MainWindow : Window
             InitializeColumnVisibilityMenu();
 
             ApplyStoredWindowDimensions();
-            CacheAllVersionsMenuItem.IsChecked = _userConfiguration.CacheAllVersionsLocally;
-            RequireExactVsVersionMenuItem.IsChecked = _userConfiguration.RequireExactVsVersionMatch;
-            DisableAutoRefreshMenuItem.IsChecked = _userConfiguration.DisableAutoRefresh;
-            DisableInternetAccessMenuItem.IsChecked = _userConfiguration.DisableInternetAccess;
-            AutomaticDataBackupsMenuItem.IsChecked = _userConfiguration.AutomaticDataBackupsEnabled;
             InternetAccessManager.SetInternetAccessDisabled(_userConfiguration.DisableInternetAccess);
             UpdateServerOptionsState(_userConfiguration.EnableServerOptions);
-            UseFasterThumbnailsMenuItem.IsChecked = _userConfiguration.UseFasterThumbnails;
             DisableHoverEffectsMenuItem.IsChecked = _userConfiguration.DisableHoverEffects;
             HoverEffectHelper.SetDisableHoverEffects(this, _userConfiguration.DisableHoverEffects);
-            UpdateLoggingMenuState();
             InitializeTraceListener();
             _modActivityLoggingService.LogAppLaunch();
 
@@ -364,8 +365,6 @@ public partial class MainWindow : Window
                     ManagerVersionMenuItem.Visibility = Visibility.Visible;
                 }
             }
-
-            UpdateModlistAutoLoadMenu(_userConfiguration.ModlistAutoLoadBehavior);
 
             TryInitializePaths();
             RefreshDeveloperProfilesMenuEntries();
@@ -394,6 +393,8 @@ public partial class MainWindow : Window
         }
 
     public IAsyncRelayCommand RefreshModsUiCommand { get; }
+
+    public SettingsMenuViewModel SettingsMenu { get; }
 
     private delegate bool PathValidator(string? path, out string? normalizedPath, out string? errorMessage);
 }

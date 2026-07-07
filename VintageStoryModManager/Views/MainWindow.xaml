@@ -158,9 +158,10 @@
                         <MenuItem
                             x:Name="AutomaticDataBackupsMenuItem"
                             Height="35"
-                            Click="AutomaticDataBackupsMenuItem_OnClick"
+                            Command="{Binding SettingsMenu.ToggleAutomaticDataBackupsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             Header="Automatically back up VintagestoryData before launch"
                             IsCheckable="True"
+                            IsChecked="{Binding SettingsMenu.AutomaticDataBackupsEnabled, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
                         <Separator x:Name="ServerOptionsSeparator1" />
                         <MenuItem
@@ -197,16 +198,16 @@
                         <MenuItem
                             x:Name="RequireExactVsVersionMenuItem"
                             Height="35"
-                            Click="RequireExactVsVersionMenuItem_OnClick"
                             Header="Require exact VS version for compatibility checks"
                             IsCheckable="True"
+                            IsChecked="{Binding SettingsMenu.RequireExactVsVersionMatch, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
                         <MenuItem
                             x:Name="CacheAllVersionsMenuItem"
                             Height="35"
-                            Click="CacheAllVersionsMenuItem_OnClick"
                             Header="Cache all versions locally"
                             IsCheckable="True"
+                            IsChecked="{Binding SettingsMenu.CacheAllVersionsLocally, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
                         <MenuItem
                             x:Name="DeleteCachedModsMenuItem"
@@ -274,16 +275,16 @@
                         <MenuItem
                             x:Name="AlwaysClearModlistsMenuItem"
                             Height="35"
-                            Click="AlwaysClearModlistsMenuItem_OnClick"
                             Header="Always clear mods before loading Modlist"
                             IsCheckable="True"
+                            IsChecked="{Binding SettingsMenu.AlwaysClearModlists, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
                         <MenuItem
                             x:Name="AlwaysAddModlistsMenuItem"
                             Height="35"
-                            Click="AlwaysAddModlistsMenuItem_OnClick"
                             Header="Always add to current mods when loading Modlist"
                             IsCheckable="True"
+                            IsChecked="{Binding SettingsMenu.AlwaysAddModlists, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
                     </MenuItem>
                     <MenuItem
@@ -295,16 +296,17 @@
                         <MenuItem
                             x:Name="DisableAutoRefreshMenuItem"
                             Height="35"
-                            Click="DisableAutoRefreshMenuItem_OnClick"
+                            Command="{Binding SettingsMenu.ToggleDisableAutoRefreshCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             Header="_Disable auto-refresh (Faster startup, use manual Refresh button)"
                             IsCheckable="True"
+                            IsChecked="{Binding SettingsMenu.DisableAutoRefresh, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
                         <MenuItem
                             x:Name="UseFasterThumbnailsMenuItem"
                             Height="35"
-                            Click="UseFasterThumbnailsMenuItem_OnClick"
                             Header="_Faster thumbnails (Faster to load in mod database)"
                             IsCheckable="True"
+                            IsChecked="{Binding SettingsMenu.UseFasterThumbnails, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
                         <MenuItem
                             x:Name="DisableHoverEffectsMenuItem"
@@ -507,9 +509,9 @@
                         <MenuItem
                             x:Name="DisableInternetAccessMenuItem"
                             Height="35"
-                            Click="DisableInternetAccessMenuItem_OnClick"
                             Header="_Disable Internet Access"
                             IsCheckable="True"
+                            IsChecked="{Binding SettingsMenu.DisableInternetAccess, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
                         <MenuItem
                             x:Name="EnableServerOptionsMenuItem"
@@ -523,37 +525,37 @@
                             <MenuItem
                                 x:Name="LogModUpdateMenuItem"
                                 Height="35"
-                                Click="LogModUpdateMenuItem_OnClick"
                                 Header="Mod update"
                                 IsCheckable="True"
+                                IsChecked="{Binding SettingsMenu.LogModUpdates, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                                 Style="{StaticResource ToggleMenuItemStyle}" />
                             <MenuItem
                                 x:Name="LogModInstallMenuItem"
                                 Height="35"
-                                Click="LogModInstallMenuItem_OnClick"
                                 Header="Mod installation"
                                 IsCheckable="True"
+                                IsChecked="{Binding SettingsMenu.LogModInstalls, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                                 Style="{StaticResource ToggleMenuItemStyle}" />
                             <MenuItem
                                 x:Name="LogModDeletionMenuItem"
                                 Height="35"
-                                Click="LogModDeletionMenuItem_OnClick"
                                 Header="Mod deletion"
                                 IsCheckable="True"
+                                IsChecked="{Binding SettingsMenu.LogModDeletions, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                                 Style="{StaticResource ToggleMenuItemStyle}" />
                             <MenuItem
                                 x:Name="LogAppLifecycleMenuItem"
                                 Height="35"
-                                Click="LogAppLifecycleMenuItem_OnClick"
                                 Header="App launch and exit"
                                 IsCheckable="True"
+                                IsChecked="{Binding SettingsMenu.LogAppLaunchAndExit, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                                 Style="{StaticResource ToggleMenuItemStyle}" />
                             <MenuItem
                                 x:Name="LogErrorsAndExceptionsMenuItem"
                                 Height="35"
-                                Click="LogErrorsAndExceptionsMenuItem_OnClick"
                                 Header="Errors and exceptions"
                                 IsCheckable="True"
+                                IsChecked="{Binding SettingsMenu.LogErrorsAndExceptions, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                                 Style="{StaticResource ToggleMenuItemStyle}" />
                         </MenuItem>
                         <MenuItem
