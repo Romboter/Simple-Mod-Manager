@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
@@ -44,7 +42,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly ModDatabaseService _databaseService;
     private readonly ModDiscoveryService _discoveryService;
     private readonly object _searchDebounceLock = new();
-    private readonly HashSet<ModListItemViewModel> _installedModSubscriptions = new();
+    private readonly ModListSubscriptionManager _subscriptionManager;
     private readonly TagCacheService _tagCache = new();
     private readonly TagFilterService _tagFilterService;
     private readonly ObservableCollection<TagFilterOptionViewModel> _installedTagFilters = new();
@@ -60,7 +58,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         new(StringComparer.OrdinalIgnoreCase);
 
     private readonly ObservableCollection<ModListItemViewModel> _searchResults = new();
-    private readonly HashSet<ModListItemViewModel> _searchResultSubscriptions = new();
     // Tag filtering is now handled by _tagFilterService
     private readonly ClientSettingsStore _settingsStore;
     private readonly TabNavigationViewModel _tabNavigation;
@@ -157,12 +154,24 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             },
             () => SetStatus(BuildModDetailsLoadingStatusMessage(), false, true),
             () => SetStatus(BuildModDetailsReadyStatusMessage(), false));
+        _subscriptionManager = new ModListSubscriptionManager(
+            _mods,
+            _searchResults,
+            OnInstalledModPropertyChanged,
+            OnSearchResultPropertyChanged,
+            OnInstalledModAttached,
+            OnSearchResultAttached,
+            () =>
+            {
+                ScheduleInstalledTagFilterRefresh();
+                UpdateActiveCount();
+            });
         _userReportsCoordinator = new UserReportsCoordinator(
             Path.Combine(DataDirectory, "voteEtags.json"),
             BeginBusyScope,
             () => InstalledGameVersion,
-            () => _installedModSubscriptions,
-            () => _searchResultSubscriptions,
+            () => _subscriptionManager.InstalledSubscriptions,
+            () => _subscriptionManager.SearchResultSubscriptions,
             () => _allowModDetailsRefresh);
         _userReportsCoordinator.UserReportVoteSubmitted += (_, args) => UserReportVoteSubmitted?.Invoke(this, args);
         _updatePollingService = new ModUpdatePollingService(
@@ -193,8 +202,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         LocalModlistsView = _modlistCollections.LocalModlistsView;
         _modlistCollections.PropertyChanged += OnModlistCollectionsPropertyChanged;
         InstalledTagFilters = new ReadOnlyObservableCollection<TagFilterOptionViewModel>(_installedTagFilters);
-        _mods.CollectionChanged += OnModsCollectionChanged;
-        _searchResults.CollectionChanged += OnSearchResultsCollectionChanged;
         _sortOptions = new ObservableCollection<SortOption>(CreateSortOptions());
         SortOptions = new ReadOnlyObservableCollection<SortOption>(_sortOptions);
         SelectedSortOption = SortOptions.FirstOrDefault();
@@ -497,13 +504,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _disposed = true;
 
         InternetAccessManager.InternetAccessChanged -= OnInternetAccessChanged;
-        _mods.CollectionChanged -= OnModsCollectionChanged;
-        _searchResults.CollectionChanged -= OnSearchResultsCollectionChanged;
+        _subscriptionManager.Dispose();
         _modlistCollections.PropertyChanged -= OnModlistCollectionsPropertyChanged;
         _busyStateTracker.BusyChanged -= OnBusyStateTrackerBusyChanged;
-
-        DetachAllInstalledMods();
-        DetachAllSearchResults();
 
         foreach (var filter in _installedTagFilters) filter.PropertyChanged -= OnInstalledTagFilterPropertyChanged;
 
@@ -1529,107 +1532,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         SelectedMod = null;
     }
 
-    private void OnModsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-                foreach (var mod in EnumerateModItems(e.NewItems)) AttachInstalledMod(mod);
-                break;
-            case NotifyCollectionChangedAction.Remove:
-                foreach (var mod in EnumerateModItems(e.OldItems)) DetachInstalledMod(mod);
-                break;
-            case NotifyCollectionChangedAction.Replace:
-                foreach (var mod in EnumerateModItems(e.OldItems)) DetachInstalledMod(mod);
-
-                foreach (var mod in EnumerateModItems(e.NewItems)) AttachInstalledMod(mod);
-                break;
-            case NotifyCollectionChangedAction.Reset:
-                DetachAllInstalledMods();
-                foreach (var mod in _mods) AttachInstalledMod(mod);
-                break;
-        }
-
-        ScheduleInstalledTagFilterRefresh();
-        UpdateActiveCount();
-    }
-
-    private void OnSearchResultsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-                foreach (var mod in EnumerateModItems(e.NewItems)) AttachSearchResult(mod);
-                break;
-            case NotifyCollectionChangedAction.Remove:
-                foreach (var mod in EnumerateModItems(e.OldItems)) DetachSearchResult(mod);
-                break;
-            case NotifyCollectionChangedAction.Replace:
-                foreach (var mod in EnumerateModItems(e.OldItems)) DetachSearchResult(mod);
-
-                foreach (var mod in EnumerateModItems(e.NewItems)) AttachSearchResult(mod);
-                break;
-            case NotifyCollectionChangedAction.Reset:
-                DetachAllSearchResults();
-                foreach (var mod in _searchResults) AttachSearchResult(mod);
-                break;
-        }
-
-    }
-
-    private static IEnumerable<ModListItemViewModel> EnumerateModItems(IList? items)
-    {
-        if (items is null) yield break;
-
-        foreach (var item in items)
-            if (item is ModListItemViewModel mod)
-                yield return mod;
-    }
-
     // EnumerateModTags logic is now handled by TagFilterService.UpdateInstalledAvailableTagsFromMods
 
-    private void AttachInstalledMod(ModListItemViewModel mod)
+    private void OnInstalledModAttached(ModListItemViewModel mod)
     {
-        if (_installedModSubscriptions.Add(mod)) mod.PropertyChanged += OnInstalledModPropertyChanged;
-
         if (_allowModDetailsRefresh) QueueUserReportRefresh(mod);
     }
 
-    private void DetachInstalledMod(ModListItemViewModel mod)
+    private void OnSearchResultAttached(ModListItemViewModel mod)
     {
-        if (_installedModSubscriptions.Remove(mod)) mod.PropertyChanged -= OnInstalledModPropertyChanged;
-    }
-
-    private void DetachAllInstalledMods()
-    {
-        if (_installedModSubscriptions.Count == 0) return;
-
-        foreach (var mod in _installedModSubscriptions) mod.PropertyChanged -= OnInstalledModPropertyChanged;
-
-        _installedModSubscriptions.Clear();
-    }
-
-    private void AttachSearchResult(ModListItemViewModel mod)
-    {
-        if (_searchResultSubscriptions.Add(mod)) mod.PropertyChanged += OnSearchResultPropertyChanged;
-
         if (mod.CanSubmitUserReport) QueueUserReportRefresh(mod);
 
         QueueLatestReleaseUserReportRefresh(mod);
-    }
-
-    private void DetachSearchResult(ModListItemViewModel mod)
-    {
-        if (_searchResultSubscriptions.Remove(mod)) mod.PropertyChanged -= OnSearchResultPropertyChanged;
-    }
-
-    private void DetachAllSearchResults()
-    {
-        if (_searchResultSubscriptions.Count == 0) return;
-
-        foreach (var mod in _searchResultSubscriptions) mod.PropertyChanged -= OnSearchResultPropertyChanged;
-
-        _searchResultSubscriptions.Clear();
     }
 
     private void OnInstalledModPropertyChanged(object? sender, PropertyChangedEventArgs e)
