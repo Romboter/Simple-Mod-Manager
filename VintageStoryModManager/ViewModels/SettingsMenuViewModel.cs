@@ -236,7 +236,7 @@ public sealed class SettingsMenuViewModel : ObservableObject
                 Environment.NewLine + Environment.NewLine +
                 "This will decrease loading times on start for example. Use the \"Refresh\" button to choose when you want to fetch details from cache and/or Mod DB. This dialog will not be shown again.";
 
-            if (!await _confirmation.ConfirmAsync(message, "Simple VS Manager"))
+            if (!await _confirmation.ConfirmAsync(message, "Simple VS Manager", DialogSeverity.Warning))
                 return; // declined: property untouched, menu stays unchecked via OneWay binding
 
             _configuration.SetDisableAutoRefreshWarningAcknowledged(true);
@@ -258,7 +258,7 @@ public sealed class SettingsMenuViewModel : ObservableObject
             {
                 await _confirmation.NotifyAsync(
                     "Please configure a valid VintagestoryData folder before enabling automatic backups.",
-                    "Simple VS Manager");
+                    "Simple VS Manager", DialogSeverity.Warning);
                 return;
             }
 
