@@ -329,6 +329,11 @@ public partial class MainWindow : Window
                 () => _viewModel?.OnInternetAccessStateChanged(),
                 InitializeTraceListener);
 
+            ThemeMenu = new ThemeMenuViewModel(
+                _userConfiguration,
+                (theme, palette) => App.ApplyTheme(theme, palette),
+                ClearScrollViewerCache);
+
             InitializeComponent();
 
             InitializeModBrowserView();
@@ -350,7 +355,6 @@ public partial class MainWindow : Window
             _modActivityLoggingService.LogAppLaunch();
 
             RefreshCustomThemeMenuItems();
-            UpdateThemeMenuSelection(_userConfiguration.ColorTheme, _userConfiguration.GetCurrentThemeName());
 
             if (ManagerVersionMenuItem is not null)
             {
@@ -395,6 +399,8 @@ public partial class MainWindow : Window
     public IAsyncRelayCommand RefreshModsUiCommand { get; }
 
     public SettingsMenuViewModel SettingsMenu { get; }
+
+    public ThemeMenuViewModel ThemeMenu { get; }
 
     private delegate bool PathValidator(string? path, out string? normalizedPath, out string? errorMessage);
 }

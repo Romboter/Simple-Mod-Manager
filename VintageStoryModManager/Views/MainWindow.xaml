@@ -331,27 +331,30 @@
                             <MenuItem
                                 x:Name="VintageStoryThemeMenuItem"
                                 Height="35"
-                                Click="ThemeMenuItem_OnClick"
+                                Command="{Binding ThemeMenu.SelectBuiltInThemeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{x:Static services:ColorTheme.VintageStory}"
                                 Header="_Vintage Story"
                                 IsCheckable="True"
-                                Style="{StaticResource ToggleMenuItemStyle}"
-                                Tag="{x:Static services:ColorTheme.VintageStory}" />
+                                IsChecked="{Binding ThemeMenu.IsVintageStorySelected, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                                Style="{StaticResource ToggleMenuItemStyle}" />
                             <MenuItem
                                 x:Name="DarkThemeMenuItem"
                                 Height="35"
-                                Click="ThemeMenuItem_OnClick"
+                                Command="{Binding ThemeMenu.SelectBuiltInThemeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{x:Static services:ColorTheme.Dark}"
                                 Header="_Dark"
                                 IsCheckable="True"
-                                Style="{StaticResource ToggleMenuItemStyle}"
-                                Tag="{x:Static services:ColorTheme.Dark}" />
+                                IsChecked="{Binding ThemeMenu.IsDarkSelected, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                                Style="{StaticResource ToggleMenuItemStyle}" />
                             <MenuItem
                                 x:Name="LightThemeMenuItem"
                                 Height="35"
-                                Click="ThemeMenuItem_OnClick"
+                                Command="{Binding ThemeMenu.SelectBuiltInThemeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{x:Static services:ColorTheme.Light}"
                                 Header="_Light"
                                 IsCheckable="True"
-                                Style="{StaticResource ToggleMenuItemStyle}"
-                                Tag="{x:Static services:ColorTheme.Light}" />
+                                IsChecked="{Binding ThemeMenu.IsLightSelected, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                                Style="{StaticResource ToggleMenuItemStyle}" />
                             <Separator x:Name="CustomThemesSeparator" />
                             <MenuItem
                                 x:Name="EditThemeMenuItem"
