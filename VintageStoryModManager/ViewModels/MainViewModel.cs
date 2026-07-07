@@ -42,11 +42,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private const int InitialRefreshDelayMs = 500;  // Delay before starting database refresh on initial load
     private const int IncrementalRefreshDelayMs = 300;  // Delay before refreshing after incremental updates
 
-    private readonly object _busyStateLock = new();
     private readonly RelayCommand _clearSearchCommand;
     private readonly ClientSettingsWatcher _clientSettingsWatcher;
-    private readonly ObservableCollection<CloudModlistListEntry> _cloudModlists = new();
-    private readonly ObservableCollection<LocalModlistListEntry> _localModlists = new();
+    private readonly ModlistCollectionsViewModel _modlistCollections = new();
     private readonly UserConfigurationService _configuration;
     private readonly ModDatabaseService _databaseService;
     private readonly ModDiscoveryService _discoveryService;
@@ -101,8 +99,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private int _activeUserReportOperations;
     private bool _allowModDetailsRefresh = true;
     private bool _areUserReportsVisible = true;
-    private int _busyOperationCount;
-    private CancellationTokenSource? _busyReleaseCts;
+    private readonly BusyStateTracker _busyStateTracker;
     private bool _isInitialLoad = true;
     private bool _disposed;
     private Timer? _searchDebounceTimer;
@@ -176,13 +173,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         InstalledGameVersion = VintageStoryVersionLocator.GetInstalledVersion(gameDirectory);
         _modsWatcher = new ModDirectoryWatcher(_discoveryService);
         _clientSettingsWatcher = new ClientSettingsWatcher(_settingsStore.SettingsPath);
+        _busyStateTracker = new BusyStateTracker(BusyStateReleaseDelay);
+        _busyStateTracker.BusyChanged += OnBusyStateTrackerBusyChanged;
         LoadVoteEtagsFromDisk();
 
         ModsView = CollectionViewSource.GetDefaultView(_mods);
         ModsView.Filter = FilterMod;
         SearchResultsView = CollectionViewSource.GetDefaultView(_searchResults);
-        CloudModlistsView = CollectionViewSource.GetDefaultView(_cloudModlists);
-        LocalModlistsView = CollectionViewSource.GetDefaultView(_localModlists);
+        CloudModlistsView = _modlistCollections.CloudModlistsView;
+        LocalModlistsView = _modlistCollections.LocalModlistsView;
+        _modlistCollections.PropertyChanged += OnModlistCollectionsPropertyChanged;
         InstalledTagFilters = new ReadOnlyObservableCollection<TagFilterOptionViewModel>(_installedTagFilters);
         _mods.CollectionChanged += OnModsCollectionChanged;
         _searchResults.CollectionChanged += OnSearchResultsCollectionChanged;
@@ -405,9 +405,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         set => SetProperty(ref _useModDbDesignView, value);
     }
 
-    public bool HasCloudModlists => _cloudModlists.Count > 0;
+    public bool HasCloudModlists => _modlistCollections.HasCloudModlists;
 
-    public bool HasLocalModlists => _localModlists.Count > 0;
+    public bool HasLocalModlists => _modlistCollections.HasLocalModlists;
 
     public string SearchText
     {
@@ -496,6 +496,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         InternetAccessManager.InternetAccessChanged -= OnInternetAccessChanged;
         _mods.CollectionChanged -= OnModsCollectionChanged;
         _searchResults.CollectionChanged -= OnSearchResultsCollectionChanged;
+        _modlistCollections.PropertyChanged -= OnModlistCollectionsPropertyChanged;
+        _busyStateTracker.BusyChanged -= OnBusyStateTrackerBusyChanged;
 
         DetachAllInstalledMods();
         DetachAllSearchResults();
@@ -1032,39 +1034,25 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public void ReplaceCloudModlists(IEnumerable<CloudModlistListEntry>? entries)
     {
-        _cloudModlists.Clear();
-
-        if (entries is not null)
-            foreach (var entry in entries)
-                if (entry is not null)
-                    _cloudModlists.Add(entry);
-
-        CloudModlistsView.Refresh();
-        OnPropertyChanged(nameof(HasCloudModlists));
+        _modlistCollections.ReplaceCloudModlists(entries);
     }
 
     public bool TryReplaceCloudModlist(CloudModlistListEntry existing, CloudModlistListEntry replacement)
     {
-        var index = _cloudModlists.IndexOf(existing);
-        if (index < 0) return false;
-
-        _cloudModlists[index] = replacement;
-        CloudModlistsView.Refresh();
-        OnPropertyChanged(nameof(HasCloudModlists));
-        return true;
+        return _modlistCollections.TryReplaceCloudModlist(existing, replacement);
     }
 
     public void ReplaceLocalModlists(IEnumerable<LocalModlistListEntry>? entries)
     {
-        _localModlists.Clear();
+        _modlistCollections.ReplaceLocalModlists(entries);
+    }
 
-        if (entries is not null)
-            foreach (var entry in entries)
-                if (entry is not null)
-                    _localModlists.Add(entry);
-
-        LocalModlistsView.Refresh();
-        OnPropertyChanged(nameof(HasLocalModlists));
+    private void OnModlistCollectionsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (string.Equals(e.PropertyName, nameof(ModlistCollectionsViewModel.HasCloudModlists), StringComparison.Ordinal))
+            OnPropertyChanged(nameof(HasCloudModlists));
+        else if (string.Equals(e.PropertyName, nameof(ModlistCollectionsViewModel.HasLocalModlists), StringComparison.Ordinal))
+            OnPropertyChanged(nameof(HasLocalModlists));
     }
 
     public IReadOnlyList<string> GetCurrentDisabledEntries()
@@ -2618,14 +2606,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void OnModDatabaseTagFilterPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-
-        if (!string.Equals(e.PropertyName, nameof(TagFilterOptionViewModel.IsSelected),
-                StringComparison.Ordinal)) return;
-
-    }
-
     private bool SyncSelectedTagsToService(IEnumerable<TagFilterOptionViewModel> filters, bool isInstalled)
     {
         var newSelection = filters
@@ -2643,86 +2623,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private IDisposable BeginBusyScope()
     {
-        bool isBusy;
-        CancellationTokenSource? pendingRelease = null;
-        lock (_busyStateLock)
-        {
-            _busyOperationCount++;
-            isBusy = _busyOperationCount > 0;
-
-            if (_busyReleaseCts is not null)
-            {
-                pendingRelease = _busyReleaseCts;
-                _busyReleaseCts = null;
-            }
-        }
-
-        pendingRelease?.Cancel();
-
-        UpdateIsBusy(isBusy);
-        return new BusyScope(this);
+        return _busyStateTracker.BeginScope();
     }
 
-    private void EndBusyScope()
-    {
-        bool isBusy;
-        CancellationTokenSource? pendingRelease = null;
-        CancellationTokenSource? releaseToSchedule = null;
-        lock (_busyStateLock)
-        {
-            if (_busyOperationCount > 0) _busyOperationCount--;
-
-            isBusy = _busyOperationCount > 0;
-            if (!isBusy)
-            {
-                pendingRelease = _busyReleaseCts;
-                releaseToSchedule = new CancellationTokenSource();
-                _busyReleaseCts = releaseToSchedule;
-            }
-        }
-
-        pendingRelease?.Cancel();
-
-        if (isBusy)
-            UpdateIsBusy(true);
-        else
-            ScheduleBusyRelease(releaseToSchedule);
-    }
-
-    private void ScheduleBusyRelease(CancellationTokenSource? releaseCts)
-    {
-        if (releaseCts is null)
-        {
-            UpdateIsBusy(false);
-            return;
-        }
-
-        Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(BusyStateReleaseDelay, releaseCts.Token).ConfigureAwait(false);
-
-                lock (_busyStateLock)
-                {
-                    if (!ReferenceEquals(_busyReleaseCts, releaseCts)) return;
-
-                    _busyReleaseCts = null;
-                }
-
-                UpdateIsBusy(false);
-            }
-            catch (TaskCanceledException)
-            {
-            }
-            finally
-            {
-                releaseCts.Dispose();
-            }
-        });
-    }
-
-    private void UpdateIsBusy(bool isBusy)
+    private void OnBusyStateTrackerBusyChanged(bool isBusy)
     {
         if (Application.Current?.Dispatcher is Dispatcher dispatcher)
         {
@@ -2920,69 +2824,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ModDetailsStatusText = string.Empty;
     }
 
-    private Task UpdateSearchResultsAsync(IReadOnlyList<ModListItemViewModel> items,
-        CancellationToken cancellationToken)
-    {
-        return InvokeOnDispatcherAsync(() =>
-        {
-            _searchResults.Clear();
-            foreach (var item in items) _searchResults.Add(item);
-
-            SelectedMod = null;
-        }, cancellationToken);
-    }
-
-    private async Task LoadModDatabaseLogosAsync(IReadOnlyList<ModListItemViewModel> viewModels,
-        CancellationToken cancellationToken)
-    {
-        if (viewModels.Count == 0) return;
-
-        var tasks = new List<Task>(viewModels.Count);
-        foreach (var viewModel in viewModels)
-        {
-            if (cancellationToken.IsCancellationRequested) break;
-
-            tasks.Add(viewModel.LoadModDatabaseLogoAsync(cancellationToken));
-        }
-
-        if (tasks.Count == 0) return;
-
-        try
-        {
-            await Task.WhenAll(tasks).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // Swallow cancellation so callers can continue gracefully.
-        }
-    }
-
-    private Task<HashSet<string>> GetInstalledModIdsAsync(CancellationToken cancellationToken)
-    {
-        return InvokeOnDispatcherAsync(
-            () =>
-            {
-                var installed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                foreach (var mod in _mods)
-                    if (!string.IsNullOrWhiteSpace(mod.ModId))
-                        installed.Add(mod.ModId);
-
-                return installed;
-            },
-            cancellationToken);
-    }
-
-    private static bool IsResultInstalled(ModDatabaseSearchResult result, HashSet<string> installedModIds)
-    {
-        if (installedModIds.Contains(result.ModId)) return true;
-
-        foreach (var alternate in result.AlternateIds)
-            if (!string.IsNullOrWhiteSpace(alternate) && installedModIds.Contains(alternate))
-                return true;
-
-        return false;
-    }
-
     private static Task InvokeOnDispatcherAsync(Action action, CancellationToken cancellationToken,
         DispatcherPriority priority = DispatcherPriority.Normal)
     {
@@ -3016,76 +2857,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
 
         return Task.FromResult(function());
-    }
-
-    private static ModEntry CreateSearchResultEntry(ModDatabaseSearchResult result)
-    {
-        var authors = string.IsNullOrWhiteSpace(result.Author)
-            ? Array.Empty<string>()
-            : new[] { result.Author };
-
-        var description = BuildSearchResultDescription(result);
-        var pageUrl = BuildModDatabasePageUrl(result);
-
-        var databaseInfo = result.DetailedInfo ?? new ModDatabaseInfo
-        {
-            Tags = result.Tags,
-            AssetId = result.AssetId,
-            ModPageUrl = pageUrl,
-            Downloads = result.Downloads,
-            Comments = result.Comments,
-            Follows = result.Follows,
-            TrendingPoints = result.TrendingPoints,
-            LogoUrl = result.LogoUrl,
-            LogoUrlSource = result.LogoUrlSource,
-            LastReleasedUtc = result.LastReleasedUtc,
-            Side = result.Side
-        };
-
-        return new ModEntry
-        {
-            ModId = result.ModId,
-            Name = result.Name,
-            ManifestName = result.Name,
-            Description = description,
-            Authors = authors,
-            Website = pageUrl,
-            SourceKind = ModSourceKind.SourceCode,
-            SourcePath = string.Empty,
-            Side = result.Side,
-            ModDatabaseSearchScore = result.Score,
-            DatabaseInfo = databaseInfo
-        };
-    }
-
-    private ModListItemViewModel CreateSearchResultViewModel(ModEntry entry, bool isInstalled)
-    {
-        return new ModListItemViewModel(entry, false, "Mod Database", RejectActivationChangeAsync, InstalledGameVersion,
-            isInstalled, null, () => _configuration.RequireExactVsVersionMatch, _allowModDetailsRefresh);
-    }
-
-    private static string? BuildSearchResultDescription(ModDatabaseSearchResult result)
-    {
-        return string.IsNullOrWhiteSpace(result.Summary) ? null : result.Summary.Trim();
-    }
-
-    private static string? BuildModDatabasePageUrl(ModDatabaseSearchResult result)
-    {
-        if (!string.IsNullOrWhiteSpace(result.AssetId))
-            return $"https://mods.vintagestory.at/show/mod/{result.AssetId}";
-
-        if (!string.IsNullOrWhiteSpace(result.UrlAlias))
-        {
-            var alias = result.UrlAlias!.TrimStart('/');
-            return string.IsNullOrWhiteSpace(alias) ? null : $"https://mods.vintagestory.at/{alias}";
-        }
-
-        return null;
-    }
-
-    private static Task<ActivationResult> RejectActivationChangeAsync(ModListItemViewModel mod, bool isActive)
-    {
-        return Task.FromResult(new ActivationResult(false, "Install this mod locally to manage its activation state."));
     }
 
     private bool FilterMod(object? item)
@@ -3165,11 +2936,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         TryAdd(Directory.GetCurrentDirectory());
 
         return set.ToList();
-    }
-
-    private IEnumerable<string> EnumerateBasePaths()
-    {
-        return _cachedBasePaths ??= GetBasePathsList();
     }
 
     private static IEnumerable<SortOption> CreateSortOptions()
@@ -4726,25 +4492,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (!cts.IsCancellationRequested)
         {
             ModsView.Refresh();
-        }
-    }
-
-    private sealed class BusyScope : IDisposable
-    {
-        private readonly MainViewModel _owner;
-        private bool _disposed;
-
-        public BusyScope(MainViewModel owner)
-        {
-            _owner = owner;
-        }
-
-        public void Dispose()
-        {
-            if (_disposed) return;
-
-            _disposed = true;
-            _owner.EndBusyScope();
         }
     }
 }

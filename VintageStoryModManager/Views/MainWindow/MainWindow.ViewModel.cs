@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-using System.Threading.Tasks;
 using System.Windows;
 using VintageStoryModManager.ViewModels;
 
