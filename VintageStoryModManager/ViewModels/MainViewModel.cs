@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -11,7 +10,6 @@ using System.Windows.Data;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SimpleVsManager.Cloud;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using Application = System.Windows.Application;
@@ -34,7 +32,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private static readonly TimeSpan BusyStateReleaseDelay = TimeSpan.FromMilliseconds(600);
     private static readonly TimeSpan FastCheckInterval = TimeSpan.FromMinutes(2);
     private static readonly int MaxConcurrentDatabaseRefreshes = DevConfig.MaxConcurrentDatabaseRefreshes;
-    private static readonly int MaxConcurrentUserReportRefreshes = DevConfig.MaxConcurrentUserReportRefreshes;
     private static readonly int MaxNewModsRecentMonths = DevConfig.MaxNewModsRecentMonths;
     private static readonly int InstalledModsIncrementalBatchSize = DevConfig.InstalledModsIncrementalBatchSize;
 
@@ -55,7 +52,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly TagFilterService _tagFilterService;
     private readonly ObservableCollection<TagFilterOptionViewModel> _installedTagFilters = new();
     private string[] _lastInstalledAvailableTags = Array.Empty<string>();
-    private readonly Dictionary<string, string> _latestReleaseUserReportEtags = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _modDetailsBusyScopeLock = new();
     private readonly object _databaseRefreshLock = new();
     private readonly Dictionary<string, ModEntry> _modEntriesBySourcePath = new(StringComparer.OrdinalIgnoreCase);
@@ -76,15 +72,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly RelayCommand _showDatabaseTabCommand;
     private readonly ObservableCollection<SortOption> _sortOptions;
     private readonly HashSet<string> _suppressedTagEntries = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, string> _userReportEtags = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object _userReportOperationLock = new();
-    private readonly string _voteEtagCachePath;
-    private readonly object _voteEtagPersistenceLock = new();
-
-    private readonly SemaphoreSlim _userReportRefreshLimiter =
-        new(MaxConcurrentUserReportRefreshes, MaxConcurrentUserReportRefreshes);
-
-    private readonly ModVersionVoteService _voteService = new();
+    private readonly UserReportsCoordinator _userReportsCoordinator;
     private readonly ModLoadingTimingService _timingService = new();
 
     // Database info batching for improved UI performance
@@ -96,9 +84,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private List<string>? _cachedBasePaths;
     private int _activeMods;
-    private int _activeUserReportOperations;
     private bool _allowModDetailsRefresh = true;
-    private bool _areUserReportsVisible = true;
     private readonly BusyStateTracker _busyStateTracker;
     private bool _isInitialLoad = true;
     private bool _disposed;
@@ -106,8 +92,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private CancellationTokenSource? _pendingSearchCts;
     private Timer? _fastCheckTimer;
     private bool _hasActiveBusyScope;
-    private bool _hasEnabledUserReportFetching;
-    private bool _hasFetchedUserReportsThisSession;
     private bool _hasMultipleSelectedMods;
     private volatile bool _hasPendingFastCheck;
     private bool _hasSelectedMods;
@@ -162,7 +146,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ArgumentNullException.ThrowIfNull(configuration);
 
         DataDirectory = Path.GetFullPath(dataDirectory);
-        _voteEtagCachePath = Path.Combine(DataDirectory, "voteEtags.json");
         _configuration = configuration;
 
         _settingsStore = new ClientSettingsStore(DataDirectory);
@@ -175,7 +158,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _clientSettingsWatcher = new ClientSettingsWatcher(_settingsStore.SettingsPath);
         _busyStateTracker = new BusyStateTracker(BusyStateReleaseDelay);
         _busyStateTracker.BusyChanged += OnBusyStateTrackerBusyChanged;
-        LoadVoteEtagsFromDisk();
+        _userReportsCoordinator = new UserReportsCoordinator(
+            Path.Combine(DataDirectory, "voteEtags.json"),
+            BeginBusyScope,
+            () => InstalledGameVersion,
+            () => _installedModSubscriptions,
+            () => _searchResultSubscriptions,
+            () => _allowModDetailsRefresh);
+        _userReportsCoordinator.UserReportVoteSubmitted += (_, args) => UserReportVoteSubmitted?.Invoke(this, args);
 
         ModsView = CollectionViewSource.GetDefaultView(_mods);
         ModsView.Filter = FilterMod;
@@ -190,7 +180,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         SortOptions = new ReadOnlyObservableCollection<SortOption>(_sortOptions);
         SelectedSortOption = SortOptions.FirstOrDefault();
         SelectedSortOption?.Apply(ModsView);
-        _hasEnabledUserReportFetching = FirebaseAnonymousAuthenticator.HasPersistedState();
         _isAutoRefreshDisabled = configuration.DisableAutoRefresh;
         _allowModDetailsRefresh = !_isAutoRefreshDisabled;
 
@@ -551,8 +540,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _clientSettingsWatcher.Dispose();
         _modDetailsBusyScope?.Dispose();
         _modDetailsBusyScope = null;
-        _userReportRefreshLimiter.Dispose();
-        _voteService.Dispose();
+        _userReportsCoordinator.Dispose();
     }
 
     public IDisposable EnterBusyScope()
@@ -754,126 +742,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             return Array.Empty<ModEntry>();
         }
-    }
-
-    private void StoreUserReportEtag(string modId, string? modVersion, string? etag)
-    {
-        UpdateVoteEtag(_userReportEtags, "current", modId, modVersion, etag);
-    }
-
-    private void StoreLatestReleaseUserReportEtag(string modId, string? modVersion, string? etag)
-    {
-        UpdateVoteEtag(_latestReleaseUserReportEtags, "latest", modId, modVersion, etag);
-    }
-
-    private string? GetVoteEtag(
-        Dictionary<string, string> source,
-        string prefix,
-        string modId,
-        string? modVersion)
-    {
-        if (string.IsNullOrWhiteSpace(modId)
-            || string.IsNullOrWhiteSpace(modVersion)
-            || string.IsNullOrWhiteSpace(InstalledGameVersion))
-            return null;
-
-        var key = BuildVoteEtagKey(prefix, modId, modVersion, InstalledGameVersion);
-        return source.TryGetValue(key, out var etag) ? etag : null;
-    }
-
-    private void UpdateVoteEtag(
-        Dictionary<string, string> target,
-        string prefix,
-        string modId,
-        string? modVersion,
-        string? etag)
-    {
-        if (string.IsNullOrWhiteSpace(modId)
-            || string.IsNullOrWhiteSpace(modVersion)
-            || string.IsNullOrWhiteSpace(InstalledGameVersion))
-            return;
-
-        var key = BuildVoteEtagKey(prefix, modId, modVersion, InstalledGameVersion);
-        lock (_voteEtagPersistenceLock)
-        {
-            var changed = false;
-
-            if (string.IsNullOrEmpty(etag))
-            {
-                changed = target.Remove(key);
-            }
-            else if (!target.TryGetValue(key, out var existing)
-                     || !string.Equals(existing, etag, StringComparison.Ordinal))
-            {
-                target[key] = etag;
-                changed = true;
-            }
-
-            if (changed) PersistVoteEtagsLocked();
-        }
-    }
-
-    private static string BuildVoteEtagKey(string prefix, string modId, string modVersion, string? gameVersion)
-    {
-        return string.Concat(prefix, '|', modId, '|', modVersion, '|', gameVersion ?? string.Empty);
-    }
-
-    private void LoadVoteEtagsFromDisk()
-    {
-        lock (_voteEtagPersistenceLock)
-        {
-            try
-            {
-                if (!File.Exists(_voteEtagCachePath)) return;
-
-                using var stream = File.OpenRead(_voteEtagCachePath);
-                var state = JsonSerializer.Deserialize<VoteEtagCacheState>(stream);
-
-                _userReportEtags.Clear();
-                _latestReleaseUserReportEtags.Clear();
-
-                if (state?.Current is { } current)
-                    foreach (var entry in current)
-                        _userReportEtags[entry.Key] = entry.Value;
-
-                if (state?.Latest is { } latest)
-                    foreach (var entry in latest)
-                        _latestReleaseUserReportEtags[entry.Key] = entry.Value;
-            }
-            catch
-            {
-                // Ignore cache load failures; fall back to empty in-memory cache.
-            }
-        }
-    }
-
-    private void PersistVoteEtagsLocked()
-    {
-        try
-        {
-            var directory = Path.GetDirectoryName(_voteEtagCachePath);
-            if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
-
-            var state = new VoteEtagCacheState
-            {
-                Current = new Dictionary<string, string>(_userReportEtags, StringComparer.OrdinalIgnoreCase),
-                Latest = new Dictionary<string, string>(_latestReleaseUserReportEtags, StringComparer.OrdinalIgnoreCase)
-            };
-
-            using var stream = File.Create(_voteEtagCachePath);
-            JsonSerializer.Serialize(stream, state);
-        }
-        catch
-        {
-            // Persistence errors are non-fatal; ignore them.
-        }
-    }
-
-    private sealed class VoteEtagCacheState
-    {
-        public Dictionary<string, string>? Current { get; set; }
-
-        public Dictionary<string, string>? Latest { get; set; }
     }
 
     private static bool IsDifferentVersion(string? installedVersion, string? latestVersion)
@@ -1948,385 +1816,42 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 QueueUserReportRefresh(mod);
     }
 
-    private async Task<ModVersionVoteSummary?> RunUserReportOperationAsync(
-        Func<CancellationToken, Task<ModVersionVoteSummary?>> operation,
-        CancellationToken cancellationToken)
-    {
-        using var userReportScope = BeginUserReportOperation();
-        var entered = false;
-
-        try
-        {
-            await _userReportRefreshLimiter.WaitAsync(cancellationToken).ConfigureAwait(false);
-            entered = true;
-
-            return await operation(cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            if (entered) _userReportRefreshLimiter.Release();
-        }
-    }
-
-    private IDisposable BeginUserReportOperation()
-    {
-        bool shouldSetLoadingStatus;
-
-        lock (_userReportOperationLock)
-        {
-            _activeUserReportOperations++;
-            shouldSetLoadingStatus = _activeUserReportOperations == 1;
-        }
-
-        var busyScope = BeginBusyScope();
-        return new UserReportOperationScope(this, busyScope);
-    }
-
-    private void EndUserReportOperation()
-    {
-        bool shouldSetLoadedStatus;
-
-        lock (_userReportOperationLock)
-        {
-            if (_activeUserReportOperations > 0) _activeUserReportOperations--;
-
-            shouldSetLoadedStatus = _activeUserReportOperations == 0;
-        }
-    }
-
     private void QueueLatestReleaseUserReportRefresh(ModListItemViewModel mod)
     {
-        if (mod is null) return;
-
-        if (!_areUserReportsVisible) return;
-
-        _ = RunUserReportOperationAsync(
-            ct => RefreshLatestReleaseUserReportCoreAsync(mod, true, ct),
-            CancellationToken.None);
+        _userReportsCoordinator.QueueLatestReleaseUserReportRefresh(mod);
     }
 
     public Task<ModVersionVoteSummary?> RefreshLatestReleaseUserReportAsync(
         ModListItemViewModel mod,
         CancellationToken cancellationToken = default)
     {
-        return RunUserReportOperationAsync(
-            ct => RefreshLatestReleaseUserReportCoreAsync(mod, false, ct),
-            cancellationToken);
-    }
-
-    private async Task<ModVersionVoteSummary?> RefreshLatestReleaseUserReportCoreAsync(
-        ModListItemViewModel mod,
-        bool suppressErrors,
-        CancellationToken cancellationToken)
-    {
-        if (mod is null) return null;
-
-        var latestReleaseVersion = mod.LatestRelease?.Version;
-        if (string.IsNullOrWhiteSpace(latestReleaseVersion))
-        {
-            await InvokeOnDispatcherAsync(mod.ClearLatestReleaseUserReport, cancellationToken,
-                    DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            StoreLatestReleaseUserReportEtag(mod.ModId, null, null);
-            return null;
-        }
-
-        if (string.Equals(mod.LatestReleaseUserReportVersion, latestReleaseVersion, StringComparison.OrdinalIgnoreCase)
-            && mod.LatestReleaseUserReportSummary is not null)
-            return mod.LatestReleaseUserReportSummary;
-
-        if (string.IsNullOrWhiteSpace(InstalledGameVersion))
-        {
-            await InvokeOnDispatcherAsync(mod.ClearLatestReleaseUserReport, cancellationToken,
-                    DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            StoreLatestReleaseUserReportEtag(mod.ModId, latestReleaseVersion, null);
-            return null;
-        }
-
-        if (InternetAccessManager.IsInternetAccessDisabled)
-        {
-            await InvokeOnDispatcherAsync(mod.ClearLatestReleaseUserReport, cancellationToken,
-                    DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            StoreLatestReleaseUserReportEtag(mod.ModId, latestReleaseVersion, null);
-            return null;
-        }
-
-        try
-        {
-            var etag = GetVoteEtag(_latestReleaseUserReportEtags, "latest", mod.ModId, latestReleaseVersion);
-
-            var result = await _voteService
-                .GetVoteSummaryIfChangedAsync(
-                    mod.ModId,
-                    latestReleaseVersion,
-                    InstalledGameVersion!,
-                    etag,
-                    cancellationToken)
-                .ConfigureAwait(false);
-
-            var summary = result.Summary ?? mod.LatestReleaseUserReportSummary;
-
-            if (!result.IsNotModified || mod.LatestReleaseUserReportSummary is null)
-                if (summary is not null)
-                    await InvokeOnDispatcherAsync(
-                            () => mod.ApplyLatestReleaseUserReportSummary(summary),
-                            cancellationToken,
-                            DispatcherPriority.Background)
-                        .ConfigureAwait(false);
-
-            StoreLatestReleaseUserReportEtag(mod.ModId, latestReleaseVersion, result.ETag);
-
-            return summary;
-        }
-        catch (InternetAccessDisabledException)
-        {
-            await InvokeOnDispatcherAsync(mod.ClearLatestReleaseUserReport, cancellationToken,
-                    DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            StoreLatestReleaseUserReportEtag(mod.ModId, latestReleaseVersion, null);
-            return null;
-        }
-        catch (Exception ex)
-        {
-            if (!suppressErrors)
-                StatusLogService.AppendStatus(
-                    string.Format(
-                        CultureInfo.CurrentCulture,
-                        "Failed to refresh user reports for the latest release of {0}: {1}",
-                        mod.DisplayName,
-                        ex.Message),
-                    true);
-
-            await InvokeOnDispatcherAsync(mod.ClearLatestReleaseUserReport, cancellationToken,
-                    DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            StoreLatestReleaseUserReportEtag(mod.ModId, latestReleaseVersion, null);
-            return null;
-        }
+        return _userReportsCoordinator.RefreshLatestReleaseUserReportAsync(mod, cancellationToken);
     }
 
     private void QueueUserReportRefresh(ModListItemViewModel mod)
     {
-        if (mod is null) return;
-
-        if (!_areUserReportsVisible) return;
-
-        _ = RunUserReportOperationAsync(
-            ct => RefreshUserReportCoreAsync(mod, true, ct),
-            CancellationToken.None);
+        _userReportsCoordinator.QueueUserReportRefresh(mod);
     }
 
     public void EnableUserReportFetching(bool includeInstalledWhenAutoRefreshDisabled = false)
     {
-        if (!_areUserReportsVisible) return;
-
-        if (_hasFetchedUserReportsThisSession) return;
-
-        _hasEnabledUserReportFetching = true;
-
-        var allowInstalledRefresh = _allowModDetailsRefresh || includeInstalledWhenAutoRefreshDisabled;
-        var hasQueuedRefresh = false;
-
-        if (allowInstalledRefresh)
-        {
-            foreach (var mod in _installedModSubscriptions)
-            {
-                mod.EnsureUserReportStateInitialized();
-                QueueUserReportRefresh(mod);
-                hasQueuedRefresh = true;
-            }
-        }
-
-        foreach (var mod in _searchResultSubscriptions)
-        {
-            mod.EnsureUserReportStateInitialized();
-            if (mod.CanSubmitUserReport)
-            {
-                QueueUserReportRefresh(mod);
-                hasQueuedRefresh = true;
-            }
-
-            QueueLatestReleaseUserReportRefresh(mod);
-            hasQueuedRefresh = true;
-        }
-
-        if (hasQueuedRefresh) _hasFetchedUserReportsThisSession = true;
+        _userReportsCoordinator.EnableUserReportFetching(includeInstalledWhenAutoRefreshDisabled);
     }
 
     public Task<ModVersionVoteSummary?> RefreshUserReportAsync(
         ModListItemViewModel mod,
         CancellationToken cancellationToken = default)
     {
-        return RunUserReportOperationAsync(
-            ct => RefreshUserReportCoreAsync(mod, false, ct),
-            cancellationToken);
+        return _userReportsCoordinator.RefreshUserReportAsync(mod, cancellationToken);
     }
 
-    public async Task<ModVersionVoteSummary?> SubmitUserReportVoteAsync(
+    public Task<ModVersionVoteSummary?> SubmitUserReportVoteAsync(
         ModListItemViewModel mod,
         ModVersionVoteOption? option,
         string? comment,
         CancellationToken cancellationToken = default)
     {
-        if (mod is null) return null;
-
-        if (string.IsNullOrWhiteSpace(InstalledGameVersion) || string.IsNullOrWhiteSpace(mod.UserReportModVersion))
-        {
-            await InvokeOnDispatcherAsync(
-                    () => mod.SetUserReportUnavailable("User reports require a known Vintage Story and mod version."),
-                    cancellationToken,
-                    DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            return null;
-        }
-
-        if (InternetAccessManager.IsInternetAccessDisabled)
-            throw new InternetAccessDisabledException(
-                "Internet access is disabled. Enable it in the File menu to submit your vote.");
-
-        await InvokeOnDispatcherAsync(mod.SetUserReportLoading, cancellationToken, DispatcherPriority.Background)
-            .ConfigureAwait(false);
-
-        try
-        {
-            var (Summary, etag) = option.HasValue
-                ? await _voteService
-                    .SubmitVoteAsync(
-                        mod.ModId,
-                        mod.UserReportModVersion!,
-                        InstalledGameVersion!,
-                        option.Value,
-                        comment,
-                        cancellationToken)
-                    .ConfigureAwait(false)
-                : await _voteService
-                    .RemoveVoteAsync(mod.ModId, mod.UserReportModVersion!, InstalledGameVersion!, cancellationToken)
-                    .ConfigureAwait(false);
-
-            await InvokeOnDispatcherAsync(
-                    () => mod.ApplyUserReportSummary(Summary),
-                    cancellationToken,
-                    DispatcherPriority.Background)
-                .ConfigureAwait(false);
-
-            StoreUserReportEtag(mod.ModId, mod.UserReportModVersion, etag);
-
-            if (Summary is not null)
-                RaiseUserReportVoteSubmitted(mod, Summary);
-
-            return Summary;
-        }
-        catch (InternetAccessDisabledException)
-        {
-            await InvokeOnDispatcherAsync(mod.SetUserReportOffline, cancellationToken, DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            StoreUserReportEtag(mod.ModId, mod.UserReportModVersion, null);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            StatusLogService.AppendStatus(
-                string.Format(CultureInfo.CurrentCulture, "Failed to submit user report for {0}: {1}", mod.DisplayName,
-                    ex.Message),
-                true);
-            throw;
-        }
-    }
-
-    private void RaiseUserReportVoteSubmitted(ModListItemViewModel mod, ModVersionVoteSummary summary)
-    {
-        int? numericId = null;
-        if (int.TryParse(mod.ModId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedId))
-            numericId = parsedId;
-
-        UserReportVoteSubmitted?.Invoke(
-            this,
-            new ModUserReportChangedEventArgs(mod.ModId, mod.UserReportModVersion, numericId, summary));
-    }
-
-    private async Task<ModVersionVoteSummary?> RefreshUserReportCoreAsync(
-        ModListItemViewModel mod,
-        bool suppressErrors,
-        CancellationToken cancellationToken)
-    {
-        if (mod is null) return null;
-
-        if (string.IsNullOrWhiteSpace(InstalledGameVersion) || string.IsNullOrWhiteSpace(mod.UserReportModVersion))
-        {
-            await InvokeOnDispatcherAsync(
-                    () => mod.SetUserReportUnavailable("User reports require a known Vintage Story and mod version."),
-                    cancellationToken,
-                    DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            StoreUserReportEtag(mod.ModId, mod.UserReportModVersion, null);
-            return null;
-        }
-
-        if (InternetAccessManager.IsInternetAccessDisabled)
-        {
-            await InvokeOnDispatcherAsync(mod.SetUserReportOffline, cancellationToken, DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            StoreUserReportEtag(mod.ModId, mod.UserReportModVersion, null);
-            return null;
-        }
-
-        await InvokeOnDispatcherAsync(mod.SetUserReportLoading, cancellationToken, DispatcherPriority.Background)
-            .ConfigureAwait(false);
-
-        try
-        {
-            var etag = GetVoteEtag(_userReportEtags, "current", mod.ModId, mod.UserReportModVersion);
-
-            var result = await _voteService
-                .GetVoteSummaryIfChangedAsync(
-                    mod.ModId,
-                    mod.UserReportModVersion!,
-                    InstalledGameVersion!,
-                    etag,
-                    cancellationToken)
-                .ConfigureAwait(false);
-
-            var summary = result.Summary ?? mod.UserReportSummary;
-
-            if (!result.IsNotModified || mod.UserReportSummary is null)
-                if (summary is not null)
-                    await InvokeOnDispatcherAsync(
-                            () => mod.ApplyUserReportSummary(summary),
-                            cancellationToken,
-                            DispatcherPriority.Background)
-                        .ConfigureAwait(false);
-
-            StoreUserReportEtag(mod.ModId, mod.UserReportModVersion, result.ETag);
-
-            return summary;
-        }
-        catch (InternetAccessDisabledException)
-        {
-            await InvokeOnDispatcherAsync(mod.SetUserReportOffline, cancellationToken, DispatcherPriority.Background)
-                .ConfigureAwait(false);
-            StoreUserReportEtag(mod.ModId, mod.UserReportModVersion, null);
-            return null;
-        }
-        catch (Exception ex)
-        {
-            if (!suppressErrors)
-                StatusLogService.AppendStatus(
-                    string.Format(CultureInfo.CurrentCulture, "Failed to refresh user reports for {0}: {1}",
-                        mod.DisplayName, ex.Message),
-                    true);
-
-            await InvokeOnDispatcherAsync(
-                    () => mod.SetUserReportError(ex.Message),
-                    cancellationToken,
-                    DispatcherPriority.Background)
-                .ConfigureAwait(false);
-
-            if (suppressErrors) return null;
-
-            throw;
-        }
+        return _userReportsCoordinator.SubmitUserReportVoteAsync(mod, option, comment, cancellationToken);
     }
 
     private void SetTagsColumnVisibility(bool isVisible)
@@ -2351,18 +1876,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private void SetUserReportsColumnVisibility(bool isVisible)
     {
-        if (_areUserReportsVisible == isVisible) return;
-
-        _areUserReportsVisible = isVisible;
-
-        if (!isVisible)
-        {
-            _hasEnabledUserReportFetching = false;
-            _hasFetchedUserReportsThisSession = false;
-            return;
-        }
-
-        if (_allowModDetailsRefresh) EnableUserReportFetching();
+        if (_userReportsCoordinator.SetVisibility(isVisible) && isVisible && _allowModDetailsRefresh)
+            EnableUserReportFetching();
     }
 
     private void ScheduleInstalledTagFilterRefresh()
@@ -3086,7 +2601,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         if (_isTagsColumnVisible) return false;
 
-        if (_areUserReportsVisible) return false;
+        if (_userReportsCoordinator.IsVisible) return false;
 
         if (cachedInfo is null || cachedInfo.IsOfflineOnly) return false;
 
@@ -4208,28 +3723,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         MainTab,
         DatabaseTab,
         ModlistTab
-    }
-
-    private sealed class UserReportOperationScope : IDisposable
-    {
-        private readonly IDisposable _busyScope;
-        private readonly MainViewModel _owner;
-        private bool _disposed;
-
-        public UserReportOperationScope(MainViewModel owner, IDisposable busyScope)
-        {
-            _owner = owner;
-            _busyScope = busyScope;
-        }
-
-        public void Dispose()
-        {
-            if (_disposed) return;
-
-            _disposed = true;
-            _busyScope.Dispose();
-            _owner.EndUserReportOperation();
-        }
     }
 
     private void PerformClientSettingsCleanupIfNeeded()
