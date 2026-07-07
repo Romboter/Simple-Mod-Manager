@@ -30,7 +30,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private const int LargeModListThreshold = 200;
     private const int VeryLargeModListThreshold = 500;
     private static readonly TimeSpan BusyStateReleaseDelay = TimeSpan.FromMilliseconds(600);
-    private static readonly TimeSpan FastCheckInterval = TimeSpan.FromMinutes(2);
     private static readonly int MaxConcurrentDatabaseRefreshes = DevConfig.MaxConcurrentDatabaseRefreshes;
     private static readonly int MaxNewModsRecentMonths = DevConfig.MaxNewModsRecentMonths;
     private static readonly int InstalledModsIncrementalBatchSize = DevConfig.InstalledModsIncrementalBatchSize;
@@ -45,7 +44,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly UserConfigurationService _configuration;
     private readonly ModDatabaseService _databaseService;
     private readonly ModDiscoveryService _discoveryService;
-    private readonly object _fastCheckTimerLock = new();
     private readonly object _searchDebounceLock = new();
     private readonly HashSet<ModListItemViewModel> _installedModSubscriptions = new();
     private readonly TagCacheService _tagCache = new();
@@ -73,6 +71,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly ObservableCollection<SortOption> _sortOptions;
     private readonly HashSet<string> _suppressedTagEntries = new(StringComparer.OrdinalIgnoreCase);
     private readonly UserReportsCoordinator _userReportsCoordinator;
+    private readonly ModUpdatePollingService _updatePollingService;
     private readonly ModLoadingTimingService _timingService = new();
 
     // Database info batching for improved UI performance
@@ -90,10 +89,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _disposed;
     private Timer? _searchDebounceTimer;
     private CancellationTokenSource? _pendingSearchCts;
-    private Timer? _fastCheckTimer;
     private bool _hasActiveBusyScope;
     private bool _hasMultipleSelectedMods;
-    private volatile bool _hasPendingFastCheck;
     private bool _hasSelectedMods;
     private bool _hasSelectedTags;
     private bool _hasShownModDetailsLoadingStatus;
@@ -102,7 +99,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _isCompactView;
     private bool _isErrorStatus;
     private bool _isFastCheckInProgress;
-    private int _isFastCheckRunning;
     private bool _isInstalledTagRefreshPending;
     private bool _isLoadingModDetails;
     private bool _isLoadingMods;
@@ -166,6 +162,26 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             () => _searchResultSubscriptions,
             () => _allowModDetailsRefresh);
         _userReportsCoordinator.UserReportVoteSubmitted += (_, args) => UserReportVoteSubmitted?.Invoke(this, args);
+        _updatePollingService = new ModUpdatePollingService(
+            ModUpdatePollingService.DefaultInterval,
+            () => _isAutoRefreshDisabled,
+            ct => InvokeOnDispatcherAsync(
+                () =>
+                {
+                    var snapshot = new List<ModEntry>(_modEntriesBySourcePath.Count);
+                    foreach (var entry in _modEntriesBySourcePath.Values)
+                    {
+                        if (entry is null || string.IsNullOrWhiteSpace(entry.ModId)) continue;
+
+                        snapshot.Add(entry);
+                    }
+
+                    return snapshot;
+                },
+                ct),
+            (modId, ct) => _databaseService.TryFetchLatestReleaseVersionAsync(modId, ct),
+            entries => QueueDatabaseInfoRefresh(entries, true),
+            inProgress => IsFastCheckInProgress = inProgress);
 
         ModsView = CollectionViewSource.GetDefaultView(_mods);
         ModsView.Filter = FilterMod;
@@ -202,7 +218,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         InternetAccessManager.InternetAccessChanged += OnInternetAccessChanged;
 
-        ResetFastCheckTimer();
+        _updatePollingService.ResetTimer();
     }
 
     public string DataDirectory { get; }
@@ -496,11 +512,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         _installedTagFilters.Clear();
 
-        lock (_fastCheckTimerLock)
-        {
-            _fastCheckTimer?.Dispose();
-            _fastCheckTimer = null;
-        }
+        _updatePollingService.Dispose();
 
         lock (_searchDebounceLock)
         {
@@ -610,152 +622,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public void FastCheck()
     {
-        ResetFastCheckTimer();
-
-        if (_isAutoRefreshDisabled) return;
-
-        if (InternetAccessManager.IsInternetAccessDisabled) return;
-
-        _hasPendingFastCheck = true;
-
-        if (Interlocked.CompareExchange(ref _isFastCheckRunning, 1, 0) == 0) _ = Task.Run(RunFastCheckAsync);
+        _updatePollingService.FastCheck();
     }
 
-    private async Task RunFastCheckAsync()
-    {
-        try
-        {
-            IsFastCheckInProgress = true;
-
-            while (_hasPendingFastCheck)
-            {
-                _hasPendingFastCheck = false;
-
-                if (InternetAccessManager.IsInternetAccessDisabled) break;
-
-                var updateCandidates = await CheckForNewModReleasesAsync(CancellationToken.None)
-                    .ConfigureAwait(false);
-
-                if (updateCandidates.Count > 0) QueueDatabaseInfoRefresh(updateCandidates, true);
-            }
-        }
-        catch
-        {
-            // Swallow failures to ensure subsequent checks can continue.
-        }
-        finally
-        {
-            IsFastCheckInProgress = false;
-
-            Interlocked.Exchange(ref _isFastCheckRunning, 0);
-
-            if (_hasPendingFastCheck && !InternetAccessManager.IsInternetAccessDisabled) FastCheck();
-        }
-    }
-
-    private void ResetFastCheckTimer()
-    {
-        if (_disposed || _isAutoRefreshDisabled) return;
-
-        lock (_fastCheckTimerLock)
-        {
-            _fastCheckTimer ??= new Timer(OnFastCheckTimerElapsed, null, Timeout.InfiniteTimeSpan,
-                Timeout.InfiniteTimeSpan);
-            _fastCheckTimer.Change(FastCheckInterval, Timeout.InfiniteTimeSpan);
-        }
-    }
-
-    private void StopFastCheckTimer()
-    {
-        lock (_fastCheckTimerLock)
-        {
-            _fastCheckTimer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
-        }
-    }
-
-    private void OnFastCheckTimerElapsed(object? state)
-    {
-        if (_disposed || _isAutoRefreshDisabled) return;
-
-        FastCheck();
-    }
-
-    private async Task<IReadOnlyList<ModEntry>> CheckForNewModReleasesAsync(
-        CancellationToken cancellationToken)
-    {
-        var entries = new List<ModEntry>();
-
-        try
-        {
-            entries = await InvokeOnDispatcherAsync(
-                () =>
-                {
-                    var snapshot = new List<ModEntry>(_modEntriesBySourcePath.Count);
-                    foreach (var entry in _modEntriesBySourcePath.Values)
-                    {
-                        if (entry is null || string.IsNullOrWhiteSpace(entry.ModId)) continue;
-
-                        snapshot.Add(entry);
-                    }
-
-                    return snapshot;
-                },
-                cancellationToken).ConfigureAwait(false);
-
-            if (entries.Count == 0) return Array.Empty<ModEntry>();
-
-            var updateCandidates = new List<ModEntry>();
-            var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var entry in entries)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var modId = entry.ModId;
-                if (!processed.Add(modId)) continue;
-
-                var latestVersion = await _databaseService
-                    .TryFetchLatestReleaseVersionAsync(modId, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (string.IsNullOrWhiteSpace(latestVersion)) continue;
-
-                if (!IsDifferentVersion(entry.Version, latestVersion)) continue;
-
-                var knownLatest = entry.DatabaseInfo?.LatestRelease?.Version
-                                  ?? entry.DatabaseInfo?.LatestVersion;
-
-                if (string.Equals(knownLatest, latestVersion, StringComparison.OrdinalIgnoreCase)) continue;
-
-                updateCandidates.Add(entry);
-            }
-
-            return updateCandidates.Count == 0
-                ? Array.Empty<ModEntry>()
-                : updateCandidates;
-        }
-        catch (OperationCanceledException)
-        {
-            return Array.Empty<ModEntry>();
-        }
-        catch
-        {
-            return Array.Empty<ModEntry>();
-        }
-    }
-
-    private static bool IsDifferentVersion(string? installedVersion, string? latestVersion)
-    {
-        if (string.IsNullOrWhiteSpace(latestVersion) || string.IsNullOrWhiteSpace(installedVersion)) return false;
-
-        var normalizedInstalled = VersionStringUtility.Normalize(installedVersion);
-        var normalizedLatest = VersionStringUtility.Normalize(latestVersion);
-
-        if (!string.IsNullOrWhiteSpace(normalizedInstalled) && !string.IsNullOrWhiteSpace(normalizedLatest))
-            return !string.Equals(normalizedInstalled, normalizedLatest, StringComparison.OrdinalIgnoreCase);
-
-        return !string.Equals(installedVersion.Trim(), latestVersion.Trim(), StringComparison.OrdinalIgnoreCase);
-    }
     public Task InitializeAsync()
     {
         return LoadModsAsync();
@@ -1006,9 +875,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _allowModDetailsRefresh = !_isAutoRefreshDisabled;
 
         if (disabled)
-            StopFastCheckTimer();
+            _updatePollingService.StopTimer();
         else
-            ResetFastCheckTimer();
+            _updatePollingService.ResetTimer();
     }
 
     internal void ForceNextRefreshToLoadDetails()
