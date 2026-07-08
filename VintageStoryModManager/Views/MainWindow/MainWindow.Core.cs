@@ -303,6 +303,8 @@ public partial class MainWindow : Window
 
     private readonly List<MenuItem> _customThemeMenuItems = new();
 
+    private readonly IConfirmationService _confirmationService;
+
     public MainWindow()
         {
             RefreshModsUiCommand = new AsyncRelayCommand(
@@ -310,6 +312,7 @@ public partial class MainWindow : Window
                 AsyncRelayCommandOptions.AllowConcurrentExecutions);
 
             _userConfiguration = new UserConfigurationService();
+            _confirmationService = new ConfirmationService();
             _dataFolderBackupCoordinator = new DataFolderBackupCoordinator(new DataBackupService(
                 _userConfiguration.GetConfigurationDirectory(),
                 _userConfiguration.CustomDataBackupLocation));
@@ -323,7 +326,7 @@ public partial class MainWindow : Window
 
             SettingsMenu = new SettingsMenuViewModel(
                 _userConfiguration,
-                new ConfirmationService(),
+                _confirmationService,
                 () => _dataDirectory,
                 disable => _viewModel?.SetAutoRefreshDisabled(disable),
                 () => _viewModel?.OnInternetAccessStateChanged(),

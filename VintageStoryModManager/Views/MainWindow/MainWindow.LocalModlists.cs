@@ -83,7 +83,7 @@ public partial class MainWindow
             FolderOpeningHelper.OpenFolder(directory, "Modlists");
         }
 
-    private void DeleteLocalModlistsButton_OnClick(object sender, RoutedEventArgs e)
+    private async void DeleteLocalModlistsButton_OnClick(object sender, RoutedEventArgs e)
         {
             if (_selectedLocalModlists.Count == 0) return;
 
@@ -93,50 +93,32 @@ public partial class MainWindow
 
             if (entries.Count == 0) return;
 
-            string message;
-            if (entries.Count == 1)
-            {
-                var name = entries[0].DisplayName;
-                message = $"Are you sure you want to delete the modlist \"{name}\"? This cannot be undone.";
-            }
-            else
-            {
-                message = $"Are you sure you want to delete the {entries.Count} selected modlists? This cannot be undone.";
-            }
+            var deleteConfirmationMessage = LocalModlistDialogTextBuilder.BuildDeleteConfirmation(entries);
+            var confirmed = await _confirmationService.ConfirmAsync(
+                    deleteConfirmationMessage,
+                    "Delete Modlists")
+                .ConfigureAwait(true);
 
-            var confirmation = WpfMessageBox.Show(
-                this,
-                message,
-                "Delete Modlists",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (confirmation != MessageBoxResult.Yes) return;
+            if (!confirmed) return;
 
             var deletionResult =
                 LocalModlistFileService.Delete(entries);
 
             if (deletionResult.Errors.Count > 0)
             {
-                var summary = string.Join(
-                    "\n",
-                    deletionResult.Errors.Select(error => $"• {error}"));
-
-                WpfMessageBox.Show(
-                    this,
-                    "Some modlists could not be deleted:\n" + summary,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                var deletionFailureMessage = LocalModlistDialogTextBuilder.BuildDeletionFailureMessage(deletionResult.Errors);
+                await _confirmationService.NotifyAsync(
+                        deletionFailureMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
             }
             else if (deletionResult.DeletedCount > 0)
             {
                 var statusMessage =
-                    deletionResult.DeletedCount == 1
-                        ? "Deleted local modlist."
-                        : $"Deleted {deletionResult.DeletedCount} local modlists.";
-
-                _viewModel?.ReportStatus(statusMessage);
+                    LocalModlistDialogTextBuilder.BuildDeletionStatusMessage(deletionResult.DeletedCount);
+                if (!string.IsNullOrWhiteSpace(statusMessage))
+                    _viewModel?.ReportStatus(statusMessage);
             }
 
             RefreshLocalModlists(true, Array.Empty<string>());
@@ -178,22 +160,11 @@ public partial class MainWindow
 
             if (!updateResult.Success)
             {
-                var errorMessage =
-                    updateResult.ErrorMessage ??
-                    "The modlist could not be updated.";
-
-                var message =
-                    updateResult.FailureStage ==
-                    LocalModlistUpdateFailureStage.Read
-                        ? $"Failed to read the modlist:\n{errorMessage}"
-                        : updateResult.FailureStage ==
-                          LocalModlistUpdateFailureStage.Write
-                            ? $"Failed to update the modlist:\n{errorMessage}"
-                            : errorMessage;
+                var updateFailureMessage = LocalModlistDialogTextBuilder.BuildUpdateFailureMessage(updateResult);
 
                 WpfMessageBox.Show(
                     this,
-                    message,
+                    updateFailureMessage,
                     "Modify Modlist",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -263,13 +234,11 @@ public partial class MainWindow
 
             if (catalogResult.Errors.Count > 0)
             {
-                var summary = string.Join(
-                    "\n",
-                    catalogResult.Errors.Select(error => $"• {error}"));
+                var catalogFailureMessage = LocalModlistDialogTextBuilder.BuildCatalogFailureMessage(catalogResult.Errors);
 
                 WpfMessageBox.Show(
                     this,
-                    "Some local modlists could not be loaded:\n" + summary,
+                    catalogFailureMessage,
                     "Simple VS Manager",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
