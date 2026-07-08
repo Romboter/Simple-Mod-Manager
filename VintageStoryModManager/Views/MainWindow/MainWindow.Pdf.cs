@@ -1,7 +1,9 @@
 #nullable enable
 
+using System.Collections.Generic;
 using System.IO;
 using System.Security;
+using System.Threading.Tasks;
 using System.Windows;
 using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Models;
@@ -9,33 +11,30 @@ using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 using VintageStoryModManager.Views.Dialogs;
 
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
-
 namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
-
-    private void SaveInstalledModsPdfMenuItem_OnClick(object sender, RoutedEventArgs e)
+    private async void SaveInstalledModsPdfMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         if (_viewModel is null)
         {
-            WpfMessageBox.Show(
-                "Mods are still loading. Please try again once loading is complete.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.ModsStillLoadingMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
         var mods = _viewModel.GetInstalledModsSnapshot();
         if (mods.Count == 0)
         {
-            WpfMessageBox.Show(
-                "No installed mods were found to include in the PDF.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.NoInstalledModsMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -66,43 +65,65 @@ public partial class MainWindow
         var selectedConfigOptions = metadataDialog.GetSelectedConfigOptions();
         var includedConfigurations = TryReadModConfigurations(selectedConfigOptions);
 
-        TrySaveInstalledModsPdf(
-            listName,
-            version,
-            description,
-            uploaderName,
-            includedConfigurations,
-            gameVersion,
-            mods);
+        await TrySaveInstalledModsPdfAsync(
+                listName,
+                version,
+                description,
+                uploaderName,
+                includedConfigurations,
+                gameVersion,
+                mods)
+            .ConfigureAwait(true);
     }
 
     private bool TrySaveInstalledModsPdf(
-            string listName,
-            string? version,
-            string? description,
-            string uploaderName,
-            IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations,
-            string? gameVersion,
-            IReadOnlyList<ModListItemViewModel>? preFetchedMods = null)
+        string listName,
+        string? version,
+        string? description,
+        string uploaderName,
+        IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations,
+        string? gameVersion,
+        IReadOnlyList<ModListItemViewModel>? preFetchedMods = null)
+    {
+        return TrySaveInstalledModsPdfAsync(
+                listName,
+                version,
+                description,
+                uploaderName,
+                includedConfigurations,
+                gameVersion,
+                preFetchedMods)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    private async Task<bool> TrySaveInstalledModsPdfAsync(
+        string listName,
+        string? version,
+        string? description,
+        string uploaderName,
+        IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations,
+        string? gameVersion,
+        IReadOnlyList<ModListItemViewModel>? preFetchedMods = null)
     {
         if (_viewModel is null)
         {
-            WpfMessageBox.Show(
-                "Mods are still loading. Please try again once loading is complete.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.ModsStillLoadingMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return false;
         }
 
         var mods = preFetchedMods ?? _viewModel.GetInstalledModsSnapshot();
         if (mods.Count == 0)
         {
-            WpfMessageBox.Show(
-                "No installed mods were found to include in the PDF.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.NoInstalledModsMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return false;
         }
 
@@ -115,25 +136,23 @@ public partial class MainWindow
 
             if (File.Exists(filePath))
             {
-                var message =
-                    $"A modlist PDF named \"{Path.GetFileName(filePath)}\" already exists in the Modlists folder. Do you want to replace it?";
-                var confirmation = WpfMessageBox.Show(
-                    this,
-                    message,
-                    "Replace Modlist PDF",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
+                var confirmation = await _confirmationService.ConfirmAsync(
+                        PdfDialogTextBuilder.BuildReplaceExistingMessage(filePath),
+                        "Replace Modlist PDF",
+                        DialogSeverity.Question)
+                    .ConfigureAwait(true);
 
-                if (confirmation != MessageBoxResult.Yes) return false;
+                if (!confirmation) return false;
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
                                        or PathTooLongException or SecurityException)
         {
-            WpfMessageBox.Show($"Failed to prepare the Modlists folder:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.BuildPrepareFolderFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return false;
         }
 
@@ -171,30 +190,30 @@ public partial class MainWindow
 
             _viewModel.ReportStatus($"Saved installed mods PDF to \"{filePath}\".");
 
-            WpfMessageBox.Show(
-                "Saved installed mods PDF successfully.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.SavedSuccessfullyMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
 
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
                                        or PathTooLongException)
         {
-            WpfMessageBox.Show(
-                $"Failed to save the PDF:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.BuildSaveFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"Failed to generate the PDF:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.BuildGenerateFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
 
         return false;
@@ -213,5 +232,4 @@ public partial class MainWindow
 
         return "Anonymous";
     }
-
 }
