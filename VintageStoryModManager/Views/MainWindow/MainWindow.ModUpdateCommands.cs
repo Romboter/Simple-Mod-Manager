@@ -104,10 +104,11 @@ public partial class MainWindow
 
         if (mods.Count == 0)
         {
-            WpfMessageBox.Show("All mods are already up to date.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.AllModsAlreadyUpToDateMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -288,11 +289,12 @@ public partial class MainWindow
                 }
                 catch (Exception ex)
                 {
-                    WpfMessageBox.Show(
-                        $"The mod list could not be refreshed after updating mods:{Environment.NewLine}{ex.Message}",
-                        "Simple VS Manager",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                    await _confirmationService.NotifyAsync(
+                            ModOperationDialogTextBuilder.BuildRefreshAfterUpdateFailureMessage(
+                                ex.Message),
+                            "Simple VS Manager",
+                            DialogSeverity.Error)
+                        .ConfigureAwait(true);
                 }
 
             if (abortRequested && !useModlistInstallUi)
@@ -306,10 +308,11 @@ public partial class MainWindow
             }
             else if (abortRequested && showSummary)
             {
-                WpfMessageBox.Show(isBulk ? "Bulk update cancelled." : "Update cancelled.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                await _confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildUpdateCancelledMessage(isBulk),
+                        "Simple VS Manager",
+                        DialogSeverity.Information)
+                    .ConfigureAwait(true);
             }
         }
         finally

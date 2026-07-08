@@ -48,25 +48,28 @@ public partial class MainWindow
         if (!TryGetManagedModPath(mod, out var modPath, out var errorMessage))
         {
             if (!string.IsNullOrWhiteSpace(errorMessage))
-                WpfMessageBox.Show(errorMessage!,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                await _confirmationService.NotifyAsync(
+                        errorMessage!,
+                        "Simple VS Manager",
+                        DialogSeverity.Information)
+                    .ConfigureAwait(true);
 
             return;
         }
 
-        var confirmation = WpfMessageBox.Show(
-            $"Are you sure you want to delete {mod.DisplayName}? This will remove the mod from disk.",
-            "Simple VS Manager",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
+        var confirmation = await _confirmationService.ConfirmAsync(
+                ModOperationDialogTextBuilder.BuildDeleteConfirmationMessage(
+                    mod.DisplayName),
+                "Simple VS Manager",
+                DialogSeverity.Warning)
+            .ConfigureAwait(true);
 
-        if (confirmation != MessageBoxResult.Yes) return;
+        if (!confirmation) return;
 
         await CreateAutomaticBackupAsync("ModsDeleted").ConfigureAwait(true);
 
-        var removed = TryDeleteModAtPath(mod, modPath);
+        var removed = await TryDeleteModAtPathAsync(mod, modPath)
+            .ConfigureAwait(true);
 
         if (_viewModel?.RefreshCommand != null)
             try
@@ -75,10 +78,12 @@ public partial class MainWindow
             }
             catch (Exception ex)
             {
-                WpfMessageBox.Show($"The mod list could not be refreshed:{Environment.NewLine}{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildRefreshAfterDeleteFailureMessage(
+                            ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
             }
 
         if (removed) _viewModel?.ReportStatus($"Deleted {mod.DisplayName}.");
@@ -94,10 +99,11 @@ public partial class MainWindow
             if (!TryGetManagedModPath(mod, out var modPath, out var errorMessage))
             {
                 if (!string.IsNullOrWhiteSpace(errorMessage))
-                    WpfMessageBox.Show(errorMessage!,
-                        "Simple VS Manager",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    await _confirmationService.NotifyAsync(
+                            errorMessage!,
+                            "Simple VS Manager",
+                            DialogSeverity.Information)
+                        .ConfigureAwait(true);
 
                 continue;
             }
@@ -107,19 +113,21 @@ public partial class MainWindow
 
         if (deletable.Count == 0) return;
 
-        var confirmation = WpfMessageBox.Show(
-            ModDeletionPromptBuilder.BuildConfirmationMessage(deletable.Select(d => d.Mod.DisplayName).ToList()),
-            "Simple VS Manager",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
+        var confirmation = await _confirmationService.ConfirmAsync(
+                ModDeletionPromptBuilder.BuildConfirmationMessage(
+                    deletable.Select(d => d.Mod.DisplayName).ToList()),
+                "Simple VS Manager",
+                DialogSeverity.Warning)
+            .ConfigureAwait(true);
 
-        if (confirmation != MessageBoxResult.Yes) return;
+        if (!confirmation) return;
 
         await CreateAutomaticBackupAsync("ModsDeleted").ConfigureAwait(true);
 
         var removedCount = 0;
         foreach (var (mod, path) in deletable)
-            if (TryDeleteModAtPath(mod, path))
+            if (await TryDeleteModAtPathAsync(mod, path)
+                    .ConfigureAwait(true))
                 removedCount++;
 
         if (_viewModel?.RefreshCommand != null)
@@ -129,17 +137,19 @@ public partial class MainWindow
             }
             catch (Exception ex)
             {
-                WpfMessageBox.Show($"The mod list could not be refreshed:{Environment.NewLine}{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildRefreshAfterDeleteFailureMessage(
+                            ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
             }
 
         if (removedCount > 0)
             _viewModel?.ReportStatus($"Deleted {removedCount} mod{(removedCount == 1 ? string.Empty : "s")}.");
     }
 
-    private bool TryDeleteModAtPath(ModListItemViewModel mod, string modPath)
+    private async Task<bool> TryDeleteModAtPathAsync(ModListItemViewModel mod, string modPath)
     {
         var removed = false;
         try
@@ -157,20 +167,24 @@ public partial class MainWindow
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            WpfMessageBox.Show($"Failed to delete {mod.DisplayName}:{Environment.NewLine}{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.BuildDeleteFailureMessage(
+                        mod.DisplayName,
+                        ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return false;
         }
 
         if (!removed)
         {
-            WpfMessageBox.Show(
-                $"The mod could not be found at:{Environment.NewLine}{modPath}{Environment.NewLine}It may have already been removed.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.BuildMissingDeletedModMessage(
+                        modPath),
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return false;
         }
 

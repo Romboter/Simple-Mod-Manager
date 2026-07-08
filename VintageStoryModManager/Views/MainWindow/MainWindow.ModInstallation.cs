@@ -34,20 +34,22 @@ public partial class MainWindow
     {
         if (!modViewModel.HasDownloadableRelease)
         {
-            WpfMessageBox.Show("No downloadable releases are available for this mod.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.NoDownloadableReleasesMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
         var release = ModReleaseSelectionHelper.SelectReleaseForInstall(modViewModel);
         if (release is null)
         {
-            WpfMessageBox.Show("No downloadable releases are available for this mod.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.NoDownloadableReleasesMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -55,10 +57,11 @@ public partial class MainWindow
                 out var targetPath, out var errorMessage))
         {
             if (!string.IsNullOrWhiteSpace(errorMessage))
-                WpfMessageBox.Show(errorMessage!,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        errorMessage!,
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
 
             return;
         }
@@ -92,10 +95,13 @@ public partial class MainWindow
             {
                 var message = outcome.ErrorMessage!;
                 _viewModel?.ReportStatus($"Failed to install {modViewModel.DisplayName}: {message}", true);
-                WpfMessageBox.Show($"Failed to install {modViewModel.DisplayName}:{Environment.NewLine}{message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildInstallFailureMessage(
+                            modViewModel.DisplayName,
+                            message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
                 return;
             }
 
@@ -117,10 +123,13 @@ public partial class MainWindow
                 _modActivityLoggingService.LogError($"Failed to install {modViewModel.DisplayName}", ex);
 
             _viewModel?.ReportStatus($"Failed to install {modViewModel.DisplayName}: {ex.Message}", true);
-            WpfMessageBox.Show($"Failed to install {modViewModel.DisplayName}:{Environment.NewLine}{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.BuildInstallFailureMessage(
+                        modViewModel.DisplayName,
+                        ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
         finally
         {

@@ -24,10 +24,11 @@ public partial class MainWindow
         var dependencies = mod.Dependencies;
         if (dependencies.Count == 0)
         {
-            WpfMessageBox.Show("This mod does not declare dependencies that can be fixed automatically.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.NoAutoFixableDependenciesMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -97,11 +98,12 @@ public partial class MainWindow
             }
             catch (Exception ex)
             {
-                WpfMessageBox.Show(
-                    $"The mods with errors could not be refreshed after fixing dependencies:{Environment.NewLine}{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildRefreshAfterDependencyRepairFailureMessage(
+                            ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
             }
 
             UpdateSelectedModButtons();
@@ -109,11 +111,11 @@ public partial class MainWindow
 
         if (failures.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, failures);
-            WpfMessageBox.Show($"Some dependencies could not be resolved:{Environment.NewLine}{message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.BuildDependencyFailuresMessage(failures),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             _viewModel?.ReportStatus($"Failed to resolve all dependencies for {mod.DisplayName}.", true);
         }
         else if (anySuccess)
