@@ -130,21 +130,21 @@ public partial class MainWindow
 
         if (string.IsNullOrWhiteSpace(_dataDirectory) || !Directory.Exists(_dataDirectory))
         {
-            WpfMessageBox.Show(
-                "The VintagestoryData folder is not available. Please set it before restoring a backup.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.DataDirectoryUnavailableForRestoreMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
-        var confirmation = WpfMessageBox.Show(
-            "Restoring a VintagestoryData backup replaces the entire folder (the Cache folder will be cleared). Continue?",
-            "Simple VS Manager",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
+        var confirmed = await _confirmationService.ConfirmAsync(
+                DataFolderBackupDialogTextBuilder.RestoreConfirmationMessage,
+                "Simple VS Manager",
+                DialogSeverity.Warning)
+            .ConfigureAwait(true);
 
-        if (confirmation != MessageBoxResult.Yes) return;
+        if (!confirmed) return;
 
         await RestoreDataBackupAsync(summary).ConfigureAwait(true);
     }
@@ -233,72 +233,68 @@ public partial class MainWindow
         }
     }
 
-    private void DeleteDataFolderBackupsMenuItem_OnClick(object? sender, RoutedEventArgs e)
+    private async void DeleteDataFolderBackupsMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
         if (string.IsNullOrWhiteSpace(_dataDirectory))
         {
-            WpfMessageBox.Show(
-                "Set the VintagestoryData folder before deleting backups.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.SetDataDirectoryBeforeDeleteMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
         var (installedVersion, normalizedInstalledVersion) = VintageStoryVersionLocator.GetNormalizedInstalledVersion(_gameDirectory);
         if (string.IsNullOrWhiteSpace(normalizedInstalledVersion))
         {
-            WpfMessageBox.Show(
-                "The installed Vintage Story version could not be determined, so backups cannot be deleted safely.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.UnknownInstalledVersionDeleteMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
         var displayVersion = installedVersion ?? normalizedInstalledVersion;
-        var confirmation = WpfMessageBox.Show(
-            $"Delete all VintagestoryData backups for Vintage Story {displayVersion}? This action cannot be undone.",
-            "Simple VS Manager",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
+        var confirmed = await _confirmationService.ConfirmAsync(
+                DataFolderBackupDialogTextBuilder.BuildDeleteConfirmation(displayVersion),
+                "Simple VS Manager",
+                DialogSeverity.Warning)
+            .ConfigureAwait(true);
 
-        if (confirmation != MessageBoxResult.Yes) return;
+        if (!confirmed) return;
 
         try
         {
             var deleted = _dataFolderBackupCoordinator.DeleteBackups(_dataDirectory!, displayVersion);
             if (deleted == 0)
             {
-                WpfMessageBox.Show(
-                    "No backups matching the current data folder and Vintage Story version were found.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                await _confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.NoMatchingBackupsMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Information)
+                    .ConfigureAwait(true);
                 return;
             }
 
-            _viewModel?.ReportStatus(
-                deleted == 1
-                    ? "Deleted 1 VintagestoryData backup."
-                    : $"Deleted {deleted} VintagestoryData backups.");
+            var statusMessage = DataFolderBackupDialogTextBuilder.BuildDeletedStatusMessage(deleted);
+            _viewModel?.ReportStatus(statusMessage);
 
-            WpfMessageBox.Show(
-                deleted == 1
-                    ? "Deleted 1 VintagestoryData backup."
-                    : $"Deleted {deleted} VintagestoryData backups.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    statusMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException
                                    or ArgumentException)
         {
-            WpfMessageBox.Show(
-                $"Failed to delete the VintagestoryData backups:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildDeleteFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 
@@ -308,11 +304,11 @@ public partial class MainWindow
 
         if (!PathRelationshipHelper.IsSameDirectory(summary.SourceDataDirectory, _dataDirectory))
         {
-            WpfMessageBox.Show(
-                "This backup was created for a different VintagestoryData folder and cannot be restored.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.DifferentDataFolderRestoreMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -324,11 +320,13 @@ public partial class MainWindow
         {
             var backupVersionDisplay = summary.VintageStoryVersion ?? normalizedBackupVersion;
             var installedVersionDisplay = installedVersion ?? normalizedInstalledVersion;
-            WpfMessageBox.Show(
-                $"This backup was created for Vintage Story {backupVersionDisplay}, but the installed version is {installedVersionDisplay}. Install the matching Vintage Story version before restoring this backup.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildVersionMismatchMessage(
+                        backupVersionDisplay,
+                        installedVersionDisplay),
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -341,19 +339,19 @@ public partial class MainWindow
                 .ConfigureAwait(true);
             await RefreshModsAsync(true).ConfigureAwait(true);
             _viewModel?.ReportStatus($"Restored VintagestoryData backup \"{summary.Id}\".");
-            WpfMessageBox.Show(
-                "VintagestoryData was restored from the selected backup.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.RestoreSuccessMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            WpfMessageBox.Show(
-                $"Failed to restore the selected VintagestoryData backup:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildRestoreFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
         finally
         {
