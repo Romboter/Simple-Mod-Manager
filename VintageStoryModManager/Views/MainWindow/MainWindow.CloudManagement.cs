@@ -19,11 +19,11 @@ public partial class MainWindow
                 store);
         if (entries.Count == 0)
         {
-            WpfMessageBox.Show(
-                "You do not have any cloud modlists saved.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    CloudManagementDialogTextBuilder.NoCloudModlistsSavedMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -59,21 +59,21 @@ public partial class MainWindow
                     $"{result.ErrorMessage}",
                     true);
 
-                WpfMessageBox.Show(
-                    $"Failed to load the cloud modlist before renaming:\n" +
-                    result.ErrorMessage,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.BuildRenameLoadFailureMessage(
+                            result.ErrorMessage),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
 
                 return false;
 
             case CloudModlistRenameStatus.ContentUnavailable:
-                WpfMessageBox.Show(
-                    "The selected cloud modlist could not be loaded.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.ContentUnavailableMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
 
                 return false;
 
@@ -83,12 +83,12 @@ public partial class MainWindow
                     $"{result.ErrorMessage}",
                     true);
 
-                WpfMessageBox.Show(
-                    $"The cloud modlist data is invalid and could not " +
-                    $"be renamed:\n{result.ErrorMessage}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.BuildInvalidRenameContentMessage(
+                            result.ErrorMessage),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
 
                 return false;
 
@@ -98,12 +98,12 @@ public partial class MainWindow
                     $"{result.ErrorMessage}",
                     true);
 
-                WpfMessageBox.Show(
-                    $"Failed to rename the cloud modlist:\n" +
-                    result.ErrorMessage,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.BuildRenameSaveFailureMessage(
+                            result.ErrorMessage),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
 
                 return false;
 
@@ -120,8 +120,9 @@ public partial class MainWindow
                 entry.SlotKey);
 
         _viewModel?.ReportStatus(
-            $"Renamed cloud modlist in {slotLabel} to " +
-            $"\"{result.Name}\".");
+            CloudManagementDialogTextBuilder.BuildRenamedStatusMessage(
+                slotLabel,
+                result.Name));
 
         await UpdateCloudModlistsAfterChangeAsync();
         return true;
@@ -144,12 +145,12 @@ public partial class MainWindow
                     $"{result.ErrorMessage}",
                     true);
 
-                WpfMessageBox.Show(
-                    $"Failed to delete the cloud modlist:\n" +
-                    result.ErrorMessage,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.BuildDeleteFailureMessage(
+                            result.ErrorMessage),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
 
                 return false;
 
@@ -159,12 +160,12 @@ public partial class MainWindow
                     $"{result.ErrorMessage}",
                     true);
 
-                WpfMessageBox.Show(
-                    $"Failed to delete the cloud modlist:\n" +
-                    result.ErrorMessage,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.BuildDeleteFailureMessage(
+                            result.ErrorMessage),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
 
                 return false;
 
@@ -181,7 +182,7 @@ public partial class MainWindow
                 entry.SlotKey);
 
         _viewModel?.ReportStatus(
-            $"Deleted cloud modlist from {slotLabel}.");
+            CloudManagementDialogTextBuilder.BuildDeletedStatusMessage(slotLabel));
 
         await UpdateCloudModlistsAfterChangeAsync();
         return true;
@@ -204,16 +205,20 @@ public partial class MainWindow
         _viewModel?.ReplaceCloudModlists(null);
         if (CloudModlistsDataGrid is not null) CloudModlistsDataGrid.SelectedItem = null;
 
-        StatusLogService.AppendStatus("Deleted all cloud modlists and Firebase authorization.", false);
-        _viewModel?.ReportStatus("Deleted all cloud modlists and Firebase authorization.");
+        StatusLogService.AppendStatus(
+            CloudManagementDialogTextBuilder.DeletedAllCloudModlistsAndAuthorizationMessage,
+            false);
+        _viewModel?.ReportStatus(
+            CloudManagementDialogTextBuilder.DeletedAllCloudModlistsAndAuthorizationMessage);
 
         if (showCompletionMessage)
-            WpfMessageBox.Show(
-                this,
-                "Cloud modlists and Firebase authorization have been deleted.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+        {
+            await _confirmationService.NotifyAsync(
+                    CloudManagementDialogTextBuilder.DeletedAllCloudModlistsAndAuthorizationMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
+        }
     }
 
     private async void DeleteCloudAuthMenuItem_OnClick(object sender, RoutedEventArgs e)

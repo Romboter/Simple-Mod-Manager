@@ -4,8 +4,6 @@ using System.Windows;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
-using WpfMessageBox =
-    VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -61,16 +59,15 @@ public partial class MainWindow
                         CloudModlistHelper.FormatCloudSlotLabel(
                             matchingSlot.SlotKey);
 
-                    var replaceExisting = WpfMessageBox.Show(
-                        $"A cloud modlist named \"{trimmedModlistName}\" " +
-                        $"already exists in {slotLabel}. Do you want to " +
-                        "replace it?",
-                        "Simple VS Manager",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question);
+                    var replaceExisting = await _confirmationService.ConfirmAsync(
+                            CloudSaveDialogTextBuilder.BuildReplaceExistingPrompt(
+                                trimmedModlistName,
+                                slotLabel),
+                            "Simple VS Manager",
+                            DialogSeverity.Question)
+                        .ConfigureAwait(true);
 
-                    if (replaceExisting != MessageBoxResult.Yes)
-                        return;
+                    if (!replaceExisting) return;
 
                     replacementSlot = matchingSlot;
                     slotKey = matchingSlot.SlotKey;
@@ -102,11 +99,15 @@ public partial class MainWindow
                     var replacedVersion = replacementSlot.Version;
                     if (!string.IsNullOrWhiteSpace(replacedVersion)) replacedName = $"{replacedName} (v{replacedVersion})";
 
-                    _viewModel?.ReportStatus($"Replaced cloud modlist \"{replacedName}\" with \"{modlistName}\".");
+                    _viewModel?.ReportStatus(
+                        CloudSaveDialogTextBuilder.BuildReplacedStatusMessage(
+                            replacedName,
+                            modlistName));
                 }
                 else
                 {
-                    _viewModel?.ReportStatus($"Saved cloud modlist \"{modlistName}\" to the cloud.");
+                    _viewModel?.ReportStatus(
+                        CloudSaveDialogTextBuilder.BuildSavedStatusMessage(modlistName));
                 }
             }, "save the modlist to the cloud");
         }
