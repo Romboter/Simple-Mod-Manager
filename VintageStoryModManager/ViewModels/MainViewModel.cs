@@ -1028,7 +1028,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             new(_modEntriesBySourcePath, StringComparer.OrdinalIgnoreCase);
 
         var reloadResults = await Task
-            .Run(() => LoadChangedModEntries(candidates, existingEntriesSnapshot))
+            .Run(() => ModEntryDiffHelper.LoadChangedModEntries(candidates, existingEntriesSnapshot, _discoveryService.LoadModFromPath))
             .ConfigureAwait(true);
 
         var refreshedEntries = new List<ModEntry>(reloadResults.Count);
@@ -1120,7 +1120,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 Dictionary<string, ModEntry> existingEntriesSnapshot =
                     new(_modEntriesBySourcePath, StringComparer.OrdinalIgnoreCase);
                 var reloadResults =
-                    await Task.Run(() => LoadChangedModEntries(changeSet.Paths, existingEntriesSnapshot));
+                    await Task.Run(() => ModEntryDiffHelper.LoadChangedModEntries(changeSet.Paths, existingEntriesSnapshot, _discoveryService.LoadModFromPath));
 
                 var updatedEntriesForStatus = new List<ModEntry>(reloadResults.Count);
                 HashSet<string>? removedModIds = null;
@@ -1229,9 +1229,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
                     foreach (var entry in batch)
                     {
-                        ResetCalculatedModState(entry);
+                        ModEntryDiffHelper.ResetCalculatedModState(entry);
                         if (previousEntries.TryGetValue(entry.SourcePath, out var previous))
-                            CopyTransientModState(previous, entry);
+                            ModEntryDiffHelper.CopyTransientModState(previous, entry);
                         allEntries.Add(entry);
                     }
 
@@ -1945,50 +1945,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         IsErrorStatus = isError;
         _isModDetailsStatusActive = isModDetailsStatus;
         _hasShownModDetailsLoadingStatus = isModDetailsStatus;
-    }
-
-    private Dictionary<string, ModEntry?> LoadChangedModEntries(
-        IReadOnlyCollection<string> paths,
-        IReadOnlyDictionary<string, ModEntry>? existingEntries)
-    {
-        var results = new Dictionary<string, ModEntry?>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var path in paths)
-        {
-            var entry = _discoveryService.LoadModFromPath(path);
-            if (entry != null)
-            {
-                ResetCalculatedModState(entry);
-                if (existingEntries != null && existingEntries.TryGetValue(path, out var previous))
-                    CopyTransientModState(previous, entry);
-            }
-
-            results[path] = entry;
-        }
-
-        return results;
-    }
-
-    private static void ResetCalculatedModState(ModEntry entry)
-    {
-        entry.LoadError = null;
-        entry.DependencyHasErrors = false;
-        entry.MissingDependencies = Array.Empty<ModDependencyInfo>();
-    }
-
-    private static void CopyTransientModState(ModEntry source, ModEntry target)
-    {
-        if (source is null || target is null) return;
-
-        var sameModId = string.Equals(source.ModId, target.ModId, StringComparison.OrdinalIgnoreCase);
-        var sameVersion = string.Equals(source.Version, target.Version, StringComparison.OrdinalIgnoreCase)
-                          || (string.IsNullOrWhiteSpace(source.Version) && string.IsNullOrWhiteSpace(target.Version));
-
-        if (!sameModId || !sameVersion) return;
-
-        if (target.DatabaseInfo is null && source.DatabaseInfo != null) target.DatabaseInfo = source.DatabaseInfo;
-
-        if (source.ModDatabaseSearchScore.HasValue) target.ModDatabaseSearchScore = source.ModDatabaseSearchScore;
     }
 
     private void ApplyPartialUpdates(
