@@ -19,10 +19,11 @@ public partial class MainWindow
             }
             catch (InternetAccessDisabledException ex)
             {
-                WpfMessageBox.Show(ex.Message,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        ex.Message,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
                 return;
             }
 
@@ -34,10 +35,11 @@ public partial class MainWindow
             catch (Exception ex)
             {
                 StatusLogService.AppendStatus($"Failed to initialize cloud storage: {ex}", true);
-                WpfMessageBox.Show($"Failed to initialize cloud storage:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        CloudOperationDialogTextBuilder.BuildInitializationFailureMessage(ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
                 return;
             }
 
@@ -48,35 +50,45 @@ public partial class MainWindow
             }
             catch (InternetAccessDisabledException ex)
             {
-                WpfMessageBox.Show(ex.Message,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        ex.Message,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
             }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
             {
                 StatusLogService.AppendStatus($"Network error while attempting to {actionDescription}: {ex.Message}", true);
-                WpfMessageBox.Show($"Failed to {actionDescription}:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        CloudOperationDialogTextBuilder.BuildActionFailureMessage(
+                            actionDescription,
+                            ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
             }
             catch (InvalidOperationException ex)
             {
                 StatusLogService.AppendStatus(
                     $"Cloud operation failed while attempting to {actionDescription}: {ex.Message}", true);
-                WpfMessageBox.Show($"Failed to {actionDescription}:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        CloudOperationDialogTextBuilder.BuildActionFailureMessage(
+                            actionDescription,
+                            ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
             }
             catch (Exception ex)
             {
                 StatusLogService.AppendStatus($"Unexpected error while attempting to {actionDescription}: {ex}", true);
-                WpfMessageBox.Show($"An unexpected error occurred while attempting to {actionDescription}:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        CloudOperationDialogTextBuilder.BuildUnexpectedActionFailureMessage(
+                            actionDescription,
+                            ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
             }
         }
 
