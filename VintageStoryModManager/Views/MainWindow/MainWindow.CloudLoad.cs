@@ -7,8 +7,6 @@ using System.Windows.Threading;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
-using WpfMessageBox =
-    VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -44,11 +42,11 @@ public partial class MainWindow
         catch (Exception ex) when (
             ex is IOException or UnauthorizedAccessException)
         {
-            WpfMessageBox.Show(
-                $"Failed to prepare the cloud modlist cache:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    CloudLoadDialogTextBuilder.BuildCachePreparationFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -63,11 +61,11 @@ public partial class MainWindow
         catch (Exception ex) when (
             ex is IOException or UnauthorizedAccessException)
         {
-            WpfMessageBox.Show(
-                $"Failed to cache the selected modlist:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    CloudLoadDialogTextBuilder.BuildSelectedModlistCacheFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -87,13 +85,12 @@ public partial class MainWindow
                 out var preset,
                 out var errorMessage))
         {
-            var message = string.IsNullOrWhiteSpace(errorMessage)
-                ? "Failed to load the downloaded cloud modlist."
-                : errorMessage!;
-            WpfMessageBox.Show(message,
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            var message = CloudLoadDialogTextBuilder.BuildDownloadedModlistLoadFailureMessage(errorMessage);
+            await _confirmationService.NotifyAsync(
+                    message,
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -118,10 +115,11 @@ public partial class MainWindow
                     true);
             if (slots.Count == 0)
             {
-                WpfMessageBox.Show("No cloud modlists are available.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                await _confirmationService.NotifyAsync(
+                        CloudLoadDialogTextBuilder.NoCloudModlistsAvailableMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Information)
+                    .ConfigureAwait(true);
                 return;
             }
 
@@ -147,11 +145,11 @@ public partial class MainWindow
 
             if (string.IsNullOrWhiteSpace(json))
             {
-                WpfMessageBox.Show(
-                    "The selected cloud modlist is empty.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        CloudLoadDialogTextBuilder.SelectedCloudModlistEmptyMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
                 return;
             }
 
@@ -163,13 +161,12 @@ public partial class MainWindow
                     out var errorMessage,
                     sourceName))
             {
-                var message = string.IsNullOrWhiteSpace(errorMessage)
-                    ? "The selected cloud modlist is not valid."
-                    : errorMessage!;
-                WpfMessageBox.Show($"Failed to load the modlist:\n{message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                var message = CloudLoadDialogTextBuilder.BuildCloudModlistLoadFailureMessage(errorMessage);
+                await _confirmationService.NotifyAsync(
+                        message,
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
                 return;
             }
 
@@ -195,10 +192,11 @@ public partial class MainWindow
                     false);
             if (slots.Count == 0)
             {
-                WpfMessageBox.Show("No cloud modlists are available to delete.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                await _confirmationService.NotifyAsync(
+                        CloudLoadDialogTextBuilder.NoCloudModlistsAvailableToDeleteMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Information)
+                    .ConfigureAwait(true);
                 return;
             }
 
@@ -214,13 +212,13 @@ public partial class MainWindow
                 ? slotLabel
                 : $"{slotLabel} (\"{selectedSlot.Name}\")";
 
-            var confirmation = WpfMessageBox.Show(
-                $"Are you sure you want to delete {displayName}? This action cannot be undone.",
-                "Simple VS Manager",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+            var confirmed = await _confirmationService.ConfirmAsync(
+                    CloudLoadDialogTextBuilder.BuildDeleteConfirmationMessage(displayName),
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
 
-            if (confirmation != MessageBoxResult.Yes) return;
+            if (!confirmed) return;
 
             await CloudModlistManagementService.DeleteSlotAsync(
                 store,
@@ -285,10 +283,11 @@ public partial class MainWindow
 
         if (refreshedEntry is null)
         {
-            WpfMessageBox.Show("The selected cloud modlist could not be downloaded.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    CloudLoadDialogTextBuilder.SelectedCloudModlistDownloadFailedMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return null;
         }
 
