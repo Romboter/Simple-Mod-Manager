@@ -1,11 +1,9 @@
 #nullable enable
 
 using System.Globalization;
-using System.Text;
 using System.Windows;
 using VintageStoryModManager.Services;
 
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -13,13 +11,13 @@ public partial class MainWindow
 {
     private async void DeleteCachedModsMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        var result = WpfMessageBox.Show(
-            "This will only delete the managers cached mods to save some disk space, it will not affect your installed mods.",
-            "Simple VS Manager",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
+        var result = await _confirmationService.ConfirmAsync(
+                ManagerCacheDialogTextBuilder.DeleteCachedModsConfirmationMessage,
+                "Simple VS Manager",
+                DialogSeverity.Warning)
+            .ConfigureAwait(true);
 
-        if (result != MessageBoxResult.Yes) return;
+        if (!result) return;
 
         try
         {
@@ -28,27 +26,27 @@ public partial class MainWindow
             switch (deletionStatus)
             {
                 case CachedModsDeletionStatus.DirectoryUnavailable:
-                    WpfMessageBox.Show(
-                        "Could not determine the cached mods directory.",
-                        "Simple VS Manager",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                    await _confirmationService.NotifyAsync(
+                            ManagerCacheDialogTextBuilder.CachedModsDirectoryUnavailableMessage,
+                            "Simple VS Manager",
+                            DialogSeverity.Warning)
+                        .ConfigureAwait(true);
                     break;
 
                 case CachedModsDeletionStatus.DirectoryNotFound:
-                    WpfMessageBox.Show(
-                        "No cached mods were found.",
-                        "Simple VS Manager",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    await _confirmationService.NotifyAsync(
+                            ManagerCacheDialogTextBuilder.NoCachedModsFoundMessage,
+                            "Simple VS Manager",
+                            DialogSeverity.Information)
+                        .ConfigureAwait(true);
                     break;
 
                 case CachedModsDeletionStatus.Deleted:
-                    WpfMessageBox.Show(
-                        "Cached mods deleted successfully.",
-                        "Simple VS Manager",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    await _confirmationService.NotifyAsync(
+                            ManagerCacheDialogTextBuilder.CachedModsDeletedSuccessfullyMessage,
+                            "Simple VS Manager",
+                            DialogSeverity.Information)
+                        .ConfigureAwait(true);
                     break;
 
                 default:
@@ -57,33 +55,25 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"Failed to delete cached mods:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ManagerCacheDialogTextBuilder.BuildDeleteCachedModsFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
 
         await RefreshDeleteCachedModsMenuHeaderAsync();
     }
 
-    private void ClearAllCachesMenuItem_OnClick(object sender, RoutedEventArgs e)
+    private async void ClearAllCachesMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        const string confirmationMessage =
-            "This will delete all cache folders used by Simple VS Manager:\n\n" +
-            "• Temp Cache (contains all cache data)\n\n" +
-            "Your settings, modlists and installed mods will NOT be affected.\n\n" +
-            "This is useful when experiencing problems with the mod database or cached data.\n\n" +
-            "Continue?";
+        var confirmation = await _confirmationService.ConfirmAsync(
+                ManagerCacheDialogTextBuilder.ClearAllCachesConfirmationMessage,
+                "Simple VS Manager",
+                DialogSeverity.Question)
+            .ConfigureAwait(true);
 
-        var confirmation = WpfMessageBox.Show(
-            this,
-            confirmationMessage,
-            "Simple VS Manager",
-            MessageBoxButton.OKCancel,
-            MessageBoxImage.Question);
-
-        if (confirmation != MessageBoxResult.OK) return;
+        if (!confirmation) return;
 
         try
         {
@@ -91,54 +81,31 @@ public partial class MainWindow
 
             if (!clearResult.DataDirectoryAvailable)
             {
-                WpfMessageBox.Show(
-                    this,
-                    "Could not locate the Simple VS Manager data directory.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        ManagerCacheDialogTextBuilder.ManagerDataDirectoryUnavailableMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
                 return;
             }
 
-            var messageBuilder = new StringBuilder();
-
-            if (clearResult.DeletedFolders.Count > 0)
-            {
-                messageBuilder.AppendLine("Successfully deleted the following cache folders:");
-                foreach (var folder in clearResult.DeletedFolders)
-                    messageBuilder.AppendLine($"• {folder}");
-            }
-            else if (clearResult.FailedFolders.Count == 0)
-            {
-                messageBuilder.AppendLine("No cache folders were found to delete.");
-            }
-
-            if (clearResult.FailedFolders.Count > 0)
-            {
-                if (messageBuilder.Length > 0) messageBuilder.AppendLine();
-
-                messageBuilder.AppendLine("Failed to delete the following cache folders:");
-                foreach (var error in clearResult.FailedFolders)
-                    messageBuilder.AppendLine($"• {error}");
-            }
-
-            WpfMessageBox.Show(
-                this,
-                messageBuilder.ToString(),
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                clearResult.FailedFolders.Count > 0
-                    ? MessageBoxImage.Warning
-                    : MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    ManagerCacheDialogTextBuilder.BuildClearAllCachesResultMessage(
+                        clearResult.DeletedFolders,
+                        clearResult.FailedFolders),
+                    "Simple VS Manager",
+                    clearResult.FailedFolders.Count > 0
+                        ? DialogSeverity.Warning
+                        : DialogSeverity.Information)
+                .ConfigureAwait(true);
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                this,
-                $"An error occurred while clearing caches:\n\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ManagerCacheDialogTextBuilder.BuildClearAllCachesFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 
