@@ -9,7 +9,6 @@ using VintageStoryModManager.Services;
 using VintageStoryModManager.Helpers;
 using VintageStoryModManager.ViewModels;
 using VintageStoryModManager.Views.Dialogs;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -110,11 +109,11 @@ public partial class MainWindow
 
         if (!File.Exists(backupPath))
         {
-            WpfMessageBox.Show(
-                "The selected backup could not be found.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    ModlistBackupDialogTextBuilder.SelectedBackupMissingMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -124,20 +123,19 @@ public partial class MainWindow
                 out var preset,
                 out var errorMessage))
         {
-            var message = string.IsNullOrWhiteSpace(errorMessage)
-                ? "The selected backup is not valid."
-                : errorMessage!;
-            WpfMessageBox.Show(
-                $"Failed to restore the backup:\n{message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            var message = ModlistBackupDialogTextBuilder.BuildRestoreFailureMessage(errorMessage);
+            await _confirmationService.NotifyAsync(
+                    message,
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
 
         var loadedPreset = preset!;
         await ApplyPresetAsync(loadedPreset, restoreConfigurations).ConfigureAwait(true);
-        _viewModel.ReportStatus($"Restored backup \"{loadedPreset.Name}\".");
+        _viewModel.ReportStatus(
+            ModlistBackupDialogTextBuilder.BuildRestoredStatusMessage(loadedPreset.Name));
     }
 
     private Task CreateAppStartedBackupAsync()
