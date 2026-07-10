@@ -1,11 +1,8 @@
 #nullable enable
 
-using System.Windows;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
-
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -186,10 +183,11 @@ public partial class MainWindow
                 _recentLocalModBackupModNames);
 
             if (!string.IsNullOrWhiteSpace(message))
-                WpfMessageBox.Show(message,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        message,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
         }
 
         return showInstallOverlay;

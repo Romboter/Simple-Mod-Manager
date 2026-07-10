@@ -10,7 +10,6 @@ using VintageStoryModManager.Services;
 
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -24,7 +23,7 @@ public partial class MainWindow
         return presetDirectory;
     }
 
-    private bool TrySaveSnapshot(
+    private async Task<bool> TrySaveSnapshot(
         string directory,
         string title,
         string filter,
@@ -50,14 +49,16 @@ public partial class MainWindow
             InitialDirectory = directory
         };
 
-        dialog.FileOk += (_, args) =>
+        dialog.FileOk += async (_, args) =>
         {
             if (PathRelationshipHelper.IsPathWithinDirectory(directory, dialog.FileName)) return;
 
-            WpfMessageBox.Show(folderWarningMessage,
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            // NotifyAsync completes synchronously (modal dialog), so Cancel is still set before FileOk returns.
+            await _confirmationService.NotifyAsync(
+                    folderWarningMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             args.Cancel = true;
         };
 
@@ -85,10 +86,11 @@ public partial class MainWindow
         var saveResult = LocalModlistFileService.Save(filePath, serializable);
         if (!saveResult.Success)
         {
-            WpfMessageBox.Show($"Failed to save the {failureContext}:\n{saveResult.ErrorMessage}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    PresetDialogTextBuilder.BuildSaveFailureMessage(failureContext, saveResult.ErrorMessage),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return false;
         }
 
@@ -188,14 +190,16 @@ public partial class MainWindow
             Multiselect = false
         };
 
-        dialog.FileOk += (_, args) =>
+        dialog.FileOk += async (_, args) =>
         {
             if (PathRelationshipHelper.IsPathWithinDirectory(presetDirectory, dialog.FileName)) return;
 
-            WpfMessageBox.Show("Please select a preset from the Presets folder.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            // NotifyAsync completes synchronously (modal dialog), so Cancel is still set before FileOk returns.
+            await _confirmationService.NotifyAsync(
+                    "Please select a preset from the Presets folder.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             args.Cancel = true;
         };
 
@@ -218,11 +222,11 @@ public partial class MainWindow
 
         if (!File.Exists(filePath))
         {
-            WpfMessageBox.Show(
-                "The selected preset could not be found.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "The selected preset could not be found.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -231,10 +235,11 @@ public partial class MainWindow
             var message = string.IsNullOrWhiteSpace(errorMessage)
                 ? "The selected file is not a valid preset."
                 : errorMessage!;
-            WpfMessageBox.Show($"Failed to load the preset:\n{message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    PresetDialogTextBuilder.BuildLoadFailureMessage(message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -244,10 +249,10 @@ public partial class MainWindow
         _viewModel?.ReportStatus($"Loaded preset \"{loadedPreset.Name}\".");
     }
 
-    private void SavePresetMenuItem_OnClick(object sender, RoutedEventArgs e)
+    private async void SavePresetMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         var presetDirectory = EnsurePresetDirectory();
-        TrySaveSnapshot(
+        await TrySaveSnapshot(
             presetDirectory,
             "Save Mod Preset",
             "Preset files (*.json)|*.json|All files (*.*)|*.*",
@@ -261,6 +266,6 @@ public partial class MainWindow
             },
             "preset",
             false,
-            false);
+            false).ConfigureAwait(true);
     }
 }

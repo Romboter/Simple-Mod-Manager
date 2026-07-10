@@ -1,13 +1,9 @@
 #nullable enable
 
 using System.IO;
-using System.Text;
-using System.Windows;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
-
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -130,15 +126,11 @@ public partial class MainWindow
 
         if (failures.Count > 0)
         {
-            var builder = new StringBuilder();
-            builder.AppendLine("Some mods could not be removed:");
-            foreach (var failure in failures.Distinct(StringComparer.OrdinalIgnoreCase))
-                builder.AppendLine($" • {failure}");
-
-            WpfMessageBox.Show(builder.ToString().Trim(),
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    PresetDialogTextBuilder.BuildExclusiveRemovalFailureMessage(failures),
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
         }
     }
 }
