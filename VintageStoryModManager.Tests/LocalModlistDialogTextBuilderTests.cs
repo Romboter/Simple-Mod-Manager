@@ -7,6 +7,22 @@ namespace VintageStoryModManager.Tests;
 public sealed class LocalModlistDialogTextBuilderTests
 {
     [Fact]
+    public void BuildFolderFailureMessage_FormatsError()
+    {
+        Assert.Equal(
+            "Failed to open the Modlists folder:\naccess denied",
+            LocalModlistDialogTextBuilder.BuildFolderFailureMessage("access denied"));
+    }
+
+    [Fact]
+    public void BuildReadFailureMessage_FormatsError()
+    {
+        Assert.Equal(
+            "Failed to read local modlists:\ndisk full",
+            LocalModlistDialogTextBuilder.BuildReadFailureMessage("disk full"));
+    }
+
+    [Fact]
     public void BuildDeleteConfirmation_SingleEntry_NamesModlist()
     {
         var entries = new[]
