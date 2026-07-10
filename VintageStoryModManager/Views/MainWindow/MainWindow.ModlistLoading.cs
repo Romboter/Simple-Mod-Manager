@@ -8,7 +8,6 @@ using VintageStoryModManager.Services;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -41,11 +40,11 @@ public partial class MainWindow
 
         if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
         {
-            WpfMessageBox.Show(
-                "The selected file could not be found.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "The selected file could not be found.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -60,14 +59,13 @@ public partial class MainWindow
 
         if (!PresetFileLoader.TryLoadPresetFromFile(filePath, "Modlist", loadOptions, out var preset, out var errorMessage))
         {
-            var message = "The file is not a valid SVSM modlist.";
-            if (!string.IsNullOrWhiteSpace(errorMessage)) message += $"\n{errorMessage}";
+            var message = ModlistDialogTextBuilder.BuildInvalidFileMessage(errorMessage);
 
-            WpfMessageBox.Show(
-                message,
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    message,
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
 

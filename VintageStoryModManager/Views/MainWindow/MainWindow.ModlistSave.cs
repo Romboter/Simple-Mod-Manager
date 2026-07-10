@@ -6,21 +6,20 @@ using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
-using WpfMessageBox =
-    VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
-    private void SaveModlistMenuItem_OnClick(object sender, RoutedEventArgs e)
+    private async void SaveModlistMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        if (TrySaveModlist(null, out var savedFilePath))
+        var saveResult = await TrySaveModlistAsync(null).ConfigureAwait(true);
+        if (saveResult.Success)
         {
-            if (!string.IsNullOrWhiteSpace(savedFilePath))
-                RefreshLocalModlists(true, new[] { savedFilePath });
+            if (!string.IsNullOrWhiteSpace(saveResult.SavedFilePath))
+                await RefreshLocalModlistsAsync(true, new[] { saveResult.SavedFilePath }).ConfigureAwait(true);
             else
-                RefreshLocalModlists(true);
+                await RefreshLocalModlistsAsync(true).ConfigureAwait(true);
         }
     }
 
@@ -31,7 +30,14 @@ public partial class MainWindow
 
     private bool TrySaveModlist(Func<string?>? suggestedNameProvider, out string? savedFilePath)
     {
-        savedFilePath = null;
+        var result = TrySaveModlistAsync(suggestedNameProvider).GetAwaiter().GetResult();
+        savedFilePath = result.SavedFilePath;
+        return result.Success;
+    }
+
+    private async Task<(bool Success, string? SavedFilePath)> TrySaveModlistAsync(
+        Func<string?>? suggestedNameProvider)
+    {
 
         var configOptions = BuildModConfigOptions();
         var suggestedName = suggestedNameProvider?.Invoke();
@@ -48,7 +54,7 @@ public partial class MainWindow
         };
 
         var dialogResult = metadataDialog.ShowDialog();
-        if (dialogResult != true) return false;
+        if (dialogResult != true) return (false, null);
 
         var listName = metadataDialog.ListName;
         var version = metadataDialog.Version;
@@ -64,13 +70,13 @@ public partial class MainWindow
 
         if (metadataDialog.SelectedAction == SaveInstalledModsDialogResult.SavePdf)
         {
-            return TrySaveInstalledModsPdf(
+            return (TrySaveInstalledModsPdf(
                 listName,
                 version,
                 description,
                 createdBy,
                 includedConfigurations,
-                gameVersion);
+                gameVersion), null);
         }
 
         try
@@ -84,16 +90,14 @@ public partial class MainWindow
 
             if (File.Exists(filePath))
             {
-                var message =
-                    $"A modlist named \"{Path.GetFileName(filePath)}\" already exists in the Modlists folder. Do you want to replace it?";
-                var confirmation = WpfMessageBox.Show(
-                    this,
-                    message,
-                    "Replace Modlist",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
+                var message = ModlistDialogTextBuilder.BuildReplaceExistingMessage(Path.GetFileName(filePath));
+                var confirmation = await _confirmationService.ConfirmAsync(
+                        message,
+                        "Replace Modlist",
+                        DialogSeverity.Question)
+                    .ConfigureAwait(true);
 
-                if (confirmation != MessageBoxResult.Yes) return false;
+                if (!confirmation) return (false, null);
             }
 
             var serializable = PresetSnapshotBuilder.BuildModlistPreset(
@@ -108,25 +112,26 @@ public partial class MainWindow
             var saveResult = LocalModlistFileService.Save(filePath, serializable);
             if (!saveResult.Success)
             {
-                WpfMessageBox.Show($"Failed to save the modlist:\n{saveResult.ErrorMessage}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return false;
+                await _confirmationService.NotifyAsync(
+                        ModlistDialogTextBuilder.BuildSaveFailureMessage(saveResult.ErrorMessage!),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
+                return (false, null);
             }
 
             _viewModel?.ReportStatus($"Saved modlist \"{entryName}\".");
-            savedFilePath = filePath;
-            return true;
+            return (true, filePath);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
                                       or PathTooLongException)
         {
-            WpfMessageBox.Show($"Failed to save the modlist:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-            return false;
+            await _confirmationService.NotifyAsync(
+                    ModlistDialogTextBuilder.BuildSaveFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
+            return (false, null);
         }
     }
 
@@ -151,10 +156,10 @@ public partial class MainWindow
         var saveResult = LocalModlistFileService.Save(filePath, serializable);
         if (!saveResult.Success)
         {
-            WpfMessageBox.Show($"Failed to save the modlist:\n{saveResult.ErrorMessage}",
+            _ = _confirmationService.NotifyAsync(
+                ModlistDialogTextBuilder.BuildSaveFailureMessage(saveResult.ErrorMessage!),
                 "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+                DialogSeverity.Error);
             savedName = string.Empty;
             filePath = string.Empty;
             return false;

@@ -4,6 +4,12 @@ namespace VintageStoryModManager.Services;
 
 internal static class LocalModlistDialogTextBuilder
 {
+    internal static string BuildFolderFailureMessage(string errorMessage) =>
+        $"Failed to open the Modlists folder:\n{errorMessage}";
+
+    internal static string BuildReadFailureMessage(string errorMessage) =>
+        $"Failed to read local modlists:\n{errorMessage}";
+
     internal static string BuildDeleteConfirmation(IReadOnlyList<LocalModlistListEntry> entries)
     {
         ArgumentNullException.ThrowIfNull(entries);
