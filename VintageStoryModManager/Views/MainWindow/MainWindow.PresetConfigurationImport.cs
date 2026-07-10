@@ -1,11 +1,8 @@
 #nullable enable
 
 using System.IO;
-using System.Windows;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
-
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -27,23 +24,21 @@ public partial class MainWindow
                 ? resolvedName.Trim()
                 : null);
 
-        var promptResult = WpfMessageBox.Show(
-            this,
-            prompt.Message,
-            "Import Mod Configurations",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+        var confirmed = await _confirmationService.ConfirmAsync(
+                prompt.Message,
+                "Import Mod Configurations",
+                DialogSeverity.Question)
+            .ConfigureAwait(true);
 
-        if (promptResult != MessageBoxResult.Yes) return;
+        if (!confirmed) return;
 
         if (string.IsNullOrWhiteSpace(_dataDirectory))
         {
-            WpfMessageBox.Show(
-                "The Vintage Story data directory is not set, so the " +
-                "configuration files could not be imported.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    PresetConfigurationImportDialogTextBuilder.DataDirectoryNotSetMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -62,11 +57,12 @@ public partial class MainWindow
         catch (Exception ex) when (
             ex is IOException or UnauthorizedAccessException)
         {
-            WpfMessageBox.Show(
-                $"Failed to prepare the configuration directory:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    PresetConfigurationImportDialogTextBuilder
+                        .BuildPrepareDirectoryFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -81,12 +77,12 @@ public partial class MainWindow
 
         if (importResult.Errors.Count > 0)
         {
-            WpfMessageBox.Show(
-                "Some configuration files could not be imported:\n" +
-                string.Join("\n", importResult.Errors),
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    PresetConfigurationImportDialogTextBuilder
+                        .BuildPartialFailureMessage(importResult.Errors),
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
         }
     }
 }
