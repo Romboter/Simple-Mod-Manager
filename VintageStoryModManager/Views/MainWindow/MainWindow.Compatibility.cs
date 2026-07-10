@@ -1,5 +1,4 @@
 #nullable enable
-using System.Globalization;
 using System.Net.Http;
 using System.Windows;
 using System.Windows.Input;
@@ -7,7 +6,6 @@ using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 using VintageStoryModManager.Views.Dialogs;
 using Cursors = System.Windows.Input.Cursors;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -21,11 +19,11 @@ public partial class MainWindow
 
         if (InternetAccessManager.IsInternetAccessDisabled)
         {
-            WpfMessageBox.Show(
-                "Enable Internet Access in the File menu to check mod compatibility.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "Enable Internet Access in the File menu to check mod compatibility.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -38,11 +36,11 @@ public partial class MainWindow
         }
         catch (HttpRequestException ex)
         {
-            WpfMessageBox.Show(
-                $"Failed to retrieve Vintage Story versions:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    CompatibilityDialogTextBuilder.BuildFailedToRetrieveVersionsMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
         catch (TaskCanceledException)
@@ -51,21 +49,21 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"Failed to retrieve Vintage Story versions:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    CompatibilityDialogTextBuilder.BuildFailedToRetrieveVersionsMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
 
         if (recentVersions is not { Count: > 0 })
         {
-            WpfMessageBox.Show(
-                "Could not determine recent Vintage Story versions.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "Could not determine recent Vintage Story versions.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -84,11 +82,11 @@ public partial class MainWindow
         var mods = viewModel.GetInstalledModsSnapshot();
         if (mods.Count == 0)
         {
-            WpfMessageBox.Show(
-                $"Vintage Story version: {targetVersion}.\n\nNo installed mods were found.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    CompatibilityDialogTextBuilder.BuildNoInstalledModsMessage(targetVersion),
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -124,11 +122,11 @@ public partial class MainWindow
     {
         if (_viewModel?.SelectedMod is not ModListItemViewModel selectedMod)
         {
-            WpfMessageBox.Show(
-                "Select a mod first!",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    "Select a mod first!",
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -149,32 +147,29 @@ public partial class MainWindow
             if (string.IsNullOrWhiteSpace(messageText))
                 messageText = result.Reason ?? "No relevant comments were found.";
 
-            var title = string.Format(
-                CultureInfo.CurrentCulture,
-                "Compatibility comments for {0}",
-                selectedMod.DisplayName);
+            var title = CompatibilityDialogTextBuilder.BuildCompatibilityCommentsTitle(selectedMod.DisplayName);
 
-            WpfMessageBox.Show(
-                messageText,
-                title,
-                MessageBoxButton.OK,
-                result.Top3.Count > 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    messageText,
+                    title,
+                    result.Top3.Count > 0 ? DialogSeverity.Information : DialogSeverity.Warning)
+                .ConfigureAwait(true);
         }
         catch (InternetAccessDisabledException ex)
         {
-            WpfMessageBox.Show(
-                ex.Message,
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    ex.Message,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"The experimental compatibility review failed:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    CompatibilityDialogTextBuilder.BuildExperimentalCompReviewFailedMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
         finally
         {
