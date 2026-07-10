@@ -6,8 +6,6 @@ using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 using VintageStoryModManager.Views.Dialogs;
 
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
-
 namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
@@ -26,7 +24,7 @@ public partial class MainWindow
         UpdateSyncToServerMenuState();
     }
 
-    private void SyncToServerMenuItem_OnClick(object sender, RoutedEventArgs e)
+    private async void SyncToServerMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         var preflight = ServerSyncPreflight.Evaluate(
             _userConfiguration.IsActiveProfileServerProfile(),
@@ -36,7 +34,11 @@ public partial class MainWindow
 
         if (preflight.Target is not { } target)
         {
-            WpfMessageBox.Show(preflight.ErrorMessage!, "Sync to Server", MessageBoxButton.OK, preflight.Icon);
+            await _confirmationService.NotifyAsync(
+                    preflight.ErrorMessage!,
+                    "Sync to Server",
+                    MapPreflightSeverity(preflight.Icon))
+                .ConfigureAwait(true);
             return;
         }
 
@@ -59,6 +61,14 @@ public partial class MainWindow
         };
         dialog.ShowDialog();
     }
+
+    private static DialogSeverity MapPreflightSeverity(MessageBoxImage icon) => icon switch
+    {
+        MessageBoxImage.Warning => DialogSeverity.Warning,
+        MessageBoxImage.Error => DialogSeverity.Error,
+        MessageBoxImage.Question => DialogSeverity.Question,
+        _ => DialogSeverity.Information
+    };
 
     private void UpdateSyncToServerMenuState()
     {

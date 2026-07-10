@@ -23,6 +23,9 @@ internal static class DataFolderBackupDialogTextBuilder
     internal const string RestoreSuccessMessage =
         "VintagestoryData was restored from the selected backup.";
 
+    internal const string BackupDirectoryUnavailableMessage =
+        "The data backup directory is not available.";
+
     internal static string BuildDeleteConfirmation(string displayVersion)
     {
         return $"Delete all VintagestoryData backups for Vintage Story {displayVersion}? This action cannot be undone.";
@@ -50,5 +53,15 @@ internal static class DataFolderBackupDialogTextBuilder
     internal static string BuildRestoreFailureMessage(string errorMessage)
     {
         return $"Failed to restore the selected VintagestoryData backup:\n{errorMessage}";
+    }
+
+    internal static string BuildOpenBackupDirectoryFailureMessage(string errorMessage)
+    {
+        return $"Failed to open the data backup directory:\n{errorMessage}";
+    }
+
+    internal static string BuildChangeBackupLocationFailureMessage(string errorMessage)
+    {
+        return $"Failed to set the backup location:\n{errorMessage}";
     }
 }

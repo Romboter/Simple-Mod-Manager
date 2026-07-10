@@ -10,7 +10,6 @@ using VintageStoryModManager.Helpers;
 using DataFolderBackupProgress = VintageStoryModManager.Services.DataBackupProgress;
 using DataFolderBackupSummary = VintageStoryModManager.Services.DataBackupSummary;
 using WinForms = System.Windows.Forms;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -149,18 +148,18 @@ public partial class MainWindow
         await RestoreDataBackupAsync(summary).ConfigureAwait(true);
     }
 
-    private void OpenDataBackupDirectoryMenuItem_OnClick(object? sender, RoutedEventArgs e)
+    private async void OpenDataBackupDirectoryMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
         var directory = _dataFolderBackupCoordinator.GetBackupRootDirectory();
         try
         {
             if (string.IsNullOrWhiteSpace(directory))
             {
-                WpfMessageBox.Show(
-                    "The data backup directory is not available.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.BackupDirectoryUnavailableMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
                 return;
             }
 
@@ -173,23 +172,23 @@ public partial class MainWindow
         }
         catch (Win32Exception ex)
         {
-            WpfMessageBox.Show(
-                $"Failed to open the data backup directory:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildOpenBackupDirectoryFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            WpfMessageBox.Show(
-                $"Failed to open the data backup directory:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildOpenBackupDirectoryFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 
-    private void ChangeBackupLocationMenuItem_OnClick(object? sender, RoutedEventArgs e)
+    private async void ChangeBackupLocationMenuItem_OnClick(object? sender, RoutedEventArgs e)
     {
         var currentLocation = _dataFolderBackupCoordinator.GetBackupRootDirectory();
 
@@ -225,11 +224,11 @@ public partial class MainWindow
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
         {
-            WpfMessageBox.Show(
-                $"Failed to set the backup location:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildChangeBackupLocationFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 

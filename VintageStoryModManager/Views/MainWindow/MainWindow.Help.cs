@@ -5,7 +5,6 @@ using System.IO;
 using System.Windows;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -38,7 +37,7 @@ public partial class MainWindow
         _ = dialog.ShowDialog();
     }
 
-    private void DiscordButton_OnClick(object sender, RoutedEventArgs e)
+    private async void DiscordButton_OnClick(object sender, RoutedEventArgs e)
     {
         if (e is not null)
         {
@@ -47,11 +46,11 @@ public partial class MainWindow
 
         if (InternetAccessManager.IsInternetAccessDisabled)
         {
-            WpfMessageBox.Show(
-                "Enable Internet Access in the File menu to open Discord.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    "Enable Internet Access in the File menu to open Discord.",
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -65,11 +64,11 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"Failed to open Discord:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    HelpDialogTextBuilder.BuildOpenDiscordFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 

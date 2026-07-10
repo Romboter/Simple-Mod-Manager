@@ -5,32 +5,31 @@ using System.Windows;
 using System.Windows.Navigation;
 using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Services;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
-    private void ManagerUpdateLink_OnRequestNavigate(object sender, RequestNavigateEventArgs e)
+    private async void ManagerUpdateLink_OnRequestNavigate(object sender, RequestNavigateEventArgs e)
     {
         e.Handled = true;
-        OpenManagerModDatabasePage();
+        await OpenManagerModDatabasePageAsync().ConfigureAwait(true);
     }
 
-    private void ManagerModDbPageMenuItem_OnClick(object sender, RoutedEventArgs e)
+    private async void ManagerModDbPageMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        OpenManagerModDatabasePage();
+        await OpenManagerModDatabasePageAsync().ConfigureAwait(true);
     }
 
-    private void OpenManagerModDatabasePage()
+    private async Task OpenManagerModDatabasePageAsync()
     {
         if (InternetAccessManager.IsInternetAccessDisabled)
         {
-            WpfMessageBox.Show(
-                "Internet access is disabled. Enable Internet Access in the File menu to open the mod database page.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    "Internet access is disabled. Enable Internet Access in the File menu to open the mod database page.",
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -44,11 +43,11 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"Failed to open the mod database page:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ManagerUpdateLinkDialogTextBuilder.BuildOpenModDatabasePageFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 

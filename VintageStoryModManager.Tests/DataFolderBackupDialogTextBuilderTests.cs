@@ -56,6 +56,22 @@ public sealed class DataFolderBackupDialogTextBuilderTests
     }
 
     [Fact]
+    public void BuildOpenBackupDirectoryFailureMessage_FormatsError()
+    {
+        Assert.Equal(
+            "Failed to open the data backup directory:\naccess denied",
+            DataFolderBackupDialogTextBuilder.BuildOpenBackupDirectoryFailureMessage("access denied"));
+    }
+
+    [Fact]
+    public void BuildChangeBackupLocationFailureMessage_FormatsError()
+    {
+        Assert.Equal(
+            "Failed to set the backup location:\ndisk full",
+            DataFolderBackupDialogTextBuilder.BuildChangeBackupLocationFailureMessage("disk full"));
+    }
+
+    [Fact]
     public void FixedMessages_MatchExistingCopy()
     {
         Assert.Equal(
@@ -81,5 +97,9 @@ public sealed class DataFolderBackupDialogTextBuilderTests
         Assert.Equal(
             "VintagestoryData was restored from the selected backup.",
             DataFolderBackupDialogTextBuilder.RestoreSuccessMessage);
+
+        Assert.Equal(
+            "The data backup directory is not available.",
+            DataFolderBackupDialogTextBuilder.BackupDirectoryUnavailableMessage);
     }
 }

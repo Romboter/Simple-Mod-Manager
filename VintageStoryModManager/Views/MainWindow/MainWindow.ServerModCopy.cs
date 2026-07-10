@@ -7,13 +7,12 @@ using VintageStoryModManager.ViewModels;
 
 using WinForms = System.Windows.Forms;
 using WpfButton = System.Windows.Controls.Button;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
-    private void SelectedModCopyForServerButton_OnClick(object sender, RoutedEventArgs e)
+    private async void SelectedModCopyForServerButton_OnClick(object sender, RoutedEventArgs e)
     {
         if (sender is not WpfButton { DataContext: ModListItemViewModel mod }) return;
 
@@ -31,12 +30,11 @@ public partial class MainWindow
         {
             var errorMessage = $"Failed to copy server install command for {mod.DisplayName}: {ex.Message}";
             _viewModel?.ReportStatus(errorMessage, true);
-            WpfMessageBox.Show(
-                this,
-                "Failed to copy the server install command. Please try again.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    "Failed to copy the server install command. Please try again.",
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 }
