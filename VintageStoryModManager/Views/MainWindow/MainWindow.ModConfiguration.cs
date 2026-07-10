@@ -3,16 +3,16 @@
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 using YamlDotNet.Core;
 using WpfButton = System.Windows.Controls.Button;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
-    private void EditConfigButton_OnClick(object sender, RoutedEventArgs e)
+    private async void EditConfigButton_OnClick(object sender, RoutedEventArgs e)
     {
         if (sender is not WpfButton { DataContext: ModListItemViewModel mod }) return;
 
@@ -49,10 +49,11 @@ public partial class MainWindow
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
-            WpfMessageBox.Show($"Failed to store the configuration path:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ModConfigDialogTextBuilder.BuildStoreFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -81,19 +82,21 @@ public partial class MainWindow
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
                 {
-                    WpfMessageBox.Show($"Failed to store the configuration path:\n{ex.Message}",
-                        "Simple VS Manager",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                    await _confirmationService.NotifyAsync(
+                            ModConfigDialogTextBuilder.BuildStoreFailureMessage(ex.Message),
+                            "Simple VS Manager",
+                            DialogSeverity.Error)
+                        .ConfigureAwait(true);
                 }
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or YamlException)
         {
-            WpfMessageBox.Show($"Failed to open the configuration file:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ModConfigDialogTextBuilder.BuildOpenFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             _userConfiguration.RemoveModConfigPath(mod.ModId);
             UpdateSelectedModEditConfigButton(mod);
         }

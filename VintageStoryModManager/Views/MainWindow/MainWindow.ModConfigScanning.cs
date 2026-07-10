@@ -2,7 +2,6 @@
 
 using System.Windows;
 using VintageStoryModManager.Services;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -16,11 +15,11 @@ public partial class MainWindow
             _dataDirectory);
         if (blockedMessage is not null)
         {
-            WpfMessageBox.Show(
-                blockedMessage,
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    blockedMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -48,29 +47,29 @@ public partial class MainWindow
             if (results.Count == 0)
             {
                 viewModel.ReportStatus("No missing mod configuration files were found.");
-                WpfMessageBox.Show(
-                    "No missing mod configuration files were found.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                await _confirmationService.NotifyAsync(
+                        "No missing mod configuration files were found.",
+                        "Simple VS Manager",
+                        DialogSeverity.Information)
+                    .ConfigureAwait(true);
                 return;
             }
 
             viewModel.ReportStatus($"Assigned configuration files for {results.Count} mod(s).");
 
-            WpfMessageBox.Show(
-                ModConfigDiscoveryService.FormatAssignedConfigsMessage(results),
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    ModConfigDiscoveryService.FormatAssignedConfigsMessage(results),
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"Failed to scan for mod configuration files:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ModConfigDialogTextBuilder.BuildScanFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 }
