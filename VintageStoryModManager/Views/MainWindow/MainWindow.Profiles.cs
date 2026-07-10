@@ -60,7 +60,11 @@ public partial class MainWindow
         if (!_userConfiguration.TryCreateGameProfile(profileName, out var normalizedName, out var errorMessage))
         {
             if (!string.IsNullOrWhiteSpace(errorMessage))
-                WpfMessageBox.Show(errorMessage, "Simple VS Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                await _confirmationService.NotifyAsync(
+                    errorMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                    .ConfigureAwait(true);
 
             return;
         }
@@ -82,12 +86,16 @@ public partial class MainWindow
         UpdateGameProfileMenuChecks();
     }
 
-    private void EditGameProfileMenuItem_OnClick(object sender, RoutedEventArgs e)
+    private async void EditGameProfileMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         var profileName = _userConfiguration.ActiveGameProfileName;
         if (string.IsNullOrEmpty(profileName))
         {
-            WpfMessageBox.Show("No active profile to edit.", "Simple VS Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                "No active profile to edit.",
+                "Simple VS Manager",
+                DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -132,7 +140,11 @@ public partial class MainWindow
                 out var activeProfileChanged))
         {
             if (!string.IsNullOrWhiteSpace(errorMessage))
-                WpfMessageBox.Show(errorMessage, "Simple VS Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                await _confirmationService.NotifyAsync(
+                    errorMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                    .ConfigureAwait(true);
 
             return;
         }

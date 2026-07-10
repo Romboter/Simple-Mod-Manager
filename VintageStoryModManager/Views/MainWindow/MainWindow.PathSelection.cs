@@ -7,7 +7,6 @@ using VintageStoryModManager.ViewModels;
 
 using FolderBrowserDialog = System.Windows.Forms.FolderBrowserDialog;
 using WinForms = System.Windows.Forms;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -70,13 +69,12 @@ public partial class MainWindow
             {
                 if (allowCancel) return null;
 
-                var exit = WpfMessageBox.Show(
+                var exit = _confirmationService.ConfirmAsync(
                     "You must select a folder to continue. Do you want to exit the application?",
                     "Simple VS Manager",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
+                    DialogSeverity.Warning).GetAwaiter().GetResult();
 
-                if (exit == MessageBoxResult.Yes) return null;
+                if (exit) return null;
 
                 continue;
             }
@@ -84,10 +82,10 @@ public partial class MainWindow
             candidate = dialog.SelectedPath;
             if (validator(candidate, out var normalized, out var errorMessage)) return normalized;
 
-            WpfMessageBox.Show(errorMessage ?? "The selected folder is not valid.",
+            _confirmationService.NotifyAsync(
+                errorMessage ?? "The selected folder is not valid.",
                 "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                DialogSeverity.Warning).GetAwaiter().GetResult();
         }
     }
 
