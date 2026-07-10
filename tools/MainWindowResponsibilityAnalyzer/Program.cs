@@ -4,11 +4,13 @@ using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.MSBuild;
 
 MSBuildLocator.RegisterDefaults();
 
 string? focusArg = null;
+string? viewStateSeedMethodName = null;
 List<string> positionalArgs = [];
 
 for (int i = 0; i < args.Length; i++)
@@ -22,6 +24,18 @@ for (int i = 0; i < args.Length; i++)
         }
 
         focusArg = args[++i];
+        continue;
+    }
+
+    if (string.Equals(args[i], "--view-state", StringComparison.Ordinal))
+    {
+        if (i + 1 >= args.Length)
+        {
+            Console.Error.WriteLine("--view-state requires a seed method name (e.g. --view-state UpdateModsAsync).");
+            return 2;
+        }
+
+        viewStateSeedMethodName = args[++i];
         continue;
     }
 
@@ -242,6 +256,28 @@ foreach (PartialPart part in partialParts)
     }
 }
 
+// ---- Pass 4: symbol-based field reference finding (SymbolFinder) ----
+//
+// Pass 3's simple-name walk only classifies field reads/writes it happens to see as a descendant of a
+// method body. It also has a documented false-positive: `_field!` (the null-forgiving operator) is a
+// PostfixUnaryExpressionSyntax and was being misclassified as a write by ClassifyFieldAccess. This pass
+// uses SymbolFinder.FindReferencesAsync for a comprehensive, symbol-accurate reference set per field
+// (still scoped to the MainWindow.*.cs partials), reusing the now-fixed ClassifyFieldAccess for
+// read/write classification. It is authoritative for FieldsRead/FieldsWritten and fieldUsages
+// ReadBy/WrittenBy; AnalyzeSimpleName no longer populates those (see its field branch below).
+await AnalyzeFieldReferencesViaSymbolFinderAsync(solution, mainWindowDir, fieldUsages, rowBySymbol);
+
+// ---- Pass 5: symbol-based method callback/method-group reference finding (SymbolFinder) ----
+//
+// AnalyzeInvocation (pass 3) only records a MainWindow method call when it is the target of an
+// InvocationExpressionSyntax. A method passed as a delegate/callback (e.g. `Foo.Click += Handler;`,
+// `list.Select(SomeMethod)`) is never invoked syntactically at that reference site, so it was invisible
+// to the dependency graph entirely. This pass finds those references and merges them into the existing
+// method-dependency data (row.CalledRows, for the call graph/clustering/view-state traversal) while
+// keeping them distinguishable via row.MethodsCalledAsCallback and the callbackEdges set.
+HashSet<(MethodRow Caller, MethodRow Callee)> callbackEdges = [];
+await AnalyzeMethodCallbackReferencesViaSymbolFinderAsync(solution, mainWindowDir, rowBySymbol, callbackEdges);
+
 // ---- XAML event-handler scan ----
 
 string xamlPath = Path.Combine(repoRoot, "VintageStoryModManager", "Views", "MainWindow.xaml");
@@ -289,7 +325,7 @@ List<ExtractionCandidate> candidates = BuildExtractionCandidates(methodRows, fie
 WritePartialSummary(reportsDir, partialParts, methodRows, fieldUsages);
 WriteMethodDependenciesCsv(reportsDir, methodRows);
 WriteFieldUsageCsv(reportsDir, fieldUsages);
-WriteCrossPartialCallsCsv(reportsDir, methodRows);
+WriteCrossPartialCallsCsv(reportsDir, methodRows, callbackEdges);
 WriteExtractionCandidatesReport(reportsDir, candidates);
 WriteXamlEventHandlersCsv(reportsDir, xamlHandlers);
 
@@ -297,6 +333,19 @@ if (focusPart is not null)
 {
     WriteFocusedReport(reportsDir, focusPart, methodRows, fieldUsages);
     Console.WriteLine($"Focused report written for: {focusPart.FileName}");
+}
+
+if (viewStateSeedMethodName is not null)
+{
+    bool wrote = WriteViewStateReport(reportsDir, viewStateSeedMethodName, methodRows);
+
+    if (!wrote)
+    {
+        Console.Error.WriteLine($"--view-state target not found: no method named '{viewStateSeedMethodName}' in any MainWindow partial.");
+        return 2;
+    }
+
+    Console.WriteLine($"View-state coupling report written for seed method: {viewStateSeedMethodName}");
 }
 
 Console.WriteLine();
@@ -373,38 +422,19 @@ static void AnalyzeSimpleName(
     if (symbol is IFieldSymbol fieldSymbol &&
         SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingType, mainWindowSymbol))
     {
-        if (!fieldUsages.TryGetValue(fieldSymbol, out FieldUsage? usage))
+        if (!fieldUsages.ContainsKey(fieldSymbol))
         {
             // A MainWindow field the analyzer never declared as a tracked source field —
             // e.g. an x:Name-generated control field from MainWindow.g.cs, which lives
             // outside the Views/MainWindow partials this tool scans.
             row.UntrackedMainWindowMembersUsed.Add(fieldSymbol.Name);
-            return;
         }
 
-        ExpressionSyntax referenceExpression =
-            node.Parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == node
-                ? memberAccess
-                : node;
-
-        (bool isRead, bool isWrite) = ClassifyFieldAccess(referenceExpression);
-
-        if (isRead)
-        {
-            row.FieldsRead.Add(fieldSymbol.Name);
-            usage.ReadBy.Add(selfId);
-            usage.ReaderRows.Add(row);
-            usage.ReadCount++;
-        }
-
-        if (isWrite)
-        {
-            row.FieldsWritten.Add(fieldSymbol.Name);
-            usage.WrittenBy.Add(selfId);
-            usage.WriterRows.Add(row);
-            usage.WriteCount++;
-        }
-
+        // Read/write classification, FieldsRead/FieldsWritten, and fieldUsages
+        // ReadBy/WrittenBy for tracked fields are computed by the symbol-based
+        // SymbolFinder pass (AnalyzeFieldReferencesViaSymbolFinderAsync) instead of here —
+        // it is comprehensive (not limited to what a body-walk happens to visit) and
+        // correctly excludes the null-forgiving `!` operator from being classified as a write.
         return;
     }
 
@@ -441,7 +471,15 @@ static (bool IsRead, bool IsWrite) ClassifyFieldAccess(ExpressionSyntax referenc
     }
 
     if (parent is PostfixUnaryExpressionSyntax postfix && postfix.Operand == referenceExpression)
+    {
+        // The null-forgiving operator (`_field!`) is syntactically a PostfixUnaryExpressionSyntax too,
+        // but it only suppresses a nullable warning — it is a read, not a write. Without this check it
+        // was being misclassified as a write (documented analyzer blind spot).
+        if (postfix.IsKind(SyntaxKind.SuppressNullableWarningExpression))
+            return (true, false);
+
         return (true, true);
+    }
 
     if (parent is PrefixUnaryExpressionSyntax prefix &&
         prefix.Operand == referenceExpression &&
@@ -498,6 +536,179 @@ static string DescribeAwaitedExpression(ExpressionSyntax expression)
     return expression is InvocationExpressionSyntax invocation
         ? invocation.Expression.ToString()
         : expression.ToString();
+}
+
+static async Task AnalyzeFieldReferencesViaSymbolFinderAsync(
+    Solution solution,
+    string mainWindowDir,
+    Dictionary<IFieldSymbol, FieldUsage> fieldUsages,
+    Dictionary<IMethodSymbol, MethodRow> rowBySymbol)
+{
+    Dictionary<SyntaxTree, SemanticModel> modelCache = [];
+
+    foreach ((IFieldSymbol fieldSymbol, FieldUsage usage) in fieldUsages)
+    {
+        IEnumerable<ReferencedSymbol> references = await SymbolFinder.FindReferencesAsync(fieldSymbol, solution);
+
+        foreach (ReferencedSymbol referencedSymbol in references)
+        {
+            foreach (ReferenceLocation location in referencedSymbol.Locations)
+            {
+                if (location.Document.FilePath is null)
+                    continue;
+
+                string fullPath = Path.GetFullPath(location.Document.FilePath);
+
+                if (!fullPath.StartsWith(mainWindowDir, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                SyntaxTree? tree = await location.Document.GetSyntaxTreeAsync();
+
+                if (tree is null)
+                    continue;
+
+                SyntaxNode root = await tree.GetRootAsync();
+                SyntaxNode node = root.FindNode(location.Location.SourceSpan);
+
+                if (node is not ExpressionSyntax expressionNode)
+                    continue;
+
+                MethodDeclarationSyntax? enclosingMethod = node.FirstAncestorOrSelf<MethodDeclarationSyntax>();
+
+                if (enclosingMethod is null)
+                    continue;
+
+                if (!modelCache.TryGetValue(tree, out SemanticModel? model))
+                {
+                    model = await location.Document.GetSemanticModelAsync();
+
+                    if (model is null)
+                        continue;
+
+                    modelCache[tree] = model;
+                }
+
+                if (model.GetDeclaredSymbol(enclosingMethod) is not IMethodSymbol enclosingMethodSymbol)
+                    continue;
+
+                if (!rowBySymbol.TryGetValue(enclosingMethodSymbol, out MethodRow? row))
+                    continue;
+
+                string selfId = $"{row.PartialFile}::{row.MethodName}";
+
+                ExpressionSyntax referenceExpression =
+                    expressionNode.Parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == expressionNode
+                        ? memberAccess
+                        : expressionNode;
+
+                (bool isRead, bool isWrite) = ClassifyFieldAccess(referenceExpression);
+
+                if (isRead)
+                {
+                    row.FieldsRead.Add(fieldSymbol.Name);
+                    usage.ReadBy.Add(selfId);
+                    usage.ReaderRows.Add(row);
+                    usage.ReadCount++;
+                }
+
+                if (isWrite)
+                {
+                    row.FieldsWritten.Add(fieldSymbol.Name);
+                    usage.WrittenBy.Add(selfId);
+                    usage.WriterRows.Add(row);
+                    usage.WriteCount++;
+                }
+            }
+        }
+    }
+}
+
+static bool IsInvocationTarget(SyntaxNode node)
+{
+    SyntaxNode current = node;
+
+    if (current.Parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == current)
+    {
+        current = memberAccess;
+    }
+
+    return current.Parent is InvocationExpressionSyntax invocation && invocation.Expression == current;
+}
+
+static async Task AnalyzeMethodCallbackReferencesViaSymbolFinderAsync(
+    Solution solution,
+    string mainWindowDir,
+    Dictionary<IMethodSymbol, MethodRow> rowBySymbol,
+    HashSet<(MethodRow Caller, MethodRow Callee)> callbackEdges)
+{
+    Dictionary<SyntaxTree, SemanticModel> modelCache = [];
+
+    // Snapshot the pairs up front — the loop body doesn't mutate rowBySymbol, but iterating a live
+    // dictionary while awaiting inside the loop is fragile to reason about.
+    foreach ((IMethodSymbol targetMethodSymbol, MethodRow targetRow) in rowBySymbol.ToList())
+    {
+        IEnumerable<ReferencedSymbol> references = await SymbolFinder.FindReferencesAsync(targetMethodSymbol, solution);
+
+        foreach (ReferencedSymbol referencedSymbol in references)
+        {
+            foreach (ReferenceLocation location in referencedSymbol.Locations)
+            {
+                if (location.Document.FilePath is null)
+                    continue;
+
+                string fullPath = Path.GetFullPath(location.Document.FilePath);
+
+                if (!fullPath.StartsWith(mainWindowDir, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                SyntaxTree? tree = await location.Document.GetSyntaxTreeAsync();
+
+                if (tree is null)
+                    continue;
+
+                SyntaxNode root = await tree.GetRootAsync();
+                SyntaxNode node = root.FindNode(location.Location.SourceSpan);
+
+                // A direct invocation target is already captured by AnalyzeInvocation (pass 3) — only
+                // references that are NOT the target of an invocation are method-group/callback uses.
+                if (IsInvocationTarget(node))
+                    continue;
+
+                MethodDeclarationSyntax? enclosingMethod = node.FirstAncestorOrSelf<MethodDeclarationSyntax>();
+
+                if (enclosingMethod is null)
+                    continue;
+
+                if (!modelCache.TryGetValue(tree, out SemanticModel? model))
+                {
+                    model = await location.Document.GetSemanticModelAsync();
+
+                    if (model is null)
+                        continue;
+
+                    modelCache[tree] = model;
+                }
+
+                if (model.GetDeclaredSymbol(enclosingMethod) is not IMethodSymbol enclosingMethodSymbol)
+                    continue;
+
+                if (!rowBySymbol.TryGetValue(enclosingMethodSymbol, out MethodRow? referencingRow))
+                    continue;
+
+                if (referencingRow == targetRow)
+                    continue;
+
+                referencingRow.MethodsCalledAsCallback.Add(targetRow.MethodName);
+
+                if (!referencingRow.CalledRows.Contains(targetRow))
+                {
+                    referencingRow.CalledRows.Add(targetRow);
+                }
+
+                callbackEdges.Add((referencingRow, targetRow));
+            }
+        }
+    }
 }
 
 static List<XamlHandlerRow> ParseXamlEventHandlers(
@@ -832,7 +1043,8 @@ static void WriteMethodDependenciesCsv(string reportsDir, List<MethodRow> method
 
     sb.AppendLine(
         "PartialFile,MethodName,IsAsync,IsEventHandlerLike,FieldsRead,FieldsWritten," +
-        "MainWindowMethodsCalled,ExternalTypesUsed,AwaitedCalls,XamlEventsReferencingMethod");
+        "MainWindowMethodsCalled,ExternalTypesUsed,AwaitedCalls,XamlEventsReferencingMethod," +
+        "MainWindowMethodsReferencedAsCallback");
 
     foreach (MethodRow row in methodRows
         .OrderBy(r => r.PartialFile, StringComparer.OrdinalIgnoreCase)
@@ -849,7 +1061,8 @@ static void WriteMethodDependenciesCsv(string reportsDir, List<MethodRow> method
             Csv(JoinList(row.MethodsCalled)),
             Csv(JoinList(row.ExternalTypes)),
             Csv(JoinList(row.AwaitedCalls)),
-            Csv(JoinList(row.XamlEvents))));
+            Csv(JoinList(row.XamlEvents)),
+            Csv(JoinList(row.MethodsCalledAsCallback))));
     }
 
     File.WriteAllText(Path.Combine(reportsDir, "method-dependencies.csv"), sb.ToString());
@@ -906,9 +1119,13 @@ static void WriteFieldUsageCsv(string reportsDir, Dictionary<IFieldSymbol, Field
     File.WriteAllText(Path.Combine(reportsDir, "field-usage.csv"), sb.ToString());
 }
 
-static void WriteCrossPartialCallsCsv(string reportsDir, List<MethodRow> methodRows)
+static void WriteCrossPartialCallsCsv(
+    string reportsDir,
+    List<MethodRow> methodRows,
+    HashSet<(MethodRow Caller, MethodRow Callee)> callbackEdges)
 {
     HashSet<(string CallerFile, string CallerMethod, string CalleeFile, string CalleeMethod)> pairs = [];
+    HashSet<(string CallerFile, string CallerMethod, string CalleeFile, string CalleeMethod)> callbackPairs = [];
 
     foreach (MethodRow row in methodRows)
     {
@@ -918,13 +1135,18 @@ static void WriteCrossPartialCallsCsv(string reportsDir, List<MethodRow> methodR
                 continue;
 
             pairs.Add((row.PartialFile, row.MethodName, calleeRow.PartialFile, calleeRow.MethodName));
+
+            if (callbackEdges.Contains((row, calleeRow)))
+            {
+                callbackPairs.Add((row.PartialFile, row.MethodName, calleeRow.PartialFile, calleeRow.MethodName));
+            }
         }
     }
 
     HashSet<(string, string)> fileLevelDirections = [.. pairs.Select(p => (p.CallerFile, p.CalleeFile))];
 
     StringBuilder sb = new();
-    sb.AppendLine("CallerFile,CallerMethod,CalleeFile,CalleeMethod,Direction,Notes");
+    sb.AppendLine("CallerFile,CallerMethod,CalleeFile,CalleeMethod,Direction,Notes,ReferenceKind");
 
     foreach ((string callerFile, string callerMethod, string calleeFile, string calleeMethod) in pairs
         .OrderBy(p => p.CallerFile, StringComparer.OrdinalIgnoreCase)
@@ -935,6 +1157,12 @@ static void WriteCrossPartialCallsCsv(string reportsDir, List<MethodRow> methodR
         bool bidirectional = fileLevelDirections.Contains((calleeFile, callerFile));
         string notes = bidirectional ? "Bidirectional file-level coupling." : string.Empty;
 
+        // A caller/callee method pair can be reached both via a direct call and via a separate
+        // callback/method-group reference (e.g. two different call sites) — report both if so.
+        string referenceKind = callbackPairs.Contains((callerFile, callerMethod, calleeFile, calleeMethod))
+            ? "callback reference"
+            : "direct call";
+
         sb.AppendLine(string.Join(
             ",",
             Csv(callerFile),
@@ -942,7 +1170,8 @@ static void WriteCrossPartialCallsCsv(string reportsDir, List<MethodRow> methodR
             Csv(calleeFile),
             Csv(calleeMethod),
             Csv($"{callerFile} -> {calleeFile}"),
-            Csv(notes)));
+            Csv(notes),
+            Csv(referenceKind)));
     }
 
     File.WriteAllText(Path.Combine(reportsDir, "cross-partial-calls.csv"), sb.ToString());
@@ -996,6 +1225,137 @@ static void WriteExtractionCandidatesReport(string reportsDir, List<ExtractionCa
     }
 
     File.WriteAllText(Path.Combine(reportsDir, "extraction-candidates.md"), sb.ToString());
+}
+
+static bool IsBuiltInUiBoundMemberName(string name)
+{
+    // Extra keywords (beyond the XAML-generated-control check in WriteViewStateReport) that mark a plain
+    // MainWindow field as UI-bound state for --view-state purposes. Seeded from a grep of
+    // MainWindow.Core.cs / MainViewModel.cs for the actual busy-flag/overlay/progress-related field
+    // names in this codebase (_isCloudModlistRefreshInProgress, _isModUpdateInProgress,
+    // _isRefreshingAfterModlistLoad, the ModlistInstallOverlay/DataBackupOverlay/ModInfoOverlay/
+    // Discord*Overlay XAML controls, etc.) — extend this list if new busy/overlay/progress-shaped
+    // members are added.
+    string[] builtInUiBoundKeywords = ["Overlay", "Busy", "Progress", "Loading", "Spinner", "InProgress"];
+
+    return builtInUiBoundKeywords.Any(keyword => name.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+}
+
+/// <summary>
+///     Writes the --view-state report: starting from <paramref name="seedMethodName"/>, computes the
+///     transitive closure over the method-call graph (row.CalledRows — which includes both direct calls
+///     and the callback edges merged in by AnalyzeMethodCallbackReferencesViaSymbolFinderAsync) and
+///     reports, for every UI-bound member reachable along the way, the shortest call path from the seed.
+///     A "UI-bound member" is either an untracked MainWindow member (a XAML-generated control/property —
+///     see UntrackedMainWindowMembersUsed) or a tracked field/method whose name matches
+///     <see cref="BuiltInUiBoundKeywords"/>. Returns false if no method named <paramref name="seedMethodName"/>
+///     exists in any MainWindow partial.
+/// </summary>
+static bool WriteViewStateReport(string reportsDir, string seedMethodName, List<MethodRow> methodRows)
+{
+    List<MethodRow> seeds = [.. methodRows.Where(m => string.Equals(m.MethodName, seedMethodName, StringComparison.Ordinal))];
+
+    if (seeds.Count == 0)
+    {
+        seeds = [.. methodRows.Where(m => string.Equals(m.MethodName, seedMethodName, StringComparison.OrdinalIgnoreCase))];
+    }
+
+    if (seeds.Count == 0)
+        return false;
+
+    // Multi-source BFS over row.CalledRows — first time a row is reached is guaranteed to be via a
+    // shortest path, since BFS explores in increasing hop-count order.
+    Dictionary<MethodRow, List<MethodRow>> shortestPathTo = [];
+    Queue<MethodRow> queue = new();
+
+    foreach (MethodRow seed in seeds)
+    {
+        if (shortestPathTo.ContainsKey(seed))
+            continue;
+
+        shortestPathTo[seed] = [seed];
+        queue.Enqueue(seed);
+    }
+
+    while (queue.Count > 0)
+    {
+        MethodRow current = queue.Dequeue();
+        List<MethodRow> currentPath = shortestPathTo[current];
+
+        foreach (MethodRow callee in current.CalledRows.Distinct())
+        {
+            if (shortestPathTo.ContainsKey(callee))
+                continue;
+
+            List<MethodRow> path = [.. currentPath, callee];
+            shortestPathTo[callee] = path;
+            queue.Enqueue(callee);
+        }
+    }
+
+    // For every UI-bound member reached, keep only the shortest path (fewest hops) across all the
+    // reachable methods that touch it.
+    Dictionary<string, (List<MethodRow> Path, MethodRow ReachedFrom, string Kind)> uiBoundHits = [];
+
+    void RecordHit(string memberName, string kind, List<MethodRow> path, MethodRow reachedFrom)
+    {
+        if (uiBoundHits.TryGetValue(memberName, out (List<MethodRow> Path, MethodRow ReachedFrom, string Kind) existing) &&
+            existing.Path.Count <= path.Count)
+            return;
+
+        uiBoundHits[memberName] = (path, reachedFrom, kind);
+    }
+
+    foreach ((MethodRow row, List<MethodRow> path) in shortestPathTo)
+    {
+        foreach (string member in row.UntrackedMainWindowMembersUsed)
+        {
+            RecordHit(member, "XAML-generated control/member", path, row);
+        }
+
+        foreach (string field in row.FieldsRead.Concat(row.FieldsWritten).Distinct(StringComparer.Ordinal))
+        {
+            if (IsBuiltInUiBoundMemberName(field))
+            {
+                RecordHit(field, "busy/overlay/progress field", path, row);
+            }
+        }
+    }
+
+    StringBuilder sb = new();
+    sb.AppendLine($"# View-State Coupling Report: {seedMethodName}");
+    sb.AppendLine();
+    sb.AppendLine(
+        $"Transitive closure over the MainWindow method-call graph (direct calls + callback/method-group " +
+        $"references) starting from **{seedMethodName}** " +
+        $"({string.Join(", ", seeds.Select(s => s.PartialFile))}). " +
+        $"{shortestPathTo.Count} method(s) reachable; {uiBoundHits.Count} UI-bound member(s) touched.");
+    sb.AppendLine();
+
+    if (uiBoundHits.Count == 0)
+    {
+        sb.AppendLine("No UI-bound members (XAML-generated controls, or busy/overlay/progress-shaped fields) were reached from this seed.");
+        File.WriteAllText(Path.Combine(reportsDir, $"view-state-{seedMethodName}.md"), sb.ToString());
+        return true;
+    }
+
+    sb.AppendLine("| UI-bound member | Kind | Hops | Reached from | Shortest call path |");
+    sb.AppendLine("|---|---|---:|---|---|");
+
+    foreach ((string memberName, (List<MethodRow> path, MethodRow reachedFrom, string kind)) in uiBoundHits
+        .OrderBy(kvp => kvp.Value.Path.Count)
+        .ThenBy(kvp => kvp.Key, StringComparer.Ordinal))
+    {
+        string pathDescription = string.Join(
+            " -> ",
+            path.Select(p => $"{p.MethodName} ({p.PartialFile})"));
+
+        sb.AppendLine(
+            $"| {memberName} | {kind} | {path.Count - 1} | {reachedFrom.MethodName} ({reachedFrom.PartialFile}) | {pathDescription} |");
+    }
+
+    File.WriteAllText(Path.Combine(reportsDir, $"view-state-{seedMethodName}.md"), sb.ToString());
+    return true;
 }
 
 static void WriteXamlEventHandlersCsv(string reportsDir, List<XamlHandlerRow> xamlHandlers)
@@ -1346,6 +1706,7 @@ internal sealed class MethodRow(string PartialFile, string MethodName, bool IsPu
     public SortedSet<string> AwaitedCalls { get; } = new(StringComparer.Ordinal);
     public SortedSet<string> XamlEvents { get; } = new(StringComparer.Ordinal);
     public SortedSet<string> UntrackedMainWindowMembersUsed { get; } = new(StringComparer.Ordinal);
+    public SortedSet<string> MethodsCalledAsCallback { get; } = new(StringComparer.Ordinal);
     public List<MethodRow> CalledRows { get; } = [];
 }
 
