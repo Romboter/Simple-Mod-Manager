@@ -4,7 +4,6 @@ using System.IO;
 using System.Windows;
 using VintageStoryModManager.Services;
 using WinForms = System.Windows.Forms;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -30,20 +29,20 @@ public partial class MainWindow
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            var response = WpfMessageBox.Show(
-                $"The automatic VintagestoryData backup failed:\n{ex.Message}\n\nLaunch Vintage Story without creating a backup?",
-                "Simple VS Manager",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-            return response == MessageBoxResult.Yes;
+            var confirmed = await _confirmationService.ConfirmAsync(
+                    GameLaunchDialogTextBuilder.BuildBackupFailedPromptMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
+            return confirmed;
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"The automatic VintagestoryData backup failed:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    GameLaunchDialogTextBuilder.BuildBackupFailedMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
             return false;
         }
         finally
@@ -62,11 +61,11 @@ public partial class MainWindow
         {
             if (!File.Exists(_customShortcutPath))
             {
-                WpfMessageBox.Show(
-                    "The custom Vintage Story shortcut could not be found. Please set it again from File > Set custom Vintage Story shortcut.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        "The custom Vintage Story shortcut could not be found. Please set it again from File > Set custom Vintage Story shortcut.",
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
                 _userConfiguration.ClearCustomShortcutPath();
                 _customShortcutPath = null;
                 return;
@@ -82,10 +81,11 @@ public partial class MainWindow
             }
             catch (Exception ex)
             {
-                WpfMessageBox.Show($"Failed to launch Vintage Story using the shortcut:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        GameLaunchDialogTextBuilder.BuildShortcutLaunchFailedMessage(ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
             }
 
             return;
@@ -93,22 +93,22 @@ public partial class MainWindow
 
         if (string.IsNullOrWhiteSpace(_dataDirectory) || !Directory.Exists(_dataDirectory))
         {
-            WpfMessageBox.Show(
-                "The VintagestoryData folder could not be located. Please verify it from File > Set Data Folder before launching the game.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "The VintagestoryData folder could not be located. Please verify it from File > Set Data Folder before launching the game.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
         var executable = GameDirectoryLocator.FindExecutable(_gameDirectory);
         if (executable is null)
         {
-            WpfMessageBox.Show(
-                "The Vintage Story executable could not be found. Verify the game folder in File > Set Game Folder.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "The Vintage Story executable could not be found. Verify the game folder in File > Set Game Folder.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -127,14 +127,15 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show($"Failed to launch Vintage Story:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    GameLaunchDialogTextBuilder.BuildLaunchFailedMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 
-    private void SetCustomShortcutMenuItem_OnClick(object sender, RoutedEventArgs e)
+    private async void SetCustomShortcutMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         string? initialDirectory = null;
         string? initialFileName = null;
@@ -171,11 +172,11 @@ public partial class MainWindow
             var selected = dialog.FileName;
             if (!File.Exists(selected))
             {
-                WpfMessageBox.Show(
-                    "The selected shortcut could not be found.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        "The selected shortcut could not be found.",
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
                 return;
             }
 
@@ -186,11 +187,11 @@ public partial class MainWindow
             }
             catch (ArgumentException ex)
             {
-                WpfMessageBox.Show(
-                    $"The selected shortcut is not valid:\n{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        GameLaunchDialogTextBuilder.BuildInvalidShortcutMessage(ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
             }
 
             return;
@@ -198,13 +199,13 @@ public partial class MainWindow
 
         if (string.IsNullOrWhiteSpace(_customShortcutPath)) return;
 
-        var clear = WpfMessageBox.Show(
-            "Do you want to clear the custom Vintage Story shortcut?",
-            "Simple VS Manager",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+        var clear = await _confirmationService.ConfirmAsync(
+                "Do you want to clear the custom Vintage Story shortcut?",
+                "Simple VS Manager",
+                DialogSeverity.Question)
+            .ConfigureAwait(true);
 
-        if (clear != MessageBoxResult.Yes) return;
+        if (!clear) return;
 
         _userConfiguration.ClearCustomShortcutPath();
         _customShortcutPath = null;
