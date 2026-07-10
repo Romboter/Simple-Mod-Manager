@@ -4,7 +4,6 @@ using System.Windows;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 using VintageStoryModManager.Views.Dialogs;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -14,43 +13,43 @@ public partial class MainWindow
     {
         if (_viewModel?.SelectedMod is not ModListItemViewModel selectedMod)
         {
-            WpfMessageBox.Show(
-                "Please select a mod before using Experimental Mod Debugging.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    "Please select a mod before using Experimental Mod Debugging.",
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
         var modId = selectedMod.ModId?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(modId))
         {
-            WpfMessageBox.Show(
-                "The selected mod does not specify a mod ID to search for in the logs.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "The selected mod does not specify a mod ID to search for in the logs.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(_dataDirectory))
         {
-            WpfMessageBox.Show(
-                "The manager data directory is not available. Please configure the Vintage Story data folder and try again.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "The manager data directory is not available. Please configure the Vintage Story data folder and try again.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
         var logsDirectory = Path.Combine(_dataDirectory, "Logs");
         if (!Directory.Exists(logsDirectory))
         {
-            WpfMessageBox.Show(
-                "No log files were found in the manager's Logs folder.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "No log files were found in the manager's Logs folder.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -82,11 +81,11 @@ public partial class MainWindow
     {
         if (_viewModel is null)
         {
-            WpfMessageBox.Show(
-                "The installed mod list is not available. Please wait for the manager to finish loading and try again.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    "The installed mod list is not available. Please wait for the manager to finish loading and try again.",
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -96,32 +95,32 @@ public partial class MainWindow
 
         if (modIdentifiers.Count == 0)
         {
-            WpfMessageBox.Show(
-                "No installed mods with a valid mod ID were found to search for in the logs.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    "No installed mods with a valid mod ID were found to search for in the logs.",
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(_dataDirectory))
         {
-            WpfMessageBox.Show(
-                "The manager data directory is not available. Please configure the Vintage Story data folder and try again.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "The manager data directory is not available. Please configure the Vintage Story data folder and try again.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
         var logsDirectory = Path.Combine(_dataDirectory, "Logs");
         if (!Directory.Exists(logsDirectory))
         {
-            WpfMessageBox.Show(
-                "No log files were found in the manager's Logs folder.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    "No log files were found in the manager's Logs folder.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
             return;
         }
 
