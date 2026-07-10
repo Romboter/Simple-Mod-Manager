@@ -1,9 +1,8 @@
 #nullable enable
 
-using System.Windows;
 using System.Windows.Threading;
+using VintageStoryModManager.Services;
 
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -49,10 +48,11 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show($"Failed to refresh mods automatically:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ModRefreshDialogTextBuilder.BuildAutomaticRefreshFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
         finally
         {

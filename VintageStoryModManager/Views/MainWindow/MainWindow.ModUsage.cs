@@ -7,7 +7,6 @@ using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 using VintageStoryModManager.Views.Dialogs;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -304,21 +303,19 @@ public partial class MainWindow
             if (errors.Count > 0)
             {
                 var message = string.Join(Environment.NewLine, errors.Distinct(StringComparer.OrdinalIgnoreCase));
-                WpfMessageBox.Show(
-                    this,
-                    "Some votes could not be submitted:" + Environment.NewLine + message,
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                await _confirmationService.NotifyAsync(
+                        ModUsageDialogTextBuilder.BuildVoteSubmissionFailureMessage(message),
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
             }
             else if (successfulKeys.Count > 0)
             {
-                WpfMessageBox.Show(
-                    this,
-                    "Thanks! Your \"No issues\" votes were submitted.",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                await _confirmationService.NotifyAsync(
+                        "Thanks! Your \"No issues\" votes were submitted.",
+                        "Simple VS Manager",
+                        DialogSeverity.Information)
+                    .ConfigureAwait(true);
             }
         }
         finally

@@ -1,9 +1,8 @@
 #nullable enable
 
-using System.Windows;
 using System.Windows.Threading;
+using VintageStoryModManager.Services;
 
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -69,11 +68,11 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"Failed to refresh mod details:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ModRefreshDialogTextBuilder.BuildRefreshModDetailsFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 
@@ -97,11 +96,11 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show(
-                $"The mod list could not be refreshed after resolving dependencies:{Environment.NewLine}{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    ModRefreshDialogTextBuilder.BuildDependencyResolutionRefreshFailureMessage(ex.Message),
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
         finally
         {
@@ -128,11 +127,11 @@ public partial class MainWindow
             }
             catch (Exception ex)
             {
-                WpfMessageBox.Show(
-                    $"Failed to refresh mods after loading the modlist:{Environment.NewLine}{ex.Message}",
-                    "Simple VS Manager",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                await _confirmationService.NotifyAsync(
+                        ModRefreshDialogTextBuilder.BuildModlistLoadRefreshFailureMessage(ex.Message),
+                        "Simple VS Manager",
+                        DialogSeverity.Error)
+                    .ConfigureAwait(true);
             }
             finally
             {
