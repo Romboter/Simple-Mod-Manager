@@ -1,11 +1,8 @@
 #nullable enable
 
-using System.Collections.Generic;
 using System.IO;
 using System.Security;
-using System.Threading.Tasks;
 using System.Windows;
-using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
@@ -127,17 +124,16 @@ public partial class MainWindow
             return false;
         }
 
-        string filePath;
+        ModlistFilePathResolution resolution;
         try
         {
             var modListDirectory = EnsureModListDirectory();
-            var entryName = FileNameHelper.BuildSuggestedFileName(listName, "Modlist");
-            filePath = Path.Combine(modListDirectory, entryName + ".pdf");
+            resolution = ModlistWorkflowService.ResolveModlistFilePath(modListDirectory, listName, null, ".pdf");
 
-            if (File.Exists(filePath))
+            if (resolution.AlreadyExists)
             {
                 var confirmation = await _confirmationService.ConfirmAsync(
-                        PdfDialogTextBuilder.BuildReplaceExistingMessage(filePath),
+                        PdfDialogTextBuilder.BuildReplaceExistingMessage(resolution.FilePath),
                         "Replace Modlist PDF",
                         DialogSeverity.Question)
                     .ConfigureAwait(true);
@@ -156,39 +152,25 @@ public partial class MainWindow
             return false;
         }
 
-        var presetName = string.IsNullOrWhiteSpace(listName)
-            ? "Installed Mods"
-            : listName.Trim();
         var resolvedGameVersion = ResolveGameVersion(gameVersion);
-        var serializable = PresetSnapshotBuilder.BuildModlistPreset(
-            _viewModel!.GetCurrentModStates(),
-            presetName,
-            description,
-            version,
-            uploaderName,
-            includedConfigurations,
-            resolvedGameVersion);
-
-        var serializableConfigList = PresetConfigurationSerializer.BuildSerializableConfigList(includedConfigurations);
-
         var normalizedUploader = string.IsNullOrWhiteSpace(uploaderName)
             ? GetUploaderNameForPdf()
             : uploaderName.Trim();
 
         try
         {
-            InstalledModsPdfGenerator.GenerateInstalledModsPdf(
-                filePath,
+            ModlistWorkflowService.SavePdfModlist(
+                resolution.FilePath,
                 listName,
                 version,
                 description,
                 normalizedUploader,
                 resolvedGameVersion,
                 mods,
-                serializable,
-                serializableConfigList);
+                _viewModel!.GetCurrentModStates(),
+                includedConfigurations);
 
-            _viewModel.ReportStatus($"Saved installed mods PDF to \"{filePath}\".");
+            _viewModel.ReportStatus($"Saved installed mods PDF to \"{resolution.FilePath}\".");
 
             await _confirmationService.NotifyAsync(
                     PdfDialogTextBuilder.SavedSuccessfullyMessage,
