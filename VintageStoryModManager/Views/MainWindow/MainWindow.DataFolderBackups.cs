@@ -299,34 +299,35 @@ public partial class MainWindow
 
     private async Task RestoreDataBackupAsync(DataFolderBackupSummary summary)
     {
-        if (string.IsNullOrWhiteSpace(_dataDirectory) || !Directory.Exists(_dataDirectory)) return;
+        var check = _dataFolderBackupCoordinator.ValidateRestore(summary, _dataDirectory, _gameDirectory);
 
-        if (!PathRelationshipHelper.IsSameDirectory(summary.SourceDataDirectory, _dataDirectory))
+        switch (check.Result)
         {
-            await _confirmationService.NotifyAsync(
-                    DataFolderBackupDialogTextBuilder.DifferentDataFolderRestoreMessage,
-                    "Simple VS Manager",
-                    DialogSeverity.Warning)
-                .ConfigureAwait(true);
-            return;
-        }
+            case DataBackupRestoreValidation.DataDirectoryUnavailable:
+                await _confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.DataDirectoryUnavailableForRestoreMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
+                return;
 
-        var (installedVersion, normalizedInstalledVersion) = VintageStoryVersionLocator.GetNormalizedInstalledVersion(_gameDirectory);
-        var normalizedBackupVersion = VersionStringUtility.Normalize(summary.VintageStoryVersion);
-        if (!string.IsNullOrWhiteSpace(normalizedBackupVersion)
-            && !string.IsNullOrWhiteSpace(normalizedInstalledVersion)
-            && !string.Equals(normalizedBackupVersion, normalizedInstalledVersion, StringComparison.OrdinalIgnoreCase))
-        {
-            var backupVersionDisplay = summary.VintageStoryVersion ?? normalizedBackupVersion;
-            var installedVersionDisplay = installedVersion ?? normalizedInstalledVersion;
-            await _confirmationService.NotifyAsync(
-                    DataFolderBackupDialogTextBuilder.BuildVersionMismatchMessage(
-                        backupVersionDisplay,
-                        installedVersionDisplay),
-                    "Simple VS Manager",
-                    DialogSeverity.Warning)
-                .ConfigureAwait(true);
-            return;
+            case DataBackupRestoreValidation.DifferentDataFolder:
+                await _confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.DifferentDataFolderRestoreMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
+                return;
+
+            case DataBackupRestoreValidation.VersionMismatch:
+                await _confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.BuildVersionMismatchMessage(
+                            check.BackupVersionDisplay!,
+                            check.InstalledVersionDisplay!),
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
+                return;
         }
 
         ShowDataBackupOverlay("Preparing to restore VintagestoryData...");
