@@ -30,6 +30,15 @@ public static class VintageStoryVersionLocator
         return null;
     }
 
+    /// <summary>
+    ///     Convenience wrapper for the common raw+normalized installed-version pair used by backup compatibility checks.
+    /// </summary>
+    public static (string? Raw, string? Normalized) GetNormalizedInstalledVersion(string? configuredGameDirectory = null)
+    {
+        var raw = GetInstalledVersion(configuredGameDirectory);
+        return (raw, VersionStringUtility.Normalize(raw));
+    }
+
     private static IEnumerable<string> EnumerateCandidates(string? configuredGameDirectory)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

@@ -1,0 +1,209 @@
+#nullable enable
+
+using System.ComponentModel;
+using System.IO;
+using System.Windows;
+using SimpleVsManager.Cloud;
+using VintageStoryModManager.Helpers;
+using VintageStoryModManager.Services;
+using VintageStoryModManager.ViewModels;
+using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
+
+namespace VintageStoryModManager.Views;
+
+public partial class MainWindow
+{
+
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            Loaded -= MainWindow_Loaded;
+
+            ApplyStoredModInfoPanelPosition();
+
+            _userConfiguration.EnablePersistence();
+
+            MigrateLegacyRebuiltModlistsIfNeeded();
+
+            // Ensure firebase-auth.json is backed up if it exists and hasn't been backed up yet
+            FirebaseAnonymousAuthenticator.EnsureStartupBackup(_userConfiguration);
+
+            await MigrateLegacyFirebaseDataIfNeededAsync().ConfigureAwait(true);
+
+            await CheckAndPromptMigrationAsync().ConfigureAwait(true);
+
+            await PromptCacheRefreshIfNeededAsync().ConfigureAwait(true);
+
+            if (_viewModel != null)
+            {
+                await InitializeViewModelAsync(_viewModel).ConfigureAwait(true);
+                await EnsureInstalledModsCachedAsync(_viewModel).ConfigureAwait(true);
+                await CreateAppStartedBackupAsync().ConfigureAwait(true);
+
+                // Sync installed mods to ModBrowser after ViewModel is initialized
+                SyncInstalledModsToModBrowser();
+            }
+
+            await RefreshDeleteCachedModsMenuHeaderAsync();
+            await RefreshManagerUpdateLinkAsync();
+        }
+
+    private void MigrateLegacyRebuiltModlistsIfNeeded()
+        {
+            if (_userConfiguration.RebuiltModlistMigrationCompleted) return;
+
+            try
+            {
+                var modListDirectory = EnsureModListDirectory();
+                var rebuiltDirectory = Path.Combine(modListDirectory, RebuiltModListDirectoryName);
+                Directory.CreateDirectory(rebuiltDirectory);
+
+                var movedAny = false;
+                foreach (var entry in Directory.EnumerateFileSystemEntries(
+                             modListDirectory,
+                             "Rebuilt_*",
+                             SearchOption.TopDirectoryOnly))
+                {
+                    if (Directory.Exists(entry))
+                    {
+                        var targetPath = Path.Combine(rebuiltDirectory, Path.GetFileName(entry));
+                        targetPath = FileNameHelper.EnsureUniqueDirectoryPath(targetPath);
+                        Directory.Move(entry, targetPath);
+                        movedAny = true;
+                    }
+                    else if (File.Exists(entry))
+                    {
+                        var targetPath = Path.Combine(rebuiltDirectory, Path.GetFileName(entry));
+                        targetPath = FileNameHelper.EnsureUniqueFilePath(targetPath);
+                        File.Move(entry, targetPath);
+                        movedAny = true;
+                    }
+                }
+
+                if (movedAny)
+                    _viewModel?.ReportStatus($"Moved rebuilt modlists into \"{RebuiltModListDirectoryName}\" folder.");
+
+                _userConfiguration.SetRebuiltModlistMigrationCompleted();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
+            {
+                _modActivityLoggingService.LogError("Failed to prepare the Rebuilt modlists folder", ex);
+                WpfMessageBox.Show(
+                    $"Failed to prepare the Rebuilt modlists folder:\n{ex.Message}",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+
+    private async Task PromptCacheRefreshIfNeededAsync()
+        {
+            if (!_userConfiguration.HasVersionMismatch || _userConfiguration.SuppressRefreshCachePrompt) return;
+
+            var currentVersion = _userConfiguration.ModManagerVersion;
+            var previousVersion = _userConfiguration.PreviousModManagerVersion
+                                  ?? _userConfiguration.PreviousConfigurationVersion;
+
+            var message = previousVersion is null
+                ? $"Simple VS Manager {currentVersion} is now installed. Clearing cached mod data is recommended after updates to avoid stale information.\n\nWould you like to clear the caches now?"
+                : $"Simple VS Manager was updated from version {previousVersion} to {currentVersion}. Clearing cached mod data is recommended after updates to avoid stale information.\n\nWould you like to clear the caches now?";
+
+            var result = WpfMessageBox.Show(
+                this,
+                message,
+                "Simple VS Manager",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes) await ClearManagerCachesForVersionUpdateAsync().ConfigureAwait(true);
+        }
+
+    private async Task ClearManagerCachesForVersionUpdateAsync()
+        {
+            try
+            {
+                await Task.Run(() => ManagerCacheCleanupService.ClearManagerCaches(false)).ConfigureAwait(true);
+                await RefreshDeleteCachedModsMenuHeaderAsync().ConfigureAwait(true);
+
+                WpfMessageBox.Show(
+                    this,
+                    "Cached mod data cleared successfully. Fresh data will be downloaded as needed.",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                _modActivityLoggingService.LogError("Failed to clear cached mod data", ex);
+                WpfMessageBox.Show(
+                    this,
+                    $"Failed to clear cached mod data:\n{ex.Message}",
+                    "Simple VS Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+    private Task EnsureInstalledModsCachedAsync(MainViewModel viewModel, bool ignoreUserSetting = false)
+        {
+            if (viewModel is null || (!_userConfiguration.CacheAllVersionsLocally && !ignoreUserSetting))
+                return Task.CompletedTask;
+
+            var installedMods = viewModel.GetInstalledModsSnapshot();
+            if (installedMods.Count == 0) return Task.CompletedTask;
+
+            return Task.Run(() =>
+            {
+                foreach (var mod in installedMods)
+                {
+                    if (mod is null || !mod.IsInstalled) continue;
+
+                    ModCacheService.EnsureModCached(mod.ModId, mod.Version, mod.SourcePath, mod.SourceKind);
+                }
+            });
+        }
+
+    private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
+        {
+            if (_isApplyingPreset || _viewModel?.IsLoadingMods == true)
+            {
+                const string message =
+                    "A modlist is still being applied. Exiting now may leave some mods missing or disabled. Do you want to exit anyway?";
+
+                var result = WpfMessageBox.Show(
+                    message,
+                    "Simple VS Manager",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result != MessageBoxResult.Yes)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+            SaveWindowDimensions();
+            SaveUploaderName();
+
+            // Log timing summary before app exit (only if error/diagnostic logging is enabled)
+            if (_viewModel != null && _userConfiguration.LogErrorsAndExceptions)
+            {
+                var timingSummary = _viewModel.TimingService.GetTimingSummary();
+                _modActivityLoggingService.LogModLoadingTimingSummary(timingSummary);
+            }
+
+            _modActivityLoggingService.LogAppExit();
+
+            // Clean up trace listener
+            if (_traceListener != null)
+            {
+                System.Diagnostics.Trace.Listeners.Remove(_traceListener);
+                _traceListener.Dispose();
+                _traceListener = null;
+            }
+
+            DisposeCurrentViewModel();
+            InternetAccessManager.InternetAccessChanged -= InternetAccessManager_OnInternetAccessChanged;
+            DeveloperProfileManager.CurrentProfileChanged -= DeveloperProfileManager_OnCurrentProfileChanged;
+        }
+}

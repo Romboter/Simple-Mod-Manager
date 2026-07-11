@@ -25,4 +25,17 @@ public static class ServerCommandBuilder
 
         return string.Format(CultureInfo.InvariantCulture, CommandTemplate, normalizedModId, normalizedVersion);
     }
+
+    /// <summary>
+    ///     Determines whether a server install command can be copied for the given mod, given whether
+    ///     server options are enabled.
+    /// </summary>
+    /// <param name="serverOptionsEnabled">Whether server options are enabled for the active profile.</param>
+    /// <param name="modId">The unique identifier of the mod.</param>
+    /// <param name="version">The version of the mod to install.</param>
+    /// <returns>True if a valid install command can be built and server options are enabled; otherwise, false.</returns>
+    public static bool CanCopyInstallCommand(bool serverOptionsEnabled, string? modId, string? version)
+    {
+        return serverOptionsEnabled && TryBuildInstallCommand(modId, version) is not null;
+    }
 }

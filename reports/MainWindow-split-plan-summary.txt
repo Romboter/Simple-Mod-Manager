@@ -1,0 +1,43 @@
+MAINWINDOW FIRST-PASS SPLIT PLAN
+======================================
+
+Total members: 612
+Suggested files: 33
+Unassigned members: 0
+Low-confidence members: 0
+
+FILE TOTALS
+--------------------------------------
+MainWindow.Presets.cs                    31 members   1465 approx lines
+MainWindow.Modlists.cs                   40 members   1265 approx lines
+MainWindow.ModGrid.cs                    64 members    980 approx lines
+MainWindow.ManagerData.cs                27 members    975 approx lines
+MainWindow.Paths.cs                      44 members    955 approx lines
+MainWindow.ModOperations.cs              21 members    826 approx lines
+MainWindow.Backups.cs                    18 members    694 approx lines
+MainWindow.CloudModlists.cs              26 members    650 approx lines
+MainWindow.Debugging.cs                  19 members    567 approx lines
+MainWindow.ModConfiguration.cs           11 members    379 approx lines
+MainWindow.ModBrowser.cs                 13 members    374 approx lines
+MainWindow.Compatibility.cs              11 members    373 approx lines
+MainWindow.Updates.cs                     7 members    349 approx lines
+MainWindow.Profiles.cs                   16 members    347 approx lines
+MainWindow.Pdf.cs                         9 members    345 approx lines
+MainWindow.Core.cs                      114 members    319 approx lines
+MainWindow.Startup.cs                     8 members    284 approx lines
+MainWindow.ModUsage.cs                    5 members    284 approx lines
+MainWindow.Sorting.cs                    17 members    275 approx lines
+MainWindow.ServerSync.cs                  8 members    262 approx lines
+MainWindow.ViewModel.cs                  12 members    257 approx lines
+MainWindow.GameLaunch.cs                  3 members    196 approx lines
+MainWindow.Help.cs                        7 members    195 approx lines
+MainWindow.Navigation.cs                  7 members    155 approx lines
+MainWindow.ModInfoPanel.cs               12 members    153 approx lines
+MainWindow.Appearance.cs                  7 members    152 approx lines
+MainWindow.CloudAuth.cs                   8 members    125 approx lines
+MainWindow.Settings.cs                    9 members    123 approx lines
+MainWindow.Progress.cs                    9 members     91 approx lines
+MainWindow.ColumnVisibility.cs            8 members     86 approx lines
+MainWindow.Logging.cs                     9 members     86 approx lines
+MainWindow.Identity.cs                    7 members     71 approx lines
+MainWindow.WindowState.cs                 5 members     59 approx lines

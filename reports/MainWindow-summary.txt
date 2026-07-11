@@ -1,0 +1,64 @@
+]633;E;{     echo "MEMBER TYPE COUNTS"\x3b     echo "=================="\x3b      awk -F',' '\x0aNR > 1 {\x0atype=$1\x0agsub(/^"|"$/, "", type)\x0acounts[type]++\x0a}\x0aEND {\x0afor (type in counts)\x0aprint type, counts[type]\x0a}' reports/MainWindow-members.csv | sort\x3b      echo\x3b     echo "LARGEST METHODS"\x3b     echo "==============="\x3b      awk -F',' '\x0aNR > 1 && $1 == "Method" {\x0aprint $5 "\\t" $2 "\\tlines " $3 "-" $4\x0a}' reports/MainWindow-members.csv       | sort -nr       | head -50\x3b  } > reports/MainWindow-summary.txt;c05f1647-1ca7-4646-9944-cfdb278509d9]633;CMEMBER TYPE COUNTS
+==================
+Constructor 1
+Delegate 1
+Field 102
+Method 488
+Nested class 2
+Nested enum 3
+Nested record 5
+Nested struct 1
+Property 9
+
+LARGEST METHODS
+===============
+236	ApplyPresetModVersionsAsync	lines 12805-13040
+202	UpdateModsAsync	lines 13890-14091
+189	ImportPresetConfigsAsync	lines 12617-12805
+152	GenerateServerInstallMacroMenuItem_OnClick	lines 1826-1977
+131	ApplyExclusivePresetAsync	lines 13108-13238
+128	TrySaveInstalledModsPdf	lines 6140-6267
+127	ShowModUsagePromptDialogAsync	lines 961-1087
+124	ChangeManagerFolderMenuItem_OnClick	lines 6302-6425
+121	FixModButton_OnClick	lines 5334-5454
+118	ClearAllCachesMenuItem_OnClick	lines 6972-7089
+117	TryBuildPresetFromSerializable	lines 11300-11416
+115	GenerateInstalledModsPdf	lines 9938-10052
+110	RestoreDataFolderMenuItem_OnSubmenuOpened	lines 8239-8348
+109	InstallModFromBrowserAsync	lines 2735-2843
+107	CheckModsCompatibilityMenuItem_OnClick	lines 5823-5929
+105	InstallModButton_OnClick	lines 5454-5558
+101	TrySaveModlist	lines 9441-9541
+100	TryLoadPresetFromPdf	lines 11161-11260
+99	InstallOrUpdateDependencyAsync	lines 5558-5656
+98	ScanForModConfigsMenuItem_OnClick	lines 6643-6740
+97	HandleResetManagerFolder	lines 6489-6585
+96	ExperimentalAllModsDebuggingMenuItem_OnClick	lines 2061-2156
+93	SaveModlistToCloudAsync	lines 10084-10176
+91	PrepareModUsagePromptData	lines 864-954
+88	EditConfigButton_OnClick	lines 5056-5143
+87	ModifyLocalModlistButton_OnClick	lines 10566-10652
+84	ViewModelOnPropertyChanged	lines 2962-3045
+83	LaunchGameButton_OnClick	lines 8081-8163
+82	TrySaveSnapshot	lines 9208-9289
+79	ScanForModConfigFilesAsync	lines 3789-3867
+79	RestoreFirebaseAuthBackupMenuItem_OnClick	lines 7089-7167
+78	FindConfigMatches	lines 3867-3944
+78	EvaluateCompatibility	lines 5929-6006
+78	CreateBackupAsync	lines 9713-9790
+77	TryCreateLocalModlistEntry	lines 11953-12029
+77	SetCustomShortcutMenuItem_OnClick	lines 8163-8239
+75	RestoreBackupMenuItem_OnSubmenuOpened	lines 8527-8601
+75	InstallCloudModlistButton_OnClick	lines 10665-10739
+74	ExecuteCloudOperationAsync	lines 11451-11524
+74	DeleteMultipleModsAsync	lines 5221-5294
+74	DeleteAllManagerFilesMenuItem_OnClick	lines 7167-7240
+73	LoadModlistFromCloudMenuItem_OnClick	lines 10739-10811
+73	ConvertToModListItemViewModel	lines 2843-2915
+72	RenameCloudModlistAsync	lines 11647-11718
+71	LoadPresetMenuItem_OnSubmenuOpened	lines 10855-10925
+71	DeleteDataFolderBackupsMenuItem_OnClick	lines 8457-8527
+69	TryInstallPresetModAsync	lines 13040-13108
+69	ExperimentalModDebuggingMenuItem_OnClick	lines 1993-2061
+69	DeleteLocalModlistsButton_OnClick	lines 10498-10566
+67	UserReportsButton_OnClick	lines 4657-4723

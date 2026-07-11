@@ -1,0 +1,1164 @@
+PartialFile,MethodName,IsAsync,IsEventHandlerLike,FieldsRead,FieldsWritten,MainWindowMethodsCalled,ExternalTypesUsed,AwaitedCalls,XamlEventsReferencingMethod,MainWindowMethodsReferencedAsCallback
+MainWindow.Appearance.cs,EditThemeMenuItem_OnClick,False,True,,,ShowCustomThemeEditor,,,EditThemeMenuItem.Click,
+MainWindow.Appearance.cs,RefreshCustomThemeMenuItems,False,False,_customThemeMenuItems,,,VintageStoryModManager.ViewModels.CustomThemeMenuItemViewModel,,,
+MainWindow.Appearance.cs,ShowCustomThemeEditor,False,False,_userConfiguration,,ClearScrollViewerCache;RefreshCustomThemeMenuItems,VintageStoryModManager.App;VintageStoryModManager.Views.Dialogs.ThemePaletteEditorDialog,,,
+MainWindow.CloudAuth.cs,DeleteFirebaseAuthFiles,False,False,_dataDirectory,,,SimpleVsManager.Cloud.FirebaseAnonymousAuthenticator;VintageStoryModManager.Services.FirebaseAuthFileService,,,
+MainWindow.CloudAuth.cs,EnsureCloudModlistsConsent,False,False,,,EnsureFirebaseAuthConsent,,,,
+MainWindow.CloudAuth.cs,EnsureFirebaseAuthBackedUpIfAvailable,False,False,_dataDirectory;_modActivityLoggingService,,,SimpleVsManager.Cloud.FirebaseAnonymousAuthenticator;VintageStoryModManager.Services.FirebaseAuthFileService;VintageStoryModManager.Services.StatusLogService,,,
+MainWindow.CloudAuth.cs,EnsureFirebaseAuthConsent,False,False,,,EnsureFirebaseAuthBackedUpIfAvailable,SimpleVsManager.Cloud.FirebaseAnonymousAuthenticator;VintageStoryModManager.Services.ModManagerMessageBox;VintageStoryModManager.Views.Dialogs.MessageDialogButtonContentOverrides,,,
+MainWindow.CloudAuth.cs,EnsureUserReportVotingConsent,False,False,,,EnsureFirebaseAuthConsent,,,,
+MainWindow.CloudAuth.cs,RestoreFirebaseAuthBackupMenuItem_OnClick,True,True,_confirmationService,,,VintageStoryModManager.Services.CloudAuthDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.FirebaseAuthFileService;VintageStoryModManager.Services.FirebaseAuthRestoreResult;VintageStoryModManager.Services.ModManagerMessageBox,"_confirmationService.NotifyAsync(
+                            ""Could not determine the Simple VS Manager folder for firebase-auth.json."",
+                            ""Simple VS Manager"",
+                            DialogSeverity.Error)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                            ""Could not determine the location of the firebase-auth.json backup."",
+                            ""Simple VS Manager"",
+                            DialogSeverity.Error)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                            ""No firebase-auth.json backup was found in the SVSM Backup folder."",
+                            ""Simple VS Manager"",
+                            DialogSeverity.Warning)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                            ""Restored firebase-auth.json from the SVSM Backup folder."",
+                            ""Simple VS Manager"",
+                            DialogSeverity.Information)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                    CloudAuthDialogTextBuilder.BuildRestoreFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",MenuItem.Click,
+MainWindow.CloudInfrastructure.cs,EnsureCloudStoreInitializedAsync,True,False,_cloudModlistStore;_cloudStoreLock,_cloudModlistStore,ApplyPlayerIdentityToCloudStore;MigrateLegacyFirebaseDataIfNeededAsync,SimpleVsManager.Cloud.FirebaseModlistStore,MigrateLegacyFirebaseDataIfNeededAsync().ConfigureAwait;_cloudStoreLock.WaitAsync,,
+MainWindow.CloudInfrastructure.cs,ExecuteCloudOperationAsync,True,False,_confirmationService,,EnsureCloudStoreInitializedAsync;EnsureFirebaseAuthBackedUpIfAvailable,SimpleVsManager.Cloud.FirebaseModlistStore;VintageStoryModManager.Services.CloudOperationDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InternetAccessDisabledException;VintageStoryModManager.Services.InternetAccessManager;VintageStoryModManager.Services.StatusLogService,"EnsureCloudStoreInitializedAsync;_confirmationService.NotifyAsync(
+                    CloudOperationDialogTextBuilder.BuildActionFailureMessage(
+                        actionDescription,
+                        ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    CloudOperationDialogTextBuilder.BuildInitializationFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    CloudOperationDialogTextBuilder.BuildUnexpectedActionFailureMessage(
+                        actionDescription,
+                        ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ex.Message,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;operation",,
+MainWindow.CloudInfrastructure.cs,MigrateLegacyFirebaseDataIfNeededAsync,True,False,_confirmationService;_firebaseMigrationAttempted;_viewModel,_firebaseMigrationAttempted,,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.FirebaseModlistMigrationService;VintageStoryModManager.Services.StatusLogService,"Dispatcher.InvokeAsync(async () =>
+                        await _confirmationService.NotifyAsync(
+                                ""Due to bandwidth issues, the manager is changing to another database. Your modlists will be saved and moved to the new database. Each user's modlists will appear in the Online Modlists tab when they update. All compatibility votes have been reset. Thank you for using the manager and voting!"",
+                                ""Simple VS Manager"",
+                                DialogSeverity.Information)
+                            .ConfigureAwait(true))
+                    .Result.ConfigureAwait;_confirmationService.NotifyAsync(
+                                ""Due to bandwidth issues, the manager is changing to another database. Your modlists will be saved and moved to the new database. Each user's modlists will appear in the Online Modlists tab when they update. All compatibility votes have been reset. Thank you for using the manager and voting!"",
+                                ""Simple VS Manager"",
+                                DialogSeverity.Information)
+                            .ConfigureAwait;migrationService
+                .TryMigrateAsync(playerUid, _viewModel?.PlayerName, _userConfiguration, CancellationToken.None)
+                .ConfigureAwait",,
+MainWindow.CloudLoad.cs,CloudModlistsDataGrid_OnSelectionChanged,False,True,,,SetCloudModlistSelection,VintageStoryModManager.Models.CloudModlistListEntry,,CloudModlistsDataGrid.SelectionChanged,
+MainWindow.CloudLoad.cs,DeleteCloudModlistMenuItem_OnClick,True,True,_confirmationService;_viewModel,_cloudModlistsLoaded,ExecuteCloudOperationAsync;RefreshCloudModlistsAsync,VintageStoryModManager.Models.CloudModlistSlot;VintageStoryModManager.Services.CloudLoadDialogTextBuilder;VintageStoryModManager.Services.CloudModlistHelper;VintageStoryModManager.Services.CloudModlistManagementService;VintageStoryModManager.Services.CloudModlistSlotService;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Views.Dialogs.CloudSlotSelectionDialog,"CloudModlistManagementService.DeleteSlotAsync;CloudModlistSlotService.LoadSlotsAsync;ExecuteCloudOperationAsync;RefreshCloudModlistsAsync;_confirmationService.ConfirmAsync(
+                    CloudLoadDialogTextBuilder.BuildDeleteConfirmationMessage(displayName),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                        CloudLoadDialogTextBuilder.NoCloudModlistsAvailableToDeleteMessage,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Information)
+                    .ConfigureAwait",,
+MainWindow.CloudLoad.cs,EnsureCloudModlistContentAsync,True,False,_confirmationService;_viewModel,,ExecuteCloudOperationAsync;SetCloudModlistSelection,VintageStoryModManager.Models.CloudModlistListEntry;VintageStoryModManager.Services.CloudLoadDialogTextBuilder;VintageStoryModManager.Services.CloudModlistContentService;VintageStoryModManager.Services.DialogSeverity,"CloudModlistContentService.EnsureContentAsync;ExecuteCloudOperationAsync;_confirmationService.NotifyAsync(
+                    CloudLoadDialogTextBuilder.SelectedCloudModlistDownloadFailedMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",,
+MainWindow.CloudLoad.cs,InstallCloudModlistButton_OnClick,True,True,_confirmationService;_selectedCloudModlist;_viewModel,,ApplyPresetAsync;CreateAutomaticBackupAsync;EnsureCloudModListCacheDirectory;EnsureCloudModlistContentAsync;EnsureModlistBackupBeforeLoad;GetModlistLoadOptions;PrepareForModlistLoad;PromptModlistLoadMode,VintageStoryModManager.Models.CloudModlistListEntry;VintageStoryModManager.Models.ModPreset?;VintageStoryModManager.ModlistLoadMode;VintageStoryModManager.PresetLoadOptions;VintageStoryModManager.Services.CloudLoadDialogTextBuilder;VintageStoryModManager.Services.CloudModlistCacheService;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.PresetFileLoader,"ApplyPresetAsync;CloudModlistCacheService.CacheAsync;CreateAutomaticBackupAsync(""ModlistLoaded"").ConfigureAwait;EnsureCloudModlistContentAsync;_confirmationService.NotifyAsync(
+                    CloudLoadDialogTextBuilder.BuildCachePreparationFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    CloudLoadDialogTextBuilder.BuildSelectedModlistCacheFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    message,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",InstallCloudModlistButton.Click,
+MainWindow.CloudLoad.cs,LoadModlistFromCloudMenuItem_OnClick,True,True,_confirmationService;_viewModel,,ApplyPresetAsync;CreateAutomaticBackupAsync;EnsureModlistBackupBeforeLoad;ExecuteCloudOperationAsync;GetModlistLoadOptions;PrepareForModlistLoad;PromptModlistLoadMode,VintageStoryModManager.Models.CloudModlistSlot;VintageStoryModManager.Models.ModPreset;VintageStoryModManager.Models.ModPreset?;VintageStoryModManager.ModlistLoadMode;VintageStoryModManager.PresetLoadOptions;VintageStoryModManager.Services.CloudLoadDialogTextBuilder;VintageStoryModManager.Services.CloudModlistContentService;VintageStoryModManager.Services.CloudModlistHelper;VintageStoryModManager.Services.CloudModlistSlotService;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.PresetFileLoader;VintageStoryModManager.Views.Dialogs.CloudSlotSelectionDialog,"ApplyPresetAsync;CloudModlistContentService.EnsureSlotContentAsync;CloudModlistSlotService.LoadSlotsAsync;CreateAutomaticBackupAsync(""ModlistLoaded"").ConfigureAwait;ExecuteCloudOperationAsync;_confirmationService.NotifyAsync(
+                        CloudLoadDialogTextBuilder.NoCloudModlistsAvailableMessage,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Information)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        CloudLoadDialogTextBuilder.SelectedCloudModlistEmptyMessage,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        message,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait",,
+MainWindow.CloudLoad.cs,RefreshCloudModlistsAsync,True,False,_cloudModlistsLoaded;_isCloudModlistRefreshInProgress;_viewModel,_cloudModlistsLoaded;_isCloudModlistRefreshInProgress,ExecuteCloudOperationAsync;SetCloudModlistSelection;UpdateCloudModlistControlsEnabledState,VintageStoryModManager.Services.CloudModlistHelper,Dispatcher.InvokeAsync;ExecuteCloudOperationAsync;store.GetRegistryEntriesAsync,,
+MainWindow.CloudLoad.cs,RefreshCloudModlistsButton_OnClick,True,True,,,RefreshCloudModlistsAsync,,RefreshCloudModlistsAsync,RefreshCloudModlistsButton.Click,
+MainWindow.CloudLoad.cs,SetCloudModlistSelection,False,False,,_selectedCloudModlist,UpdateCloudModlistControlsEnabledState,,,,
+MainWindow.CloudLoad.cs,UpdateCloudModlistControlsEnabledState,False,False,_isCloudModlistRefreshInProgress;_selectedCloudModlist,,,VintageStoryModManager.Services.InternetAccessManager,,,
+MainWindow.CloudManagement.cs,DeleteAllCloudModlistsAndAuthorizationAsync,True,False,_confirmationService;_viewModel,_cloudModlistStore;_cloudModlistsLoaded,DeleteFirebaseAuthFiles;SetCloudModlistSelection,VintageStoryModManager.Services.CloudManagementDialogTextBuilder;VintageStoryModManager.Services.CloudModlistManagementService;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.StatusLogService,"CloudModlistManagementService
+            .DeleteAllUserDataAndAuthorizationAsync;_confirmationService.NotifyAsync(
+                    CloudManagementDialogTextBuilder.DeletedAllCloudModlistsAndAuthorizationMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",,
+MainWindow.CloudManagement.cs,DeleteCloudAuthMenuItem_OnClick,True,True,,,DeleteAllCloudModlistsAndAuthorizationAsync;ExecuteCloudOperationAsync,VintageStoryModManager.Services.ModManagerMessageBox,ExecuteCloudOperationAsync,,
+MainWindow.CloudManagement.cs,DeleteCloudModlistAsync,True,False,_confirmationService;_viewModel,,UpdateCloudModlistsAfterChangeAsync,VintageStoryModManager.Services.CloudManagementDialogTextBuilder;VintageStoryModManager.Services.CloudModlistDeleteResult;VintageStoryModManager.Services.CloudModlistDeleteStatus;VintageStoryModManager.Services.CloudModlistHelper;VintageStoryModManager.Services.CloudModlistManagementService;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.StatusLogService,"CloudModlistManagementService.DeleteAsync;UpdateCloudModlistsAfterChangeAsync;_confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.BuildDeleteFailureMessage(
+                            result.ErrorMessage),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait",,
+MainWindow.CloudManagement.cs,ModifyCloudModlistsButton_OnClick,True,True,,,ExecuteCloudOperationAsync;ShowCloudModlistManagementDialogAsync,,ExecuteCloudOperationAsync;ShowCloudModlistManagementDialogAsync,ModifyCloudModlistsButton.Click,
+MainWindow.CloudManagement.cs,RenameCloudModlistAsync,True,False,_confirmationService;_viewModel,,UpdateCloudModlistsAfterChangeAsync,VintageStoryModManager.Services.CloudManagementDialogTextBuilder;VintageStoryModManager.Services.CloudModlistHelper;VintageStoryModManager.Services.CloudModlistManagementService;VintageStoryModManager.Services.CloudModlistRenameResult;VintageStoryModManager.Services.CloudModlistRenameStatus;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.StatusLogService,"CloudModlistManagementService.RenameAsync;UpdateCloudModlistsAfterChangeAsync;_confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.BuildInvalidRenameContentMessage(
+                            result.ErrorMessage),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.BuildRenameLoadFailureMessage(
+                            result.ErrorMessage),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.BuildRenameSaveFailureMessage(
+                            result.ErrorMessage),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        CloudManagementDialogTextBuilder.ContentUnavailableMessage,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait",,
+MainWindow.CloudManagement.cs,ShowCloudModlistManagementDialogAsync,True,False,_confirmationService,,DeleteCloudModlistAsync;RenameCloudModlistAsync,VintageStoryModManager.Services.CloudManagementDialogTextBuilder;VintageStoryModManager.Services.CloudModlistManagementService;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Views.Dialogs.CloudModlistManagementDialog,"CloudModlistManagementService.LoadEntriesAsync;_confirmationService.NotifyAsync(
+                    CloudManagementDialogTextBuilder.NoCloudModlistsSavedMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",,
+MainWindow.CloudManagement.cs,UpdateCloudModlistsAfterChangeAsync,True,False,_viewModel,_cloudModlistsLoaded,RefreshCloudModlistsAsync,,RefreshCloudModlistsAsync,,
+MainWindow.CloudSave.cs,PromptForCloudSaveReplacement,False,False,,,,VintageStoryModManager.Views.Dialogs.CloudSlotSelectionDialog,,,
+MainWindow.CloudSave.cs,SaveCloudModlistButton_OnClick,True,True,_viewModel,,RefreshCloudModlistsAsync;SaveModlistToCloudAsync,,RefreshCloudModlistsAsync;SaveModlistToCloudAsync,SaveCloudModlistButton.Click,
+MainWindow.CloudSave.cs,SaveModlistToCloudAsync,False,False,_confirmationService;_viewModel,,BuildModConfigOptions;DetermineUploaderName;ExecuteCloudOperationAsync;PromptForCloudSaveReplacement;ResolveGameVersion;TryBuildCurrentModlistJson;TryReadModConfigurations,VintageStoryModManager.Models.CloudModlistSlot;VintageStoryModManager.Models.ModConfigurationSnapshot;VintageStoryModManager.Services.CloudModlistHelper;VintageStoryModManager.Services.CloudModlistSavePlan;VintageStoryModManager.Services.CloudModlistSaveService;VintageStoryModManager.Services.CloudSaveDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InstalledModsPdfGenerator;VintageStoryModManager.Views.Dialogs.CloudModlistDetailsDialog,"CloudModlistSaveService.PrepareSaveAsync;CloudModlistSaveService.SaveAsync;_confirmationService.ConfirmAsync(
+                            CloudSaveDialogTextBuilder.BuildReplaceExistingPrompt(
+                                trimmedModlistName,
+                                slotLabel),
+                            ""Simple VS Manager"",
+                            DialogSeverity.Question)
+                        .ConfigureAwait",,
+MainWindow.CloudSave.cs,SaveModlistToCloudMenuItem_OnClick,True,True,_viewModel,_cloudModlistsLoaded,RefreshCloudModlistsAsync;SaveModlistToCloudAsync,,RefreshCloudModlistsAsync;SaveModlistToCloudAsync,,
+MainWindow.ColumnVisibility.cs,ApplyColumnVisibilityPreferencesToViewModel,False,False,_installedColumnVisibilityPreferences;_viewModel,,NotifyViewModelOfInstalledColumnVisibility,,,,
+MainWindow.ColumnVisibility.cs,ApplyInstalledColumnVisibility,False,False,,,,VintageStoryModManager.InstalledModsColumn,,,
+MainWindow.ColumnVisibility.cs,InitializeColumnVisibilityMenu,False,False,,,RegisterColumnMenuItem,VintageStoryModManager.InstalledModsColumn,,,
+MainWindow.ColumnVisibility.cs,InstalledModsColumnMenuItem_OnChecked,False,True,_installedColumnVisibilityPreferences;_userConfiguration,,ApplyInstalledColumnVisibility;NotifyViewModelOfInstalledColumnVisibility,VintageStoryModManager.InstalledModsColumn,,ActiveColumnMenuItem.Checked;ActiveColumnMenuItem.Unchecked;AuthorsColumnMenuItem.Checked;AuthorsColumnMenuItem.Unchecked;IconColumnMenuItem.Checked;IconColumnMenuItem.Unchecked;LatestVersionColumnMenuItem.Checked;LatestVersionColumnMenuItem.Unchecked;NameColumnMenuItem.Checked;NameColumnMenuItem.Unchecked;SideColumnMenuItem.Checked;SideColumnMenuItem.Unchecked;StatusColumnMenuItem.Checked;StatusColumnMenuItem.Unchecked;TagsColumnMenuItem.Checked;TagsColumnMenuItem.Unchecked;UserReportsColumnMenuItem.Checked;UserReportsColumnMenuItem.Unchecked;VersionColumnMenuItem.Checked;VersionColumnMenuItem.Unchecked,
+MainWindow.ColumnVisibility.cs,NotifyViewModelOfInstalledColumnVisibility,False,False,_viewModel,,,,,,
+MainWindow.ColumnVisibility.cs,RegisterColumnMenuItem,False,False,_installedColumnVisibilityPreferences;_userConfiguration,,ApplyInstalledColumnVisibility;NotifyViewModelOfInstalledColumnVisibility,,,,InstalledModsColumnMenuItem_OnChecked
+MainWindow.Compatibility.cs,CheckModsCompatibilityMenuItem_OnClick,True,True,_confirmationService;_userConfiguration;_viewModel,,,VintageStoryModManager.CompatibilityEvaluation;VintageStoryModManager.Services.CompatibilityDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InternetAccessManager;VintageStoryModManager.Services.ModCompatibilityEvaluator;VintageStoryModManager.Services.VintageStoryGameVersionService;VintageStoryModManager.ViewModels.MainViewModel;VintageStoryModManager.ViewModels.ModListItemViewModel;VintageStoryModManager.Views.Dialogs.CompatibilityResultsDialog;VintageStoryModManager.Views.Dialogs.VintageStoryVersionSelectionDialog,"VintageStoryGameVersionService
+                .GetRecentReleaseVersionsAsync(10)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""Could not determine recent Vintage Story versions."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""Enable Internet Access in the File menu to check mod compatibility."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    CompatibilityDialogTextBuilder.BuildFailedToRetrieveVersionsMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    CompatibilityDialogTextBuilder.BuildNoInstalledModsMessage(targetVersion),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",MenuItem.Click,
+MainWindow.Compatibility.cs,ExperimentalCompReviewMenuItem_OnClick,True,True,_confirmationService;_modCompatibilityCommentsService;_viewModel,,,VintageStoryModManager.Services.CompatibilityDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InternetAccessDisabledException;VintageStoryModManager.Services.ModCompatibilityCommentsService.ExperimentalCompReviewResult;VintageStoryModManager.Services.ModCompatibilityReviewHelper;VintageStoryModManager.ViewModels.ModListItemViewModel,"_confirmationService.NotifyAsync(
+                    ""Select a mod first!"",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    CompatibilityDialogTextBuilder.BuildExperimentalCompReviewFailedMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ex.Message,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    messageText,
+                    title,
+                    result.Top3.Count > 0 ? DialogSeverity.Information : DialogSeverity.Warning)
+                .ConfigureAwait;_modCompatibilityCommentsService
+                .GetTop3CommentsAsync(modSlug, latestVersion)
+                .ConfigureAwait",,
+MainWindow.ConfigurationMigration.cs,CheckAndPromptMigrationAsync,True,False,_confirmationService;_userConfiguration,,PerformMigrationAsync,VintageStoryModManager.Services.ConfigurationMigrationDialogTextBuilder;VintageStoryModManager.Services.ConfigurationMigrationService;VintageStoryModManager.Services.DialogSeverity,"PerformMigrationAsync().ConfigureAwait;_confirmationService.ConfirmAsync(
+                ConfigurationMigrationDialogTextBuilder.MigrationPromptMessage,
+                ""Simple VS Manager - Configuration Migration"",
+                DialogSeverity.Question)
+            .ConfigureAwait",,
+MainWindow.ConfigurationMigration.cs,PerformMigrationAsync,True,False,_confirmationService,,,VintageStoryModManager.Services.ConfigurationMigrationDialogTextBuilder;VintageStoryModManager.Services.ConfigurationMigrationService;VintageStoryModManager.Services.DialogSeverity,"Task.Run(() => { migrationSuccess = ConfigurationMigrationService.PerformMigration(); })
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ConfigurationMigrationDialogTextBuilder.MigrationFailureMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ConfigurationMigrationDialogTextBuilder.MigrationSuccessMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",,
+MainWindow.DataFolderBackups.cs,ChangeBackupLocationMenuItem_OnClick,True,True,_confirmationService;_dataFolderBackupCoordinator;_userConfiguration;_viewModel,,,VintageStoryModManager.Services.DataFolderBackupDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity,"_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildChangeBackupLocationFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.DataFolderBackups.cs,CreateDataBackupProgressReporter,False,False,,,,VintageStoryModManager.Services.DataBackupProgress,,,
+MainWindow.DataFolderBackups.cs,DeleteDataFolderBackupsMenuItem_OnClick,True,True,_confirmationService;_dataDirectory;_dataFolderBackupCoordinator;_viewModel,,,VintageStoryModManager.Services.DataFolderBackupDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.VintageStoryVersionLocator,"_confirmationService.ConfirmAsync(
+                DataFolderBackupDialogTextBuilder.BuildDeleteConfirmation(displayVersion),
+                ""Simple VS Manager"",
+                DialogSeverity.Warning)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.NoMatchingBackupsMessage,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Information)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildDeleteFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.SetDataDirectoryBeforeDeleteMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.UnknownInstalledVersionDeleteMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    statusMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",,
+MainWindow.DataFolderBackups.cs,HideDataBackupOverlay,False,False,,,,,,,
+MainWindow.DataFolderBackups.cs,OpenDataBackupDirectoryMenuItem_OnClick,True,True,_confirmationService;_dataFolderBackupCoordinator,,,VintageStoryModManager.Services.DataFolderBackupDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity,"_confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.BackupDirectoryUnavailableMessage,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildOpenBackupDirectoryFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.DataFolderBackups.cs,RestoreDataBackupAsync,True,False,_confirmationService;_dataDirectory;_dataFolderBackupCoordinator;_viewModel,,CreateDataBackupProgressReporter;HideDataBackupOverlay;RefreshModsAsync;ShowDataBackupOverlay,VintageStoryModManager.Helpers.PathRelationshipHelper;VintageStoryModManager.Services.DataFolderBackupDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.VersionStringUtility;VintageStoryModManager.Services.VintageStoryVersionLocator,"RefreshModsAsync(true).ConfigureAwait;_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildRestoreFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.BuildVersionMismatchMessage(
+                        backupVersionDisplay,
+                        installedVersionDisplay),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.DifferentDataFolderRestoreMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.RestoreSuccessMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_dataFolderBackupCoordinator.RestoreBackupAsync(summary, _dataDirectory!, progress, CancellationToken.None)
+                .ConfigureAwait",,
+MainWindow.DataFolderBackups.cs,RestoreDataFolderMenuItem_OnBackupClick,True,True,_confirmationService,,RestoreDataBackupAsync,VintageStoryModManager.Services.DataBackupSummary;VintageStoryModManager.Services.DataFolderBackupDialogTextBuilder;VintageStoryModManager.Services.DialogSeverity,"RestoreDataBackupAsync(summary).ConfigureAwait;_confirmationService.ConfirmAsync(
+                DataFolderBackupDialogTextBuilder.RestoreConfirmationMessage,
+                ""Simple VS Manager"",
+                DialogSeverity.Warning)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                    DataFolderBackupDialogTextBuilder.DataDirectoryUnavailableForRestoreMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",,
+MainWindow.DataFolderBackups.cs,RestoreDataFolderMenuItem_OnSubmenuOpened,False,True,_dataDirectory;_dataFolderBackupCoordinator,,,VintageStoryModManager.Helpers.PathRelationshipHelper;VintageStoryModManager.Services.DataBackupSummary;VintageStoryModManager.Services.VintageStoryVersionLocator,,RestoreDataFolderMenuItem.SubmenuOpened,ChangeBackupLocationMenuItem_OnClick;DeleteDataFolderBackupsMenuItem_OnClick;OpenDataBackupDirectoryMenuItem_OnClick;RestoreDataFolderMenuItem_OnBackupClick
+MainWindow.DataFolderBackups.cs,ShowDataBackupOverlay,False,False,,,,,,,
+MainWindow.Debugging.cs,ExperimentalAllModsDebuggingMenuItem_OnClick,True,True,_confirmationService;_viewModel,,,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InstalledModLogIdentifierListBuilder;VintageStoryModManager.Services.ModDebugLogParser;VintageStoryModManager.Views.Dialogs.ExperimentalModDebugDialog;VintageStoryModManager.Views.Dialogs.ExperimentalModDebugLogLine,"Task.Run(() => ModDebugLogParser.CollectInstalledModDebugLines(logsDirectory, modIdentifiers))
+                .ConfigureAwait;Task.Yield;_confirmationService.NotifyAsync(
+                    ""No installed mods with a valid mod ID were found to search for in the logs."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""No log files were found in the manager's Logs folder."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""The installed mod list is not available. Please wait for the manager to finish loading and try again."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""The manager data directory is not available. Please configure the Vintage Story data folder and try again."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",MenuItem.Click,
+MainWindow.Debugging.cs,ExperimentalModDebuggingMenuItem_OnClick,True,True,_confirmationService;_viewModel,,,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModDebugLogParser;VintageStoryModManager.ViewModels.ModListItemViewModel;VintageStoryModManager.Views.Dialogs.ExperimentalModDebugDialog;VintageStoryModManager.Views.Dialogs.ExperimentalModDebugLogLine,"Task.Run(() => ModDebugLogParser.CollectExperimentalModDebugLines(logsDirectory, modId))
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""No log files were found in the manager's Logs folder."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""Please select a mod before using Experimental Mod Debugging."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""The manager data directory is not available. Please configure the Vintage Story data folder and try again."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""The selected mod does not specify a mod ID to search for in the logs."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",MenuItem.Click,
+MainWindow.DeveloperProfiles.cs,DeveloperProfileManager_OnCurrentProfileChanged,False,True,,,DeveloperProfileManager_OnCurrentProfileChanged;RefreshDeveloperProfilesMenuEntries;UpdateDeveloperProfileMenuChecks,VintageStoryModManager.Services.DeveloperProfileManager,,,
+MainWindow.DeveloperProfiles.cs,DeveloperProfileMenuItem_OnClick,True,True,_userConfiguration,_cloudModlistStore;_dataDirectory,ReloadViewModelAsync;UpdateDeveloperProfileMenuChecks,VintageStoryModManager.Services.DeveloperProfile;VintageStoryModManager.Services.DeveloperProfileManager,ReloadViewModelAsync,,
+MainWindow.DeveloperProfiles.cs,RefreshDeveloperProfilesMenuEntries,False,False,_developerProfileMenuItems,,UpdateDeveloperProfileMenuChecks,VintageStoryModManager.Services.DeveloperProfile;VintageStoryModManager.Services.DeveloperProfileManager,,,DeveloperProfileMenuItem_OnClick
+MainWindow.DeveloperProfiles.cs,UpdateDeveloperProfileMenuChecks,False,False,_developerProfileMenuItems,,,VintageStoryModManager.Services.DeveloperProfile;VintageStoryModManager.Services.DeveloperProfileManager,,,
+MainWindow.ExclusivePresetApplication.cs,ApplyExclusivePresetAsync,True,False,_confirmationService;_userConfiguration;_viewModel,_recentLocalModBackupDirectory;_recentLocalModBackupModNames,CreateLocalModBackupSessionDirectory;GetLocalModBackupEntryDirectory;RefreshModsAsync;TryGetManagedModPath,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.LocalModBackupService;VintageStoryModManager.Services.PresetDialogTextBuilder;VintageStoryModManager.ViewModels.ModListItemViewModel,"RefreshModsAsync(true).ConfigureAwait;_confirmationService.NotifyAsync(
+                    PresetDialogTextBuilder.BuildExclusiveRemovalFailureMessage(failures),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",,
+MainWindow.FeatureDirectories.cs,CreateLocalModBackupSessionDirectory,False,False,,,EnsureLocalModBackupRootDirectory,VintageStoryModManager.Helpers.FileNameHelper,,,
+MainWindow.FeatureDirectories.cs,EnsureBackupDirectory,False,False,_userConfiguration,,,,,,
+MainWindow.FeatureDirectories.cs,EnsureCloudModListCacheDirectory,False,False,_userConfiguration,,,,,,
+MainWindow.FeatureDirectories.cs,EnsureLocalModBackupRootDirectory,False,False,,,EnsureBackupDirectory,,,,
+MainWindow.FeatureDirectories.cs,EnsureModListDirectory,False,False,_userConfiguration,,,,,,
+MainWindow.FeatureDirectories.cs,EnsureRebuiltModListDirectory,False,False,,,EnsureModListDirectory,,,,
+MainWindow.FeatureDirectories.cs,GetLocalModBackupEntryDirectory,False,False,,,,VintageStoryModManager.Helpers.FileNameHelper,,,
+MainWindow.FolderOpening.cs,OpenConfigFolderButton_OnClick,False,True,_dataDirectory,,,VintageStoryModManager.Helpers.FolderOpeningHelper,,MenuItem.Click,
+MainWindow.FolderOpening.cs,OpenLogsFolderButton_OnClick,False,True,_dataDirectory,,,VintageStoryModManager.Helpers.FolderOpeningHelper,,MenuItem.Click,
+MainWindow.FolderOpening.cs,OpenModFolderButton_OnClick,False,True,_dataDirectory,,,VintageStoryModManager.Helpers.FolderOpeningHelper,,MenuItem.Click,
+MainWindow.GameLaunch.cs,LaunchGameButton_OnClick,True,True,_confirmationService;_customShortcutPath;_isApplyingPreset;_userConfiguration,_customShortcutPath,TryEnsureDataBackupBeforeLaunchAsync,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.GameDirectoryLocator;VintageStoryModManager.Services.GameLaunchDialogTextBuilder,"TryEnsureDataBackupBeforeLaunchAsync().ConfigureAwait;_confirmationService.NotifyAsync(
+                        ""The custom Vintage Story shortcut could not be found. Please set it again from File > Set custom Vintage Story shortcut."",
+                        ""Simple VS Manager"",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        GameLaunchDialogTextBuilder.BuildShortcutLaunchFailedMessage(ex.Message),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""The Vintage Story executable could not be found. Verify the game folder in File > Set Game Folder."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""The VintagestoryData folder could not be located. Please verify it from File > Set Data Folder before launching the game."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    GameLaunchDialogTextBuilder.BuildLaunchFailedMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",LaunchGameButton.Click,
+MainWindow.GameLaunch.cs,SetCustomShortcutMenuItem_OnClick,True,True,_confirmationService;_userConfiguration,_customShortcutPath,,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.GameLaunchDialogTextBuilder,"_confirmationService.ConfirmAsync(
+                ""Do you want to clear the custom Vintage Story shortcut?"",
+                ""Simple VS Manager"",
+                DialogSeverity.Question)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ""The selected shortcut could not be found."",
+                        ""Simple VS Manager"",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        GameLaunchDialogTextBuilder.BuildInvalidShortcutMessage(ex.Message),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait",MenuItem.Click,
+MainWindow.GameLaunch.cs,TryEnsureDataBackupBeforeLaunchAsync,True,False,_confirmationService;_dataDirectory;_dataFolderBackupCoordinator;_userConfiguration,,CreateDataBackupProgressReporter;HideDataBackupOverlay;ShowDataBackupOverlay,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.GameLaunchDialogTextBuilder;VintageStoryModManager.Services.VintageStoryVersionLocator,"_confirmationService.ConfirmAsync(
+                    GameLaunchDialogTextBuilder.BuildBackupFailedPromptMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    GameLaunchDialogTextBuilder.BuildBackupFailedMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_dataFolderBackupCoordinator
+                .CreateBackupAsync(_dataDirectory!, installedGameVersion, progress, CancellationToken.None)
+                .ConfigureAwait",,
+MainWindow.Help.cs,DiscordButton_OnClick,True,True,DiscordInviteUrl;_confirmationService,,,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.HelpDialogTextBuilder;VintageStoryModManager.Services.InternetAccessManager,"_confirmationService.NotifyAsync(
+                    ""Enable Internet Access in the File menu to open Discord."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    HelpDialogTextBuilder.BuildOpenDiscordFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",DiscordButton.Click,
+MainWindow.Help.cs,GuideMenuItem_OnClick,False,True,_userConfiguration,,,VintageStoryModManager.Services.ModCacheLocator;VintageStoryModManager.Views.Dialogs.GuideDialogWindow,,MenuItem.Click,
+MainWindow.Help.cs,HelpMenuItem_OnClick,False,True,_userConfiguration,,,VintageStoryModManager.Services.ModCacheLocator;VintageStoryModManager.Views.Dialogs.HelpDialogWindow,,MenuItem.Click,
+MainWindow.Help.cs,ModUsagePromptLink_OnClick,True,True,,,ShowModUsagePromptDialogAsync,,ShowModUsagePromptDialogAsync().ConfigureAwait,Hyperlink.Click,
+MainWindow.Identity.cs,ApplyPlayerIdentityToCloudStore,False,False,_viewModel,,,,,,
+MainWindow.Identity.cs,ApplyPlayerIdentityToUiAndCloudStore,False,False,_cloudModlistStore,,ApplyPlayerIdentityToCloudStore;ResolveUploaderName;SetUsernameDisplay,,,,
+MainWindow.Identity.cs,DetermineUploaderName,False,False,,,ResolveUploaderName;SetUsernameDisplay,,,,
+MainWindow.Identity.cs,ResolveUploaderName,False,False,_cloudModlistStore;_viewModel,,,VintageStoryModManager.Services.UploaderNameResolver,,,
+MainWindow.Identity.cs,SaveUploaderName,False,False,_cloudModlistStore;_userConfiguration,,ResolveUploaderName;SetUsernameDisplay,,,,
+MainWindow.Identity.cs,SetUsernameDisplay,False,False,_userConfiguration,,,,,,
+MainWindow.InternetAccess.cs,InternetAccessManager_OnInternetAccessChanged,False,True,,,RefreshManagerUpdateLinkAsync;Update;UpdateCloudModlistControlsEnabledState,,,,
+MainWindow.LocalModlists.cs,DeleteLocalModlistsButton_OnClick,True,True,_confirmationService;_selectedLocalModlists;_viewModel,,RefreshLocalModlists,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.LocalModlistDeletionResult;VintageStoryModManager.Services.LocalModlistDialogTextBuilder;VintageStoryModManager.Services.LocalModlistFileService,"_confirmationService.ConfirmAsync(
+                deleteConfirmationMessage,
+                ""Delete Modlists"")
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                    deletionFailureMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",DeleteLocalModlistsButton.Click,
+MainWindow.LocalModlists.cs,InstallLocalModlistButton_OnClick,True,True,_confirmationService;_selectedLocalModlists,,LoadModlistFromFileAsync;RefreshLocalModlistsAsync,VintageStoryModManager.Models.LocalModlistListEntry;VintageStoryModManager.Services.DialogSeverity,"LoadModlistFromFileAsync(entry.FilePath).ConfigureAwait;RefreshLocalModlistsAsync(true).ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""The selected modlist file could not be found. It may have been moved or deleted."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",InstallLocalModlistButton.Click,
+MainWindow.LocalModlists.cs,LocalModlistsDataGrid_OnSelectionChanged,False,True,,,SetLocalModlistSelection,VintageStoryModManager.Models.LocalModlistListEntry,,LocalModlistsDataGrid.SelectionChanged,
+MainWindow.LocalModlists.cs,ModifyLocalModlistButton_OnClick,True,True,_confirmationService;_selectedLocalModlists;_viewModel,,RefreshLocalModlists,VintageStoryModManager.Models.LocalModlistListEntry;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.LocalModlistDialogTextBuilder;VintageStoryModManager.Services.LocalModlistFileService;VintageStoryModManager.Services.LocalModlistUpdateResult;VintageStoryModManager.Views.Dialogs.LocalModlistEditDialog,"_confirmationService.NotifyAsync(
+                    updateFailureMessage,
+                    ""Modify Modlist"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",ModifyLocalModlistButton.Click,
+MainWindow.LocalModlists.cs,OpenModlistsFolderButton_OnClick,True,True,_confirmationService,,EnsureModListDirectory,VintageStoryModManager.Helpers.FolderOpeningHelper;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.LocalModlistDialogTextBuilder,"_confirmationService.NotifyAsync(
+                    LocalModlistDialogTextBuilder.BuildFolderFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",MenuItem.Click,
+MainWindow.LocalModlists.cs,RefreshLocalModlists,False,False,,,RefreshLocalModlistsAsync,,,,
+MainWindow.LocalModlists.cs,RefreshLocalModlistsAsync,True,False,_confirmationService;_localModlistsLoaded;_selectedLocalModlists;_viewModel,_localModlistsLoaded,EnsureModListDirectory;SetLocalModlistSelection,VintageStoryModManager.Models.LocalModlistListEntry;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.LocalModlistCatalogResult;VintageStoryModManager.Services.LocalModlistCatalogService;VintageStoryModManager.Services.LocalModlistDialogTextBuilder,"_confirmationService.NotifyAsync(
+                    LocalModlistDialogTextBuilder.BuildReadFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    catalogFailureMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",,
+MainWindow.LocalModlists.cs,SaveLocalModlistButton_OnClick,True,True,_selectedLocalModlists,,RefreshLocalModlistsAsync;TrySaveModlistAsync,,"RefreshLocalModlistsAsync(true, preservedSelection).ConfigureAwait;TrySaveModlistAsync(null).ConfigureAwait",SaveLocalModlistButton.Click,
+MainWindow.LocalModlists.cs,SetLocalModlistSelection,False,False,_selectedLocalModlists,,UpdateLocalModlistControlsEnabledState,VintageStoryModManager.Models.LocalModlistListEntry,,,
+MainWindow.LocalModlists.cs,UpdateLocalModlistControlsEnabledState,False,False,_selectedLocalModlists,,,,,,
+MainWindow.Logging.cs,InitializeTraceListener,False,False,_modActivityLoggingService;_traceListener;_userConfiguration,_traceListener,,VintageStoryModManager.Services.ModManagerTraceListener,,,
+MainWindow.ManagedModPaths.cs,TryGetManagedModPath,False,False,_dataDirectory,,,VintageStoryModManager.Services.ManagedModPathHelper,,,
+MainWindow.ManagerCache.cs,ClearAllCachesMenuItem_OnClick,True,True,_confirmationService,,,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ManagerCacheCleanupService;VintageStoryModManager.Services.ManagerCacheClearResult;VintageStoryModManager.Services.ManagerCacheDialogTextBuilder,"_confirmationService.ConfirmAsync(
+                ManagerCacheDialogTextBuilder.ClearAllCachesConfirmationMessage,
+                ""Simple VS Manager"",
+                DialogSeverity.Question)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ManagerCacheDialogTextBuilder.ManagerDataDirectoryUnavailableMessage,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerCacheDialogTextBuilder.BuildClearAllCachesFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerCacheDialogTextBuilder.BuildClearAllCachesResultMessage(
+                        clearResult.DeletedFolders,
+                        clearResult.FailedFolders),
+                    ""Simple VS Manager"",
+                    clearResult.FailedFolders.Count > 0
+                        ? DialogSeverity.Warning
+                        : DialogSeverity.Information)
+                .ConfigureAwait",MenuItem.Click,
+MainWindow.ManagerCache.cs,DeleteCachedModsMenuItem_OnClick,True,True,_confirmationService,,RefreshDeleteCachedModsMenuHeaderAsync,VintageStoryModManager.Services.CachedModsDeletionStatus;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ManagerCacheCleanupService;VintageStoryModManager.Services.ManagerCacheDialogTextBuilder,"RefreshDeleteCachedModsMenuHeaderAsync;_confirmationService.ConfirmAsync(
+                ManagerCacheDialogTextBuilder.DeleteCachedModsConfirmationMessage,
+                ""Simple VS Manager"",
+                DialogSeverity.Warning)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                            ManagerCacheDialogTextBuilder.CachedModsDeletedSuccessfullyMessage,
+                            ""Simple VS Manager"",
+                            DialogSeverity.Information)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                            ManagerCacheDialogTextBuilder.CachedModsDirectoryUnavailableMessage,
+                            ""Simple VS Manager"",
+                            DialogSeverity.Warning)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                            ManagerCacheDialogTextBuilder.NoCachedModsFoundMessage,
+                            ""Simple VS Manager"",
+                            DialogSeverity.Information)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerCacheDialogTextBuilder.BuildDeleteCachedModsFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",DeleteCachedModsMenuItem.Click,
+MainWindow.ManagerCache.cs,ModsMenuItem_OnSubmenuOpened,True,True,,,RefreshDeleteCachedModsMenuHeaderAsync,,RefreshDeleteCachedModsMenuHeaderAsync,MenuItem.SubmenuOpened,
+MainWindow.ManagerCache.cs,RefreshDeleteCachedModsMenuHeaderAsync,True,False,,,,VintageStoryModManager.Services.ManagerCacheCleanupService,Task.Run,,
+MainWindow.ManagerDataDeletion.cs,DeleteAllManagerFilesMenuItem_OnClick,True,True,_confirmationService;_dataDirectory,,DeleteAllCloudModlistsAndAuthorizationAsync;ExecuteCloudOperationAsync;SwitchToInstalledModsTab,VintageStoryModManager.ManagerDeletionResult;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ManagerDataDeletionDialogTextBuilder;VintageStoryModManager.Services.ManagerDataDeletionService,"ExecuteCloudOperationAsync;Task.Run(() => ManagerDataDeletionService.DeleteAllManagerFiles(dataDirectory)).ConfigureAwait;_confirmationService.ConfirmAsync(
+                ManagerDataDeletionDialogTextBuilder.DeleteAllManagerFilesConfirmationMessage,
+                ""Simple VS Manager"",
+                DialogSeverity.Warning)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerDataDeletionDialogTextBuilder.NoManagerFilesFoundMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                ManagerDataDeletionDialogTextBuilder.BuildDeletionResultMessage(
+                    deletionResult.DeletedPaths,
+                    deletionResult.FailedPaths),
+                ""Simple VS Manager"",
+                deletionResult.FailedPaths.Count > 0
+                    ? DialogSeverity.Warning
+                    : DialogSeverity.Information)
+            .ConfigureAwait",MenuItem.Click,
+MainWindow.ManagerFolder.cs,ChangeManagerFolderMenuItem_OnClick,True,True,_confirmationService,,HandleResetManagerFolderAsync;RestartApplication,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ManagerDataFolderRelocationService;VintageStoryModManager.Services.ManagerFolderDialogTextBuilder;VintageStoryModManager.Services.ManagerFolderMoveResult;VintageStoryModManager.Views.Dialogs.ChangeManagerFolderDialog;VintageStoryModManager.Views.Dialogs.ChangeManagerFolderDialogResult,"HandleResetManagerFolderAsync(currentFolder).ConfigureAwait;_confirmationService.ConfirmAsync(
+                    ManagerFolderDialogTextBuilder.BuildExistingFolderPrompt(
+                        newManagerFolder),
+                    ""Folder Already Exists"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.ConfirmAsync(
+                ManagerFolderDialogTextBuilder.BuildMoveConfirmationMessage(
+                    currentFolder,
+                    newManagerFolder),
+                ""Confirm Move"",
+                DialogSeverity.Warning)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ManagerFolderDialogTextBuilder.SameLocationMessage,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Information)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerFolderDialogTextBuilder.BuildMoveFailureMessage(ex.Message),
+                    ""Error"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerFolderDialogTextBuilder.BuildMoveSuccessMessage(
+                        newManagerFolder),
+                    ""Move Complete"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerFolderDialogTextBuilder.CannotDetermineCurrentManagerFolderMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",MenuItem.Click,
+MainWindow.ManagerFolder.cs,HandleResetManagerFolderAsync,True,False,_confirmationService,,RestartApplication,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ManagerDataFolderRelocationService;VintageStoryModManager.Services.ManagerFolderDialogTextBuilder,"_confirmationService.ConfirmAsync(
+                    ManagerFolderDialogTextBuilder.BuildExistingFolderPrompt(
+                        defaultFolder),
+                    ""Folder Already Exists"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.ConfirmAsync(
+                ManagerFolderDialogTextBuilder.BuildResetConfirmationMessage(
+                    currentFolder,
+                    defaultFolder),
+                ""Reset to Default Location"",
+                DialogSeverity.Question)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerFolderDialogTextBuilder.BuildAlreadyDefaultMessage(
+                        defaultFolder),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerFolderDialogTextBuilder.BuildResetFailureMessage(ex.Message),
+                    ""Error"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerFolderDialogTextBuilder.BuildResetSuccessMessage(
+                        defaultFolder),
+                    ""Reset Complete"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerFolderDialogTextBuilder.CannotDetermineDefaultManagerFolderMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.ManagerFolder.cs,ManagerDataFolderMenuItem_OnClick,True,True,_confirmationService,,,VintageStoryModManager.Helpers.FolderOpeningHelper;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ManagerFolderDialogTextBuilder;VintageStoryModManager.Services.ModCacheLocator,"_confirmationService.NotifyAsync(
+                    ManagerFolderDialogTextBuilder.BuildOpenManagerFolderFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerFolderDialogTextBuilder.ManagerDataFolderUnavailableMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",MenuItem.Click,
+MainWindow.ManagerFolder.cs,RestartApplication,False,False,,,,,,,
+MainWindow.ManagerUpdateLink.cs,ManagerModDbPageMenuItem_OnClick,True,True,,,OpenManagerModDatabasePageAsync,,OpenManagerModDatabasePageAsync().ConfigureAwait,MenuItem.Click,
+MainWindow.ManagerUpdateLink.cs,ManagerUpdateLink_OnRequestNavigate,True,True,,,OpenManagerModDatabasePageAsync,,OpenManagerModDatabasePageAsync().ConfigureAwait,Hyperlink.RequestNavigate,
+MainWindow.ManagerUpdateLink.cs,OpenManagerModDatabasePageAsync,True,False,ManagerModDatabaseUrl;_confirmationService,,,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InternetAccessManager;VintageStoryModManager.Services.ManagerUpdateLinkDialogTextBuilder,"_confirmationService.NotifyAsync(
+                    ""Internet access is disabled. Enable Internet Access in the File menu to open the mod database page."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ManagerUpdateLinkDialogTextBuilder.BuildOpenModDatabasePageFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.ManagerUpdateLink.cs,RefreshManagerUpdateLinkAsync,True,False,_modDatabaseService,,,VintageStoryModManager.Helpers.ManagerVersionHelper;VintageStoryModManager.Models.ModDatabaseInfo;VintageStoryModManager.Services.InternetAccessManager;VintageStoryModManager.Services.VersionStringUtility,"_modDatabaseService
+                .TryLoadDatabaseInfoAsync(ManagerModDatabaseModId, currentVersion, null)
+                .ConfigureAwait",,
+MainWindow.ModActivationInput.cs,ActiveToggle_OnPreviewMouseLeftButtonDown,False,True,,,,ModernWpf.Controls.ToggleSwitch,,ui:ToggleSwitch.PreviewMouseLeftButtonDown,
+MainWindow.ModActivationInput.cs,ActiveToggle_OnPreviewMouseLeftButtonUp,False,True,,,,ModernWpf.Controls.ToggleSwitch,,ui:ToggleSwitch.PreviewMouseLeftButtonUp,
+MainWindow.ModActivationInput.cs,ActiveToggle_OnPreviewMouseMove,False,True,,,,ModernWpf.Controls.ToggleSwitch,,ui:ToggleSwitch.PreviewMouseMove,
+MainWindow.ModActivationInput.cs,ActiveToggle_OnToggled,False,True,_isApplyingMultiToggle,_isApplyingMultiToggle,,ModernWpf.Controls.ToggleSwitch;VintageStoryModManager.ViewModels.ModListItemViewModel,,ui:ToggleSwitch.Toggled,
+MainWindow.ModBrowser.cs,InitializeModBrowserView,False,False,_modBrowserViewModel,_modBrowserViewModel,InitializeVotesCacheWatcher;UpdateModBrowserTabVisibilityState,VintageStoryModManager.Services.ModApiService;VintageStoryModManager.ViewModels.ModBrowserViewModel,,,InstallModFromBrowserAsync
+MainWindow.ModBrowser.cs,ModDatabasePageButton_OnClick,False,True,,,,VintageStoryModManager.ViewModels.ModListItemViewModel,,SelectedModDatabasePageButton.Click,
+MainWindow.ModBrowser.cs,OnUserReportVoteSubmitted,False,True,_modBrowserViewModel,,,,,,
+MainWindow.ModBrowserInstallation.cs,AddModToInstalledAndRemoveFromSearch,False,False,_modBrowserViewModel,,,,,,
+MainWindow.ModBrowserInstallation.cs,ConvertToModListItemViewModel,False,False,_viewModel,,,VintageStoryModManager.Models.ModEntry;VintageStoryModManager.Services.DownloadableModConverter;VintageStoryModManager.ViewModels.ActivationResult;VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModBrowserInstallation.cs,InstallModFromBrowserAsync,True,False,_isModUpdateInProgress,,AddModToInstalledAndRemoveFromSearch;ConvertToModListItemViewModel;InstallModCoreAsync,VintageStoryModManager.ViewModels.ModListItemViewModel,InstallModCoreAsync,,
+MainWindow.ModBrowserSynchronization.cs,InitializeVotesCacheWatcher,False,False,_votesCacheWatcher,_votesCacheWatcher,,VintageStoryModManager.Services.ModVersionVoteService;VintageStoryModManager.Services.VotesCacheWatcher,,,OnVotesCacheChanged
+MainWindow.ModBrowserSynchronization.cs,ModsWatcherOnChangesDetected,False,True,_modBrowserViewModel,,,,_modBrowserViewModel.RefreshSearchAsync().ConfigureAwait,,
+MainWindow.ModBrowserSynchronization.cs,OnVotesCacheChanged,False,True,_modBrowserViewModel;_votesCacheWatcher,,,,,,
+MainWindow.ModBrowserSynchronization.cs,SubscribeModBrowserToDirectoryWatcher,False,False,_isModBrowserWatcherSubscribed;_modBrowserViewModel;_viewModel,_isModBrowserWatcherSubscribed,,,,,ModsWatcherOnChangesDetected
+MainWindow.ModBrowserSynchronization.cs,SyncInstalledModsToModBrowser,False,False,_modBrowserViewModel;_viewModel,,,VintageStoryModManager.Services.InstalledModIdListBuilder,,,
+MainWindow.ModBrowserSynchronization.cs,UnsubscribeModBrowserFromDirectoryWatcher,False,False,_isModBrowserWatcherSubscribed;_viewModel,_isModBrowserWatcherSubscribed,,,,,ModsWatcherOnChangesDetected
+MainWindow.ModConfigCapture.cs,BuildModConfigOptions,False,False,_userConfiguration;_viewModel,,,VintageStoryModManager.Services.ModConfigCaptureHelper;VintageStoryModManager.Views.Dialogs.ModConfigOption,,,
+MainWindow.ModConfigCapture.cs,TryReadModConfigurations,False,False,,,,VintageStoryModManager.Services.ModConfigCaptureHelper;VintageStoryModManager.Services.ModManagerMessageBox,,,
+MainWindow.ModConfigScanning.cs,ScanForModConfigsMenuItem_OnClick,True,True,_confirmationService;_userConfiguration;_viewModel,,UpdateSelectedModEditConfigButton,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModConfigDialogTextBuilder;VintageStoryModManager.Services.ModConfigDiscoveryService;VintageStoryModManager.ViewModels.MainViewModel;VintageStoryModManager.ViewModels.ModListItemViewModel,"ModConfigDiscoveryService.ScanAsync(
+                    _dataDirectory,
+                    candidates,
+                    id => _userConfiguration.TryGetModConfigPath(id, out var path) ? path : null,
+                    (id, path) => _userConfiguration.SetModConfigPath(id, path))
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ""No missing mod configuration files were found."",
+                        ""Simple VS Manager"",
+                        DialogSeverity.Information)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModConfigDialogTextBuilder.BuildScanFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModConfigDiscoveryService.FormatAssignedConfigsMessage(results),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    blockedMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",MenuItem.Click,
+MainWindow.ModConfiguration.cs,EditConfigButton_OnClick,True,True,_confirmationService;_userConfiguration;_viewModel,,PromptForConfigFile;UpdateSelectedModEditConfigButton,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModConfigDialogTextBuilder;VintageStoryModManager.ViewModels.ModConfigEditorViewModel;VintageStoryModManager.ViewModels.ModListItemViewModel;VintageStoryModManager.Views.ModConfigEditorWindow;YamlDotNet.Core.YamlException,"_confirmationService.NotifyAsync(
+                            ModConfigDialogTextBuilder.BuildStoreFailureMessage(ex.Message),
+                            ""Simple VS Manager"",
+                            DialogSeverity.Error)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModConfigDialogTextBuilder.BuildOpenFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModConfigDialogTextBuilder.BuildStoreFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",SelectedModEditConfigButton.Click,
+MainWindow.ModDeletion.cs,DeleteModButton_OnClick,True,True,,,DeleteSelectedModsAsync;DeleteSingleModAsync,VintageStoryModManager.ViewModels.ModListItemViewModel,DeleteSelectedModsAsync;DeleteSingleModAsync,SelectedModDeleteButton.Click,
+MainWindow.ModDeletion.cs,DeleteMultipleModsAsync,True,False,_confirmationService;_viewModel,,CreateAutomaticBackupAsync;RefreshModsAsync;TryDeleteModAtPathAsync;TryGetManagedModPath,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModDeletionPromptBuilder;VintageStoryModManager.Services.ModOperationDialogTextBuilder;VintageStoryModManager.ViewModels.ModListItemViewModel,"CreateAutomaticBackupAsync(""ModsDeleted"").ConfigureAwait;RefreshModsAsync;TryDeleteModAtPathAsync(mod, path)
+                    .ConfigureAwait;_confirmationService.ConfirmAsync(
+                ModDeletionPromptBuilder.BuildConfirmationMessage(
+                    deletable.Select(d => d.Mod.DisplayName).ToList()),
+                ""Simple VS Manager"",
+                DialogSeverity.Warning)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                            errorMessage!,
+                            ""Simple VS Manager"",
+                            DialogSeverity.Information)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildRefreshAfterDeleteFailureMessage(
+                            ex.Message),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait",,
+MainWindow.ModDeletion.cs,DeleteSelectedModsAsync,True,False,,,DeleteMultipleModsAsync;DeleteSingleModAsync,,DeleteMultipleModsAsync;DeleteSingleModAsync,,
+MainWindow.ModDeletion.cs,DeleteSingleModAsync,True,False,_confirmationService;_viewModel,,CreateAutomaticBackupAsync;RefreshModsAsync;TryDeleteModAtPathAsync;TryGetManagedModPath,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModOperationDialogTextBuilder,"CreateAutomaticBackupAsync(""ModsDeleted"").ConfigureAwait;RefreshModsAsync;TryDeleteModAtPathAsync(mod, modPath)
+            .ConfigureAwait;_confirmationService.ConfirmAsync(
+                ModOperationDialogTextBuilder.BuildDeleteConfirmationMessage(
+                    mod.DisplayName),
+                ""Simple VS Manager"",
+                DialogSeverity.Warning)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildRefreshAfterDeleteFailureMessage(
+                            ex.Message),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        errorMessage!,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Information)
+                    .ConfigureAwait",,
+MainWindow.ModDeletion.cs,TryDeleteModAtPathAsync,True,False,_confirmationService;_modActivityLoggingService;_userConfiguration,,,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModOperationDialogTextBuilder,"_confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.BuildDeleteFailureMessage(
+                        mod.DisplayName,
+                        ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.BuildMissingDeletedModMessage(
+                        modPath),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",,
+MainWindow.ModDependencyRepair.cs,FixModButton_OnClick,True,True,_confirmationService;_isModUpdateInProgress;_viewModel,_isModUpdateInProgress,InstallOrUpdateDependencyAsync;UpdateSelectedModButtons,VintageStoryModManager.Models.ModDependencyInfo;VintageStoryModManager.Services.DependencyRepairHelper;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModOperationDialogTextBuilder;VintageStoryModManager.ViewModels.ModListItemViewModel,"InstallOrUpdateDependencyAsync(dependency, installedDependency)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildRefreshAfterDependencyRepairFailureMessage(
+                            ex.Message),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.BuildDependencyFailuresMessage(failures),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.NoAutoFixableDependenciesMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;viewModel.RefreshModsWithErrorsAsync(modsToRefresh).ConfigureAwait",SelectedModFixButton.Click,
+MainWindow.ModDependencyRepair.cs,InstallOrUpdateDependencyAsync,True,False,_modDatabaseService;_userConfiguration;_viewModel,,TryGetManagedModPath,VintageStoryModManager.Models.ModDatabaseInfo;VintageStoryModManager.Models.ModReleaseInfo;VintageStoryModManager.Services.ModInstallTargetPathHelper;VintageStoryModManager.Services.ModReleaseSelectionHelper;VintageStoryModManager.Services.ModUpdateDescriptor;VintageStoryModManager.Services.ModUpdateOperationHelper;VintageStoryModManager.Services.ModUpdateOperationOutcome;VintageStoryModManager.Services.ModUpdateProgress;VintageStoryModManager.Services.ModUpdateTargetPathHelper,"ModUpdateOperationHelper.ExecuteAsync(
+                    _modUpdateService, descriptor, _userConfiguration.CacheAllVersionsLocally, progress,
+                    ""The installation failed."")
+                .ConfigureAwait;_modDatabaseService
+                .TryLoadDatabaseInfoAsync(dependency.ModId, installedMod?.Version, _viewModel?.InstalledGameVersion,
+                    _userConfiguration.RequireExactVsVersionMatch)
+                .ConfigureAwait;_viewModel.PreserveActivationStateAsync(
+                    dependency.ModId,
+                    installedMod.Version,
+                    release.Version,
+                    wasActive).ConfigureAwait",,
+MainWindow.ModGridInput.cs,MainWindow_OnPreviewKeyDown,True,True,,,TryHandleModListKeyDownAsync,,TryHandleModListKeyDownAsync,MainWindowRoot.PreviewKeyDown,
+MainWindow.ModGridInput.cs,ModDatabaseCard_OnPreviewMouseLeftButtonDown,False,True,_isApplyingPreset,,HandleModRowSelection;ShouldIgnoreRowSelection,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModGridInput.cs,ModsDataGridRow_OnPreviewMouseLeftButtonDown,False,True,_isApplyingPreset,,HandleModRowSelection;ShouldIgnoreRowSelection,VintageStoryModManager.ViewModels.ModListItemViewModel,,EventSetter.Handler,
+MainWindow.ModGridInput.cs,ModsDataGrid_OnPreviewKeyDown,True,True,,,TryHandleModListKeyDownAsync,,TryHandleModListKeyDownAsync,ModsDataGrid.PreviewKeyDown,
+MainWindow.ModGridInput.cs,ModsDataGrid_OnPreviewMouseLeftButtonDown,False,True,_isApplyingPreset,,ClearSelection;FindAncestor;ShouldIgnoreRowSelection,,,ModsDataGrid.PreviewMouseLeftButtonDown,
+MainWindow.ModGridInput.cs,ModsDataGrid_OnSelectionChanged,False,True,,,,,,ModsDataGrid.SelectionChanged,
+MainWindow.ModGridInput.cs,ShouldIgnoreRowSelection,False,False,,,,ModernWpf.Controls.ToggleSwitch,,,
+MainWindow.ModGridInput.cs,TryHandleModListKeyDownAsync,True,False,_isApplyingPreset,,DeleteSelectedModsAsync;SelectAllModsInCurrentView,,DeleteSelectedModsAsync,,
+MainWindow.ModGridRowVisuals.cs,AreHoverEffectsDisabled,False,False,,,,VintageStoryModManager.Helpers.HoverEffectHelper,,,
+MainWindow.ModGridRowVisuals.cs,AreHoverOverlaysSuppressed,False,False,_viewModel,,,,,,
+MainWindow.ModGridRowVisuals.cs,AreHoverOverlaysSuppressed,False,False,,,AreHoverOverlaysSuppressed,,,,
+MainWindow.ModGridRowVisuals.cs,ClearRowOverlayValues,False,False,,,,,,,
+MainWindow.ModGridRowVisuals.cs,DisableHoverEffectsMenuItem_OnClick,False,True,_userConfiguration,,RefreshHoverOverlayState,VintageStoryModManager.Helpers.HoverEffectHelper,,DisableHoverEffectsMenuItem.Click,
+MainWindow.ModGridRowVisuals.cs,GetBoundMod,False,False,,,,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModGridRowVisuals.cs,GetBoundModHandler,False,False,,,,,,,
+MainWindow.ModGridRowVisuals.cs,GetRowIsHovered,False,False,,,,,,,
+MainWindow.ModGridRowVisuals.cs,ModsDataGridRow_OnDataContextChanged,False,True,,,AreHoverOverlaysSuppressed;ResetRowOverlays;UpdateRowModSubscription,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModGridRowVisuals.cs,ModsDataGridRow_OnLoaded,False,True,,,AreHoverOverlaysSuppressed;ResetRowOverlays;SetRowIsHovered;UpdateRowModSubscription,VintageStoryModManager.ViewModels.ModListItemViewModel,,EventSetter.Handler,ModsDataGridRow_OnDataContextChanged
+MainWindow.ModGridRowVisuals.cs,ModsDataGridRow_OnMouseEnter,False,True,,,AreHoverOverlaysSuppressed;ResetRowOverlays;SetRowIsHovered,,,EventSetter.Handler,
+MainWindow.ModGridRowVisuals.cs,ModsDataGridRow_OnMouseLeave,False,True,,,AreHoverOverlaysSuppressed;ResetRowOverlays;SetRowIsHovered,,,EventSetter.Handler,
+MainWindow.ModGridRowVisuals.cs,ModsDataGridRow_OnUnloaded,False,True,,,AreHoverOverlaysSuppressed;ClearRowOverlayValues;SetRowIsHovered;UpdateRowModSubscription,,,EventSetter.Handler,ModsDataGridRow_OnDataContextChanged
+MainWindow.ModGridRowVisuals.cs,RefreshHoverOverlayState,False,False,,,RefreshRowHoverOverlays,,,,
+MainWindow.ModGridRowVisuals.cs,RefreshRowHoverOverlays,False,False,,,ResetRowOverlays,,,,
+MainWindow.ModGridRowVisuals.cs,ResetRowOverlays,False,False,HoverOverlayOpacity;SelectionOverlayOpacity,,AreHoverEffectsDisabled;AreHoverOverlaysSuppressed;GetRowIsHovered,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModGridRowVisuals.cs,SetBoundMod,False,False,,,,,,,
+MainWindow.ModGridRowVisuals.cs,SetBoundModHandler,False,False,,,,,,,
+MainWindow.ModGridRowVisuals.cs,SetRowIsHovered,False,False,,,,,,,
+MainWindow.ModGridRowVisuals.cs,UpdateRowModSubscription,False,False,,,AreHoverOverlaysSuppressed;GetBoundMod;GetBoundModHandler;ResetRowOverlays;SetBoundMod;SetBoundModHandler,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModGridScrolling.cs,ChangelogToolTip_OnPreviewMouseWheel,False,True,,,GetCurrentScrollMultiplier,VintageStoryModManager.Helpers.ScrollWheelMath,,,
+MainWindow.ModGridScrolling.cs,ClearScrollViewerCache,False,False,,_modsScrollViewer;_modsScrollViewerSource,,,,,
+MainWindow.ModGridScrolling.cs,FindAncestor,False,False,,,GetParent,,,,
+MainWindow.ModGridScrolling.cs,FindDescendantScrollViewer,False,False,,,FindDescendantScrollViewer,,,,
+MainWindow.ModGridScrolling.cs,GetCurrentScrollMultiplier,False,False,ModListScrollMultiplier,,,,,,
+MainWindow.ModGridScrolling.cs,GetModsScrollViewer,False,False,_modsScrollViewer,_modsScrollViewer;_modsScrollViewerSource,FindDescendantScrollViewer,,,,
+MainWindow.ModGridScrolling.cs,GetParent,False,False,,,,,,,
+MainWindow.ModGridScrolling.cs,IsDescendantOfToolTip,False,False,,,GetParent,,,,
+MainWindow.ModGridScrolling.cs,LatestVersionTextBlock_OnToolTipClosing,False,True,,,,,,EventSetter.Handler,ChangelogToolTip_OnPreviewMouseWheel
+MainWindow.ModGridScrolling.cs,LatestVersionTextBlock_OnToolTipOpening,False,True,,,,,,EventSetter.Handler,ChangelogToolTip_OnPreviewMouseWheel
+MainWindow.ModGridScrolling.cs,ModsDataGrid_OnPreviewMouseWheel,False,True,,,GetCurrentScrollMultiplier;GetModsScrollViewer;IsDescendantOfToolTip,VintageStoryModManager.Helpers.ScrollWheelMath,,ModsDataGrid.PreviewMouseWheel,
+MainWindow.ModGridSelection.cs,AddToSelection,False,False,_modSelection,,,,,,
+MainWindow.ModGridSelection.cs,ClearModDatabaseSelections,False,False,_modSelection,,,,,,
+MainWindow.ModGridSelection.cs,ClearSelection,False,False,_modSelection,,,,,,
+MainWindow.ModGridSelection.cs,CloseModInfoButton_OnClick,False,True,,,ClearSelection,,,Button.Click,
+MainWindow.ModGridSelection.cs,GetModsInViewOrder,False,False,_viewModel,,,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModGridSelection.cs,HandleModRowSelection,False,False,_modSelection,,GetModsInViewOrder,,,,
+MainWindow.ModGridSelection.cs,RemoveFromSelection,False,False,_modSelection,,,,,,
+MainWindow.ModGridSelection.cs,RestoreSelectionFromSourcePaths,False,False,_modSelection;_viewModel,,,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModGridSelection.cs,SelectAllModsInCurrentView,False,False,_modSelection,,GetModsInViewOrder,,,,
+MainWindow.ModGridSelection.cs,UpdateSelectedModButton,False,False,,,,,,,
+MainWindow.ModGridSelection.cs,UpdateSelectedModButtons,False,False,_viewModel,,UpdateSelectedModButton;UpdateSelectedModCopyForServerButton;UpdateSelectedModEditConfigButton;UpdateSelectedModFixButton,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModGridSelection.cs,UpdateSelectedModCopyForServerButton,False,False,_userConfiguration,,,VintageStoryModManager.Services.ServerCommandBuilder,,,
+MainWindow.ModGridSelection.cs,UpdateSelectedModEditConfigButton,False,False,_userConfiguration,,UpdateSelectedModButton,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ModGridSelection.cs,UpdateSelectedModFixButton,False,False,_isModUpdateInProgress,,,,,,
+MainWindow.ModGridViewState.cs,AttachToModsView,False,False,_modsCollection,_currentModsView;_modsCollection,ClearSelection,,,,ModsView_OnCollectionChanged
+MainWindow.ModGridViewState.cs,ModsView_OnCollectionChanged,False,True,_viewModel,,ClearSelection,,,,
+MainWindow.ModGridViewState.cs,ShouldPreserveModsViewState,False,False,_viewModel,,,,,,
+MainWindow.ModInfoPanel.cs,ApplyStoredModInfoPanelPosition,False,False,DefaultModInfoPanelTop;_userConfiguration,_hasAppliedInitialModInfoPanelPosition,ComputeDefaultModInfoPanelLeft;SetModInfoPanelPosition,,,,
+MainWindow.ModInfoPanel.cs,ComputeDefaultModInfoPanelLeft,False,False,,,GetModInfoPanelWidth,VintageStoryModManager.Helpers.ModInfoPanelLayoutHelper,,,
+MainWindow.ModInfoPanel.cs,EnsureModInfoPanelWithinBounds,False,False,DefaultModInfoPanelTop;_hasAppliedInitialModInfoPanelPosition;_userConfiguration,,ComputeDefaultModInfoPanelLeft;SetModInfoPanelPosition,,,,
+MainWindow.ModInfoPanel.cs,GetModInfoPanelHeight,False,False,,,,,,,
+MainWindow.ModInfoPanel.cs,GetModInfoPanelWidth,False,False,,,,,,,
+MainWindow.ModInfoPanel.cs,IsModInfoDragInitiationBlocked,False,False,,,,,,,
+MainWindow.ModInfoPanel.cs,ModInfoBorder_OnLostMouseCapture,False,True,_isDraggingModInfoPanel,_isDraggingModInfoPanel,EnsureModInfoPanelWithinBounds,,,MODINFO_border.LostMouseCapture,
+MainWindow.ModInfoPanel.cs,ModInfoBorder_OnMouseLeftButtonDown,False,True,,_isDraggingModInfoPanel;_modInfoDragOffset,IsModInfoDragInitiationBlocked,,,MODINFO_border.MouseLeftButtonDown,
+MainWindow.ModInfoPanel.cs,ModInfoBorder_OnMouseLeftButtonUp,False,True,_isDraggingModInfoPanel,_isDraggingModInfoPanel,EnsureModInfoPanelWithinBounds,,,MODINFO_border.MouseLeftButtonUp,
+MainWindow.ModInfoPanel.cs,ModInfoBorder_OnMouseMove,False,True,_isDraggingModInfoPanel;_modInfoDragOffset,,SetModInfoPanelPosition,,,MODINFO_border.MouseMove,
+MainWindow.ModInfoPanel.cs,RootGrid_OnSizeChanged,False,True,_isDraggingModInfoPanel,,EnsureModInfoPanelWithinBounds,,,,
+MainWindow.ModInfoPanel.cs,SetModInfoPanelPosition,False,False,_userConfiguration,,GetModInfoPanelHeight;GetModInfoPanelWidth;SetModInfoPanelPosition,VintageStoryModManager.Helpers.ModInfoPanelLayoutHelper,,,
+MainWindow.ModInstallation.cs,InstallModButton_OnClick,True,True,_isModUpdateInProgress;_viewModel,,InstallModCoreAsync;RemoveFromSelection,VintageStoryModManager.ViewModels.ModListItemViewModel,InstallModCoreAsync,,
+MainWindow.ModInstallation.cs,InstallModCoreAsync,True,False,_confirmationService;_modActivityLoggingService;_userConfiguration;_viewModel,_isModUpdateInProgress,CreateAutomaticBackupAsync;RefreshModsAsync;UpdateSelectedModButtons,VintageStoryModManager.Models.ModReleaseInfo;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModInstallTargetPathHelper;VintageStoryModManager.Services.ModOperationDialogTextBuilder;VintageStoryModManager.Services.ModReleaseSelectionHelper;VintageStoryModManager.Services.ModUpdateDescriptor;VintageStoryModManager.Services.ModUpdateOperationHelper;VintageStoryModManager.Services.ModUpdateOperationOutcome;VintageStoryModManager.Services.ModUpdateProgress,"CreateAutomaticBackupAsync(""ModsUpdated"").ConfigureAwait;ModUpdateOperationHelper.ExecuteAsync(
+                    _modUpdateService, descriptor, _userConfiguration.CacheAllVersionsLocally, progress,
+                    ""The installation failed."")
+                .ConfigureAwait;RefreshModsAsync().ConfigureAwait;_confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildInstallFailureMessage(
+                            modViewModel.DisplayName,
+                            message),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        errorMessage!,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.BuildInstallFailureMessage(
+                        modViewModel.DisplayName,
+                        ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.NoDownloadableReleasesMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",,
+MainWindow.ModlistBackups.cs,CaptureConfigurationsForBackup,False,False,_userConfiguration,,,VintageStoryModManager.Services.ModConfigCaptureHelper,,,
+MainWindow.ModlistBackups.cs,CreateAppStartedBackupAsync,False,False,,,CreateBackupAsync,,,,
+MainWindow.ModlistBackups.cs,CreateBackupAsync,True,False,_backupSemaphore;_viewModel,,CaptureConfigurationsForBackup;EnsureBackupDirectory;ResolveGameVersion,VintageStoryModManager.Helpers.FileNameHelper;VintageStoryModManager.Models.SerializablePreset;VintageStoryModManager.Services.BackupRetentionService;VintageStoryModManager.Services.PdfModlistSerializer;VintageStoryModManager.Services.PresetSnapshotBuilder,"File.WriteAllTextAsync(filePath, json).ConfigureAwait;_backupSemaphore.WaitAsync().ConfigureAwait",,
+MainWindow.ModlistBackups.cs,RestoreBackupAsync,True,False,_confirmationService;_viewModel,,ApplyPresetAsync,VintageStoryModManager.Models.ModPreset;VintageStoryModManager.Models.ModPreset?;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModlistBackupDialogTextBuilder;VintageStoryModManager.Services.PresetFileLoader,"ApplyPresetAsync(loadedPreset, restoreConfigurations).ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModlistBackupDialogTextBuilder.SelectedBackupMissingMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    message,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.ModlistBackups.cs,RestoreBackupMenuItem_OnBackupClick,True,True,,,RestoreBackupAsync,VintageStoryModManager.Views.Dialogs.RestoreBackupDialog,"RestoreBackupAsync(filePath, confirmationDialog.RestoreConfigurations).ConfigureAwait",,
+MainWindow.ModlistBackups.cs,RestoreBackupMenuItem_OnSubmenuOpened,False,True,,,EnsureBackupDirectory,VintageStoryModManager.Services.BackupRetentionService,,MenuItem.SubmenuOpened,RestoreBackupMenuItem_OnBackupClick
+MainWindow.ModlistLoad.cs,CreateAutomaticBackupAsync,False,False,,,CreateBackupAsync,,,,
+MainWindow.ModlistLoad.cs,EnsureModlistBackupBeforeLoad,False,False,_userConfiguration,,RefreshLocalModlists;TrySaveModlist,VintageStoryModManager.Services.ModManagerMessageBox;VintageStoryModManager.Views.Dialogs.MessageDialogExtraButton,,,
+MainWindow.ModlistLoad.cs,GetModlistLoadOptions,False,False,ModListLoadOptions,,,VintageStoryModManager.ModlistLoadMode;VintageStoryModManager.PresetLoadOptions,,,
+MainWindow.ModlistLoad.cs,PromptModlistLoadMode,False,False,_userConfiguration,,,VintageStoryModManager.ModlistLoadMode;VintageStoryModManager.Services.ModManagerMessageBox;VintageStoryModManager.Services.ModlistAutoLoadBehavior;VintageStoryModManager.Views.Dialogs.MessageDialogButtonContentOverrides,,,
+MainWindow.ModlistLoading.cs,HandleModlistDragEvent,False,False,,,,VintageStoryModManager.Helpers.ModlistDropHelper,,,
+MainWindow.ModlistLoading.cs,LoadModlistFromFileAsync,True,False,_confirmationService;_viewModel,,ApplyPresetAsync;CreateAutomaticBackupAsync;EnsureModlistBackupBeforeLoad;GetModlistLoadOptions;PrepareForModlistLoad;PromptModlistLoadMode,VintageStoryModManager.Models.ModPreset;VintageStoryModManager.Models.ModPreset?;VintageStoryModManager.ModlistLoadMode;VintageStoryModManager.PresetLoadOptions;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModlistDialogTextBuilder;VintageStoryModManager.Services.PresetFileLoader,"ApplyPresetAsync;CreateAutomaticBackupAsync(""ModlistLoaded"").ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""The selected file could not be found."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    message,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.ModlistLoading.cs,LoadModlistMenuItem_OnClick,True,True,_viewModel,,EnsureModListDirectory;LoadModlistFromFileAsync,Microsoft.Win32.OpenFileDialog,LoadModlistFromFileAsync(dialog.FileName).ConfigureAwait,MenuItem.Click,
+MainWindow.ModlistLoading.cs,MainWindow_OnPreviewDragEnter,False,True,,,HandleModlistDragEvent,,,MainWindowRoot.PreviewDragEnter,
+MainWindow.ModlistLoading.cs,MainWindow_OnPreviewDragOver,False,True,,,HandleModlistDragEvent,,,MainWindowRoot.PreviewDragOver,
+MainWindow.ModlistLoading.cs,MainWindow_OnPreviewDrop,True,True,,,LoadModlistFromFileAsync,VintageStoryModManager.Helpers.ModlistDropHelper,LoadModlistFromFileAsync(filePath!).ConfigureAwait,MainWindowRoot.PreviewDrop,
+MainWindow.ModlistLoading.cs,PrepareForModlistLoad,False,False,,,ClearSelection;SwitchToInstalledModsTab,,,,
+MainWindow.ModlistLoading.cs,SwitchToInstalledModsTab,False,False,_viewModel,,,,,,
+MainWindow.ModlistLoading.cs,UpdateModlistLoadingUiState,False,False,_isApplyingPreset,,,,,,
+MainWindow.ModlistSave.cs,SaveModlistMenuItem_OnClick,True,True,,,RefreshLocalModlistsAsync;TrySaveModlistAsync,,"RefreshLocalModlistsAsync(true).ConfigureAwait;RefreshLocalModlistsAsync(true, new[] { saveResult.SavedFilePath }).ConfigureAwait;TrySaveModlistAsync(null).ConfigureAwait",MenuItem.Click,
+MainWindow.ModlistSave.cs,TryBuildCurrentModlistJson,False,False,_viewModel,,,VintageStoryModManager.Models.SerializablePreset;VintageStoryModManager.Services.PdfModlistSerializer;VintageStoryModManager.Services.PresetSnapshotBuilder,,,
+MainWindow.ModlistSave.cs,TrySaveAutomaticModlist,False,False,_confirmationService;_viewModel,,EnsureRebuiltModListDirectory;ResolveGameVersion,VintageStoryModManager.Helpers.FileNameHelper;VintageStoryModManager.Models.SerializablePreset;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.LocalModlistFileService;VintageStoryModManager.Services.LocalModlistSaveResult;VintageStoryModManager.Services.ModlistDialogTextBuilder;VintageStoryModManager.Services.PresetSnapshotBuilder,,,
+MainWindow.ModlistSave.cs,TrySaveModlist,False,False,,,TrySaveModlist,,,,
+MainWindow.ModlistSave.cs,TrySaveModlist,False,False,,,TrySaveModlistAsync,,,,
+MainWindow.ModlistSave.cs,TrySaveModlistAsync,True,False,_confirmationService;_viewModel,,BuildModConfigOptions;EnsureModListDirectory;GetUploaderNameForPdf;ResolveGameVersion;TryReadModConfigurations;TrySaveInstalledModsPdf,VintageStoryModManager.Helpers.FileNameHelper;VintageStoryModManager.Models.SerializablePreset;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.LocalModlistFileService;VintageStoryModManager.Services.LocalModlistSaveResult;VintageStoryModManager.Services.ModlistDialogTextBuilder;VintageStoryModManager.Services.PresetSnapshotBuilder;VintageStoryModManager.Views.Dialogs.SaveInstalledModsDialog;VintageStoryModManager.Views.Dialogs.SaveInstalledModsDialogResult,"_confirmationService.ConfirmAsync(
+                        message,
+                        ""Replace Modlist"",
+                        DialogSeverity.Question)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ModlistDialogTextBuilder.BuildSaveFailureMessage(saveResult.ErrorMessage!),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModlistDialogTextBuilder.BuildSaveFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.ModRefresh.cs,RefreshModDetailsOnly,False,False,_viewModel,,,,,,
+MainWindow.ModRefresh.cs,RefreshModsAfterDependencyResolutionAsync,True,False,_confirmationService;_isDependencyResolutionRefreshPending;_viewModel,_isDependencyResolutionRefreshPending,RefreshModsAsync,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModRefreshDialogTextBuilder,"RefreshModsAsync(true).ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModRefreshDialogTextBuilder.BuildDependencyResolutionRefreshFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.ModRefresh.cs,RefreshModsAsync,True,False,_viewModel,,RestoreSelectionFromSourcePaths;SyncInstalledModsToModBrowser,VintageStoryModManager.ViewModels.ModListItemViewModel,_viewModel.RefreshCommand.ExecuteAsync,,
+MainWindow.ModRefresh.cs,RefreshModsWithErrorHandlingAsync,True,False,_confirmationService;_userConfiguration;_viewModel,,RefreshModDetailsOnly,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModRefreshDialogTextBuilder,"Dispatcher.Yield;Task.Yield;_confirmationService.NotifyAsync(
+                    ModRefreshDialogTextBuilder.BuildRefreshModDetailsFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.ModRefresh.cs,ScheduleRefreshAfterModlistLoadIfReady,False,False,_confirmationService;_isRefreshingAfterModlistLoad;_refreshAfterModlistLoadPending;_viewModel,_isRefreshingAfterModlistLoad;_refreshAfterModlistLoadPending,RefreshModsAsync,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModRefreshDialogTextBuilder;VintageStoryModManager.ViewModels.MainViewModel,"RefreshModsAsync(true).ConfigureAwait;_confirmationService.NotifyAsync(
+                        ModRefreshDialogTextBuilder.BuildModlistLoadRefreshFailureMessage(ex.Message),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Error)
+                    .ConfigureAwait",,
+MainWindow.ModRefresh.cs,ShouldRefreshAfterDependencyResolution,False,False,,,,,,,
+MainWindow.ModsWatcherTimer.cs,ModsWatcherTimerOnTick,True,True,_confirmationService;_isAutomaticRefreshRunning;_isInitializing;_viewModel,_isAutomaticRefreshRunning,RefreshModsAsync,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModRefreshDialogTextBuilder,"RefreshModsAsync;_confirmationService.NotifyAsync(
+                    ModRefreshDialogTextBuilder.BuildAutomaticRefreshFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_viewModel.CheckForModStateChangesAsync",,
+MainWindow.ModsWatcherTimer.cs,StartModsWatcher,False,False,_modsWatcherTimer;_viewModel,_modsWatcherTimer,StopModsWatcher,,,,ModsWatcherTimerOnTick
+MainWindow.ModsWatcherTimer.cs,StopModsWatcher,False,False,_modsWatcherTimer,_isAutomaticRefreshRunning;_modsWatcherTimer,,,,,ModsWatcherTimerOnTick
+MainWindow.ModUpdateCommands.cs,SelectedModVersionComboBox_OnDropDownOpened,False,True,,,FindDescendantScrollViewer,,,SelectedModVersionComboBox.DropDownOpened,
+MainWindow.ModUpdateCommands.cs,SelectedModVersionComboBox_OnSelectionChanged,True,True,_isModUpdateInProgress;_viewModel,,UpdateModsAsync,VintageStoryModManager.Models.ModReleaseInfo;VintageStoryModManager.ViewModels.ModListItemViewModel;VintageStoryModManager.ViewModels.ModVersionOptionViewModel,UpdateModsAsync,SelectedModVersionComboBox.SelectionChanged,
+MainWindow.ModUpdateCommands.cs,UpdateAllModsMenuItem_OnClick,True,True,_confirmationService;_isApplyingPreset;_isModUpdateInProgress;_viewModel,,CreateAutomaticBackupAsync;UpdateModsAsync,VintageStoryModManager.Models.ModReleaseInfo;VintageStoryModManager.Models.ModReleaseInfo?;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModOperationDialogTextBuilder;VintageStoryModManager.ViewModels.ModListItemViewModel;VintageStoryModManager.Views.Dialogs.UpdateModsDialog,"CreateAutomaticBackupAsync(""ModsUpdated"").ConfigureAwait;UpdateModsAsync(selectedMods, true, selectedOverrides).ConfigureAwait;_confirmationService.NotifyAsync(
+                    ModOperationDialogTextBuilder.AllModsAlreadyUpToDateMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",UpdateAllButton.Click,
+MainWindow.ModUpdateCommands.cs,UpdateModButton_OnClick,True,True,_isModUpdateInProgress,,UpdateModsAsync,VintageStoryModManager.Models.ModReleaseInfo;VintageStoryModManager.ViewModels.ModListItemViewModel,UpdateModsAsync,SelectedModUpdateButton.Click,
+MainWindow.ModUpdateCommands.cs,UpdateModsAsync,True,False,_confirmationService;_modActivityLoggingService;_modUpdateService;_userConfiguration;_viewModel,_isModUpdateInProgress,BeginModlistInstallUi;CompleteModlistInstallStep;CreateModUpdateProgressReporter;CreateModlistInstallProgressReporter;EndModlistInstallUi;RefreshDeleteCachedModsMenuHeaderAsync;RefreshModsAsync;TryGetManagedModPath;UpdateSelectedModButtons,VintageStoryModManager.ModUpdateOperationResult;VintageStoryModManager.ModUpdateReleasePreference;VintageStoryModManager.Models.ModReleaseInfo;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModChangelogFormatter;VintageStoryModManager.Services.ModOperationDialogTextBuilder;VintageStoryModManager.Services.ModReleaseSelectionHelper;VintageStoryModManager.Services.ModUpdateDescriptor;VintageStoryModManager.Services.ModUpdateDialogHelper;VintageStoryModManager.Services.ModUpdateProgress;VintageStoryModManager.Services.ModUpdateResult;VintageStoryModManager.Services.ModUpdateTargetPathHelper;VintageStoryModManager.ViewModels.ModListItemViewModel,"RefreshDeleteCachedModsMenuHeaderAsync;RefreshModsAsync().ConfigureAwait;_confirmationService.NotifyAsync(
+                            ModOperationDialogTextBuilder.BuildRefreshAfterUpdateFailureMessage(
+                                ex.Message),
+                            ""Simple VS Manager"",
+                            DialogSeverity.Error)
+                        .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ModOperationDialogTextBuilder.BuildUpdateCancelledMessage(isBulk),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Information)
+                    .ConfigureAwait;_modUpdateService
+                    .UpdateAsync(descriptor, _userConfiguration.CacheAllVersionsLocally, progress)
+                    .ConfigureAwait;_viewModel.PreserveActivationStateAsync(mod.ModId ?? string.Empty, mod.Version, release.Version, mod.IsActive)
+                    .ConfigureAwait",,
+MainWindow.ModUsage.cs,GameSessionMonitor_OnPromptRequired,False,True,,,,,,,TryShowModUsagePromptAsync
+MainWindow.ModUsage.cs,PrepareModUsagePromptData,False,False,_userConfiguration;_viewModel,,,VintageStoryModManager.ModUsagePromptData;VintageStoryModManager.Services.ModUsageTrackingKey;VintageStoryModManager.Services.StatusLogService;VintageStoryModManager.ViewModels.ModListItemViewModel;VintageStoryModManager.ViewModels.ModUsageVoteCandidateViewModel,,,
+MainWindow.ModUsage.cs,ShowModUsagePromptDialogAsync,True,False,_confirmationService;_gameSessionMonitor;_isModUsageDialogOpen;_modActivityLoggingService;_modUsagePromptData;_userConfiguration;_viewModel,_isModUsageDialogOpen;_modUsagePromptData,PrepareModUsagePromptData;StopGameSessionMonitor;TryShowModUsagePromptAsync;UpdateModUsagePromptIndicator,VintageStoryModManager.ModUsagePromptData;VintageStoryModManager.Models.ModVersionVoteOption;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InternetAccessDisabledException;VintageStoryModManager.Services.ModUsageDialogTextBuilder;VintageStoryModManager.Services.ModUsageTrackingKey;VintageStoryModManager.Services.StatusLogService;VintageStoryModManager.ViewModels.ModUsageVoteCandidateViewModel;VintageStoryModManager.Views.Dialogs.ModUsageNoIssuesDialog;VintageStoryModManager.Views.Dialogs.ModUsageNoIssuesDialogResult,"TryShowModUsagePromptAsync().ConfigureAwait;_confirmationService.NotifyAsync(
+                        ""Thanks! Your \""No issues\"" votes were submitted."",
+                        ""Simple VS Manager"",
+                        DialogSeverity.Information)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        ModUsageDialogTextBuilder.BuildVoteSubmissionFailureMessage(message),
+                        ""Simple VS Manager"",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait;_viewModel
+                        .SubmitUserReportVoteAsync(candidate.Mod, ModVersionVoteOption.NoIssuesSoFar, null)
+                        .ConfigureAwait",,
+MainWindow.ModUsage.cs,StartGameSessionMonitor,False,False,_gameSessionMonitor;_userConfiguration;_viewModel,_gameSessionMonitor,StopGameSessionMonitor,VintageStoryModManager.Services.GameSessionMonitor;VintageStoryModManager.Services.StatusLogService,,,GameSessionMonitor_OnPromptRequired;TryShowModUsagePromptAsync
+MainWindow.ModUsage.cs,StopGameSessionMonitor,False,False,_gameSessionMonitor,_gameSessionMonitor,,,,,GameSessionMonitor_OnPromptRequired
+MainWindow.ModUsage.cs,TryShowModUsagePromptAsync,False,False,_gameSessionMonitor;_isModUsageDialogOpen;_modUsagePromptData;_userConfiguration;_viewModel,_modUsagePromptData,PrepareModUsagePromptData;UpdateModUsagePromptIndicator,VintageStoryModManager.ModUsagePromptData;VintageStoryModManager.Services.StatusLogService,,,
+MainWindow.ModUsage.cs,UpdateModUsagePromptIndicator,False,False,,,,,,,
+MainWindow.Navigation.cs,ApplyPreferredModlistsTabSelection,False,False,_userConfiguration,,,VintageStoryModManager.Services.ModlistsTabSelection,,,
+MainWindow.Navigation.cs,HandleModlistsVisibilityChanged,False,False,_cloudModlistsLoaded,,ApplyPreferredModlistsTabSelection;RefreshCloudModlistsAsync;RefreshLocalModlists;SetCloudModlistSelection;SetLocalModlistSelection,VintageStoryModManager.Models.LocalModlistListEntry,,,
+MainWindow.Navigation.cs,MiddleTabControl_OnSelectionChanged,True,True,_isUpdatingMiddleTabSelection;_viewModel,,UpdateModBrowserTabVisibilityState,,ModBrowserView.InitializeAsync,MiddleTabControl.SelectionChanged,
+MainWindow.Navigation.cs,ModlistsTabControl_OnLoaded,False,True,,,ApplyPreferredModlistsTabSelection,,,ModlistsTabControl.Loaded,
+MainWindow.Navigation.cs,ModlistsTabControl_OnSelectionChanged,False,True,_cloudModlistsLoaded;_isUpdatingModlistsTabSelection;_userConfiguration;_viewModel,_isUpdatingModlistsTabSelection,EnsureCloudModlistsConsent;EnsureFirebaseAuthBackedUpIfAvailable;RefreshCloudModlistsAsync,VintageStoryModManager.Services.FirebaseAuthFileService;VintageStoryModManager.Services.ModlistsTabSelection,,ModlistsTabControl.SelectionChanged,
+MainWindow.Navigation.cs,SyncMiddleTabControlToViewModel,False,False,_viewModel,_isUpdatingMiddleTabSelection,,,,,
+MainWindow.Navigation.cs,UpdateModBrowserTabVisibilityState,False,False,_modBrowserViewModel,,,,,,
+MainWindow.PathInitialization.cs,TryInitializePaths,False,False,_dataDirectory;_gameDirectory;_userConfiguration,,TryResolveCustomShortcut;TryResolveDataDirectory;TryResolveGameDirectory,VintageStoryModManager.Services.DeveloperProfileManager,,,
+MainWindow.PathInitialization.cs,TryResolveCustomShortcut,False,False,_userConfiguration,_customShortcutPath,,VintageStoryModManager.Services.ModManagerMessageBox,,,
+MainWindow.PathInitialization.cs,TryResolveDataDirectory,False,False,_dataDirectory;_userConfiguration,_dataDirectory,PromptForDirectory,VintageStoryModManager.Services.DataDirectoryLocator;VintageStoryModManager.Services.InstallationPathValidator;VintageStoryModManager.Services.ModManagerMessageBox,,,
+MainWindow.PathInitialization.cs,TryResolveGameDirectory,False,False,_gameDirectory;_userConfiguration,_gameDirectory,PromptForDirectory,VintageStoryModManager.Services.GameDirectoryLocator;VintageStoryModManager.Services.InstallationPathValidator;VintageStoryModManager.Services.ModManagerMessageBox,,,
+MainWindow.PathSelection.cs,GetInitialConfigDirectory,False,False,_dataDirectory,,,,,,
+MainWindow.PathSelection.cs,PromptForConfigFile,False,False,,,GetInitialConfigDirectory,,,,
+MainWindow.PathSelection.cs,PromptForDirectory,False,False,_confirmationService,,,VintageStoryModManager.Services.DialogSeverity,,,
+MainWindow.PathSelection.cs,SelectDataFolderMenuItem_OnClick,True,True,_userConfiguration,_dataDirectory,PromptForDirectory;RefreshDeveloperProfilesMenuEntries;ReloadViewModelAsync,VintageStoryModManager.Services.DeveloperProfileManager;VintageStoryModManager.Services.InstallationPathValidator,ReloadViewModelAsync,MenuItem.Click,
+MainWindow.PathSelection.cs,SelectGameFolderMenuItem_OnClick,False,True,_userConfiguration,_gameDirectory,PromptForDirectory;UpdateGameVersionMenuItem,VintageStoryModManager.Services.InstallationPathValidator;VintageStoryModManager.Services.VintageStoryVersionLocator,,MenuItem.Click,
+MainWindow.Pdf.cs,GetUploaderNameForPdf,False,False,_cloudModlistStore;_userConfiguration;_viewModel,,ResolveUploaderName,,,,
+MainWindow.Pdf.cs,SaveInstalledModsPdfMenuItem_OnClick,True,True,_confirmationService;_viewModel,,BuildModConfigOptions;GetUploaderNameForPdf;ResolveGameVersion;TryReadModConfigurations;TrySaveInstalledModsPdfAsync,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InstalledModsPdfGenerator;VintageStoryModManager.Services.PdfDialogTextBuilder;VintageStoryModManager.Views.Dialogs.SaveInstalledModsDialog;VintageStoryModManager.Views.Dialogs.SaveInstalledModsDialogResult,"TrySaveInstalledModsPdfAsync(
+                listName,
+                version,
+                description,
+                uploaderName,
+                includedConfigurations,
+                gameVersion,
+                mods)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.ModsStillLoadingMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.NoInstalledModsMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",,
+MainWindow.Pdf.cs,TrySaveInstalledModsPdf,False,False,,,TrySaveInstalledModsPdfAsync,,,,
+MainWindow.Pdf.cs,TrySaveInstalledModsPdfAsync,True,False,_confirmationService;_viewModel,,EnsureModListDirectory;GetUploaderNameForPdf;ResolveGameVersion,VintageStoryModManager.Helpers.FileNameHelper;VintageStoryModManager.Models.SerializableConfigList;VintageStoryModManager.Models.SerializablePreset;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InstalledModsPdfGenerator;VintageStoryModManager.Services.PdfDialogTextBuilder;VintageStoryModManager.Services.PresetConfigurationSerializer;VintageStoryModManager.Services.PresetSnapshotBuilder,"_confirmationService.ConfirmAsync(
+                        PdfDialogTextBuilder.BuildReplaceExistingMessage(filePath),
+                        ""Replace Modlist PDF"",
+                        DialogSeverity.Question)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.BuildGenerateFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.BuildPrepareFolderFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.BuildSaveFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.ModsStillLoadingMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.NoInstalledModsMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PdfDialogTextBuilder.SavedSuccessfullyMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait",,
+MainWindow.PresetApplication.cs,ApplyPresetAsync,True,False,_isApplyingPreset;_viewModel,_isApplyingPreset;_recentLocalModBackupDirectory;_recentLocalModBackupModNames;_refreshAfterModlistLoadPending,ApplyExclusivePresetAsync;ApplyPresetModVersionsAsync;ImportPresetConfigsAsync;ScheduleRefreshAfterModlistLoadIfReady;UpdateModlistLoadingUiState,VintageStoryModManager.ViewModels.MainViewModel,ApplyExclusivePresetAsync(preset).ConfigureAwait;ApplyPresetModVersionsAsync(preset).ConfigureAwait;ImportPresetConfigsAsync(preset).ConfigureAwait;viewModel.ApplyPresetAsync(preset).ConfigureAwait,,
+MainWindow.PresetConfigurationImport.cs,ImportPresetConfigsAsync,True,False,_confirmationService;_viewModel,,UpdateSelectedModButtons,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.PresetConfigurationImportDialogTextBuilder;VintageStoryModManager.Services.PresetConfigurationImportPrompt;VintageStoryModManager.Services.PresetConfigurationImportResult;VintageStoryModManager.Services.PresetConfigurationImportService,"PresetConfigurationImportService.ImportAsync(
+                        configurations,
+                        _dataDirectory,
+                        _userConfiguration,
+                        prompt.ModDisplayNames)
+                    .ConfigureAwait;_confirmationService.ConfirmAsync(
+                prompt.Message,
+                ""Import Mod Configurations"",
+                DialogSeverity.Question)
+            .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PresetConfigurationImportDialogTextBuilder
+                        .BuildPartialFailureMessage(importResult.Errors),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PresetConfigurationImportDialogTextBuilder
+                        .BuildPrepareDirectoryFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PresetConfigurationImportDialogTextBuilder.DataDirectoryNotSetMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",,
+MainWindow.PresetFiles.cs,EnsurePresetDirectory,False,False,_userConfiguration,,,,,,
+MainWindow.PresetFiles.cs,LoadPresetFromFileAsync,True,False,_confirmationService;_userConfiguration;_viewModel,,ApplyPresetAsync,VintageStoryModManager.Models.ModPreset;VintageStoryModManager.Models.ModPreset?;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.PresetDialogTextBuilder;VintageStoryModManager.Services.PresetFileLoader,"ApplyPresetAsync(loadedPreset).ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""The selected preset could not be found."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    PresetDialogTextBuilder.BuildLoadFailureMessage(message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",,
+MainWindow.PresetFiles.cs,LoadPresetMenuItem_OnClick,True,True,_confirmationService;_viewModel,,EnsurePresetDirectory;LoadPresetFromFileAsync,Microsoft.Win32.OpenFileDialog;VintageStoryModManager.Helpers.PathRelationshipHelper;VintageStoryModManager.Services.DialogSeverity,"LoadPresetFromFileAsync(dialog.FileName).ConfigureAwait;_confirmationService.NotifyAsync(
+                    ""Please select a preset from the Presets folder."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",BrowsePresetMenuItem.Click,
+MainWindow.PresetFiles.cs,LoadPresetMenuItem_OnPresetClick,True,True,,,LoadPresetFromFileAsync,,LoadPresetFromFileAsync(filePath).ConfigureAwait,,
+MainWindow.PresetFiles.cs,LoadPresetMenuItem_OnSubmenuOpened,False,True,,,EnsurePresetDirectory,,,LoadPresetMenuItem.SubmenuOpened,LoadPresetMenuItem_OnPresetClick
+MainWindow.PresetFiles.cs,ResolveGameVersion,False,False,_viewModel,,,,,,
+MainWindow.PresetFiles.cs,SavePresetMenuItem_OnClick,True,True,_userConfiguration;_viewModel,,EnsurePresetDirectory;TrySaveSnapshot,,"TrySaveSnapshot(
+            presetDirectory,
+            ""Save Mod Preset"",
+            ""Preset files (*.json)|*.json|All files (*.*)|*.*"",
+            ""Presets must be saved inside the Presets folder."",
+            ""Preset"",
+            () => _userConfiguration.GetLastSelectedPresetName(),
+            name =>
+            {
+                _userConfiguration.SetLastSelectedPresetName(name);
+                _viewModel?.ReportStatus($""Saved preset \""{name}\""."");
+            },
+            ""preset"",
+            false,
+            false).ConfigureAwait",MenuItem.Click,
+MainWindow.PresetFiles.cs,TrySaveSnapshot,True,False,_confirmationService;_viewModel,,ResolveGameVersion,Microsoft.Win32.SaveFileDialog;VintageStoryModManager.Helpers.FileNameHelper;VintageStoryModManager.Helpers.PathRelationshipHelper;VintageStoryModManager.Models.SerializablePreset;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.LocalModlistFileService;VintageStoryModManager.Services.LocalModlistSaveResult;VintageStoryModManager.Services.PresetDialogTextBuilder;VintageStoryModManager.Services.PresetSnapshotBuilder,"_confirmationService.NotifyAsync(
+                    PresetDialogTextBuilder.BuildSaveFailureMessage(failureContext, saveResult.ErrorMessage),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    folderWarningMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Warning)
+                .ConfigureAwait",,
+MainWindow.PresetVersionApplication.cs,ApplyPresetModVersionsAsync,True,False,_confirmationService;_viewModel,,BeginModlistInstallUi;CompleteModlistInstallStep;CreateModlistInstallProgressReporter;EndModlistInstallUi;TryInstallPresetModAsync;UpdateModsAsync,VintageStoryModManager.Models.ModPresetModState;VintageStoryModManager.Models.ModReleaseInfo;VintageStoryModManager.PresetModInstallResult;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModUpdateProgress;VintageStoryModManager.Services.ModUpdateResult;VintageStoryModManager.Services.PresetApplicationSummaryBuilder;VintageStoryModManager.Services.VersionStringUtility;VintageStoryModManager.ViewModels.ModListItemViewModel;VintageStoryModManager.ViewModels.ModListItemViewModel?;VintageStoryModManager.ViewModels.ModVersionOptionViewModel,"TryInstallPresetModAsync(candidate, progress).ConfigureAwait;UpdateModsAsync(overrides.Keys.ToList(), true, overrides, false, progressFactory,
+                        completionCallback)
+                    .ConfigureAwait;_confirmationService.NotifyAsync(
+                        message,
+                        ""Simple VS Manager"",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait",,
+MainWindow.PresetVersionApplication.cs,TryInstallPresetModAsync,True,False,_modActivityLoggingService;_modDatabaseService;_userConfiguration;_viewModel,,CreateModUpdateProgressReporter,VintageStoryModManager.Models.ModDatabaseInfo;VintageStoryModManager.Models.ModReleaseInfo;VintageStoryModManager.PresetModInstallResult;VintageStoryModManager.Services.ModInstallTargetPathHelper;VintageStoryModManager.Services.ModUpdateDescriptor;VintageStoryModManager.Services.ModUpdateOperationHelper;VintageStoryModManager.Services.ModUpdateOperationOutcome;VintageStoryModManager.Services.VersionStringUtility,"ModUpdateOperationHelper.ExecuteAsync(
+                _modUpdateService, descriptor, _userConfiguration.CacheAllVersionsLocally, progress,
+                ""The installation failed."")
+            .ConfigureAwait;_modDatabaseService
+            .TryLoadDatabaseInfoAsync(modId, desiredVersion, _viewModel.InstalledGameVersion,
+                _userConfiguration.RequireExactVsVersionMatch)
+            .ConfigureAwait",,
+MainWindow.Profiles.cs,CreateGameProfileMenuItem_OnClick,True,True,_confirmationService;_userConfiguration,,OnActiveGameProfileChangedAsync;RefreshGameProfileMenuItems;UpdateGameProfileMenuChecks,VintageStoryModManager.Models.ProfileType;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ModManagerMessageBox;VintageStoryModManager.Services.ServerConnectionHelper;VintageStoryModManager.Views.Dialogs.GameProfileDialog,"OnActiveGameProfileChangedAsync().ConfigureAwait;_confirmationService.NotifyAsync(
+                    errorMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                    .ConfigureAwait",CreateGameProfileMenuItem.Click,ShowHostKeyVerificationAsync
+MainWindow.Profiles.cs,DeleteGameProfileMenuItem_OnClick,True,True,_confirmationService;_userConfiguration,,OnActiveGameProfileChangedAsync;RefreshGameProfileMenuItems;UpdateGameProfileMenuChecks,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Views.Dialogs.DeleteGameProfilesDialog,"OnActiveGameProfileChangedAsync().ConfigureAwait;_confirmationService.NotifyAsync(
+                    errorMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                    .ConfigureAwait",DeleteGameProfileMenuItem.Click,
+MainWindow.Profiles.cs,EditGameProfileMenuItem_OnClick,True,True,_confirmationService;_userConfiguration,,UpdateSyncToServerMenuState,VintageStoryModManager.Models.ProfileType;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ServerConnectionHelper;VintageStoryModManager.Views.Dialogs.EditGameProfileDialog,"_confirmationService.NotifyAsync(
+                ""No active profile to edit."",
+                ""Simple VS Manager"",
+                DialogSeverity.Information)
+                .ConfigureAwait",EditGameProfileMenuItem.Click,ShowHostKeyVerificationAsync
+MainWindow.Profiles.cs,ExitMenuItem_OnClick,False,True,,,,,,MenuItem.Click,
+MainWindow.Profiles.cs,GameProfileMenuItem_OnClick,True,True,_userConfiguration,,OnActiveGameProfileChangedAsync;UpdateGameProfileMenuChecks,,OnActiveGameProfileChangedAsync().ConfigureAwait,,
+MainWindow.Profiles.cs,GameProfilesMenuItem_OnSubmenuOpened,False,True,,,RefreshGameProfileMenuItems;UpdateGameProfileMenuChecks,,,GameProfilesMenuItem.SubmenuOpened,
+MainWindow.Profiles.cs,OnActiveGameProfileChangedAsync,True,False,,,RefreshDeveloperProfilesMenuEntries;ReloadViewModelAsync;TryInitializePaths;UpdateActiveGameProfileDisplay;UpdateGameVersionMenuItem;UpdateSyncToServerMenuState,VintageStoryModManager.Services.VintageStoryVersionLocator,ReloadViewModelAsync,,
+MainWindow.Profiles.cs,RefreshGameProfileMenuItems,False,False,_gameProfileMenuItems;_userConfiguration,,UpdateActiveGameProfileDisplay,,,,GameProfileMenuItem_OnClick
+MainWindow.Profiles.cs,UpdateActiveGameProfileDisplay,False,False,_userConfiguration,,,VintageStoryModManager.Services.UserConfigurationService,,,
+MainWindow.Profiles.cs,UpdateGameProfileMenuChecks,False,False,_gameProfileMenuItems;_userConfiguration,,,,,,
+MainWindow.Progress.cs,BeginModlistInstallUi,False,False,,_modlistInstallCompletedSteps;_modlistInstallTotalSteps,UpdateModlistDownloadSpeed,,,,
+MainWindow.Progress.cs,ClampPercent,False,False,,,,,,,
+MainWindow.Progress.cs,CompleteModlistInstallStep,False,False,_modlistInstallCompletedSteps;_modlistInstallTotalSteps,_modlistInstallCompletedSteps,UpdateModlistDownloadSpeed,,,,
+MainWindow.Progress.cs,CreateModUpdateProgressReporter,False,False,_viewModel,,,VintageStoryModManager.Services.ModUpdateProgress,,,
+MainWindow.Progress.cs,CreateModlistInstallProgressReporter,False,False,,,UpdateModlistInstallUi,VintageStoryModManager.Services.ModUpdateProgress;VintageStoryModManager.Services.ModUpdateStage,,,
+MainWindow.Progress.cs,EndModlistInstallUi,False,False,,_modlistInstallCompletedSteps;_modlistInstallTotalSteps,UpdateModlistDownloadSpeed,,,,
+MainWindow.Progress.cs,UpdateModlistDownloadSpeed,False,False,,,,VintageStoryModManager.Services.ProgressDisplayFormatter,,,
+MainWindow.Progress.cs,UpdateModlistInstallUi,False,False,_modlistInstallCompletedSteps;_modlistInstallTotalSteps,,ClampPercent;UpdateModlistDownloadSpeed,,,,
+MainWindow.ServerConnection.cs,ShowHostKeyVerificationAsync,True,False,_serverTargetService,,ShowHostKeyVerificationAsync,VintageStoryModManager.Models.ServerTarget;VintageStoryModManager.Views.Dialogs.HostKeyConfirmationDialog,"Dispatcher.InvokeAsync(async () =>
+                await ShowHostKeyVerificationAsync(fingerprint, verificationResult)).Result.ConfigureAwait;HostKeyConfirmationDialog.ShowAsync(this, host, fingerprint, verificationResult).ConfigureAwait;ShowHostKeyVerificationAsync",,
+MainWindow.ServerModCopy.cs,SelectedModCopyForServerButton_OnClick,True,True,_confirmationService;_viewModel,,,VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.ServerCommandBuilder;VintageStoryModManager.ViewModels.ModListItemViewModel,"_confirmationService.NotifyAsync(
+                    ""Failed to copy the server install command. Please try again."",
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait",SelectedModCopyForServerButton.Click,
+MainWindow.ServerSync.cs,EnableServerOptionsMenuItem_OnClick,False,True,_userConfiguration,,UpdateServerOptionsState,,,EnableServerOptionsMenuItem.Click,
+MainWindow.ServerSync.cs,ManageServerTargetsMenuItem_OnClick,False,True,,,UpdateSyncToServerMenuState,VintageStoryModManager.Services.ServerConnectionHelper;VintageStoryModManager.Views.Dialogs.ManageServerTargetsDialog,,ManageServerTargetsMenuItem.Click,ShowHostKeyVerificationAsync
+MainWindow.ServerSync.cs,MapPreflightSeverity,False,False,,,,VintageStoryModManager.Services.DialogSeverity,,,
+MainWindow.ServerSync.cs,SyncToServerMenuItem_OnClick,True,True,_confirmationService;_dataDirectory;_serverTargetService;_userConfiguration,,MapPreflightSeverity,VintageStoryModManager.Services.ConfirmationService;VintageStoryModManager.Services.ServerConnectionHelper;VintageStoryModManager.Services.ServerSyncPreflight;VintageStoryModManager.Services.ServerSyncPreflightResult;VintageStoryModManager.ViewModels.SyncToServerDialogViewModel;VintageStoryModManager.Views.Dialogs.SyncToServerDialog,"_confirmationService.NotifyAsync(
+                    preflight.ErrorMessage!,
+                    ""Sync to Server"",
+                    MapPreflightSeverity(preflight.Icon))
+                .ConfigureAwait",SyncToServerMenuItem.Click,ShowHostKeyVerificationAsync
+MainWindow.ServerSync.cs,UpdateServerOptionsState,False,False,,,UpdateSelectedModCopyForServerButton,VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.ServerSync.cs,UpdateSyncToServerMenuState,False,False,_userConfiguration,,,VintageStoryModManager.Services.ServerSyncPreflight,,,
+MainWindow.Settings.cs,UpdateGameVersionMenuItem,False,False,,,,,,,
+MainWindow.Sorting.cs,ApplyModListSort,False,False,_viewModel,,ApplySortOption;FindMatchingSortOption,VintageStoryModManager.Helpers.ModSortHelper;VintageStoryModManager.ViewModels.SortOption,,,
+MainWindow.Sorting.cs,ApplySortOption,False,False,_suppressSortPreferenceSave;_viewModel,_suppressSortPreferenceSave,UpdateSortPreferenceFromSelectedOption,,,,
+MainWindow.Sorting.cs,ClearColumnSortIndicators,False,False,,,,,,,
+MainWindow.Sorting.cs,FindMatchingSortOption,False,False,_viewModel,,,VintageStoryModManager.Helpers.ModSortHelper;VintageStoryModManager.ViewModels.SortOption,,,
+MainWindow.Sorting.cs,ModsDataGrid_OnSorting,False,True,_viewModel,,ApplyModListSort,,,ModsDataGrid.Sorting,
+MainWindow.Sorting.cs,RestoreSortPreference,False,False,_userConfiguration;_viewModel,,ApplyModListSort;UpdateSortPreferenceFromSelectedOption,VintageStoryModManager.ViewModels.MainViewModel,,,
+MainWindow.Sorting.cs,UpdateColumnSortVisuals,False,False,,,,VintageStoryModManager.Helpers.ModSortHelper,,,
+MainWindow.Sorting.cs,UpdateSearchSortingBehavior,False,False,,,,,,,
+MainWindow.Sorting.cs,UpdateSortPreferenceFromSelectedOption,False,False,_userConfiguration;_viewModel,,ClearColumnSortIndicators;UpdateColumnSortVisuals,,,,
+MainWindow.Startup.cs,ClearManagerCachesForVersionUpdateAsync,True,False,_modActivityLoggingService,,RefreshDeleteCachedModsMenuHeaderAsync,VintageStoryModManager.Services.ManagerCacheCleanupService;VintageStoryModManager.Services.ModManagerMessageBox,RefreshDeleteCachedModsMenuHeaderAsync().ConfigureAwait;Task.Run(() => ManagerCacheCleanupService.ClearManagerCaches(false)).ConfigureAwait,,
+MainWindow.Startup.cs,EnsureInstalledModsCachedAsync,False,False,_userConfiguration,,,VintageStoryModManager.Services.ModCacheService;VintageStoryModManager.ViewModels.ModListItemViewModel,,,
+MainWindow.Startup.cs,MainWindow_Loaded,True,True,_userConfiguration;_viewModel,,ApplyStoredModInfoPanelPosition;CheckAndPromptMigrationAsync;CreateAppStartedBackupAsync;EnsureInstalledModsCachedAsync;InitializeViewModelAsync;MigrateLegacyFirebaseDataIfNeededAsync;MigrateLegacyRebuiltModlistsIfNeeded;PromptCacheRefreshIfNeededAsync;RefreshDeleteCachedModsMenuHeaderAsync;RefreshManagerUpdateLinkAsync;SyncInstalledModsToModBrowser,SimpleVsManager.Cloud.FirebaseAnonymousAuthenticator,CheckAndPromptMigrationAsync().ConfigureAwait;CreateAppStartedBackupAsync().ConfigureAwait;EnsureInstalledModsCachedAsync(_viewModel).ConfigureAwait;InitializeViewModelAsync(_viewModel).ConfigureAwait;MigrateLegacyFirebaseDataIfNeededAsync().ConfigureAwait;PromptCacheRefreshIfNeededAsync().ConfigureAwait;RefreshDeleteCachedModsMenuHeaderAsync;RefreshManagerUpdateLinkAsync,,
+MainWindow.Startup.cs,MainWindow_OnClosing,False,True,_isApplyingPreset;_modActivityLoggingService;_traceListener;_userConfiguration;_viewModel,_traceListener,DisposeCurrentViewModel;SaveUploaderName;SaveWindowDimensions,VintageStoryModManager.Services.DeveloperProfileManager;VintageStoryModManager.Services.InternetAccessManager;VintageStoryModManager.Services.ModManagerMessageBox,,,DeveloperProfileManager_OnCurrentProfileChanged;InternetAccessManager_OnInternetAccessChanged
+MainWindow.Startup.cs,MigrateLegacyRebuiltModlistsIfNeeded,False,False,RebuiltModListDirectoryName;_modActivityLoggingService;_userConfiguration;_viewModel,,EnsureModListDirectory,VintageStoryModManager.Helpers.FileNameHelper;VintageStoryModManager.Services.ModManagerMessageBox,,,
+MainWindow.Startup.cs,PromptCacheRefreshIfNeededAsync,True,False,_userConfiguration,,ClearManagerCachesForVersionUpdateAsync,VintageStoryModManager.Services.ModManagerMessageBox,ClearManagerCachesForVersionUpdateAsync().ConfigureAwait,,
+MainWindow.StatusReporting.cs,ReportStatus,False,False,_viewModel,,,,,,
+MainWindow.UserReports.cs,UserReportsButton_OnClick,True,True,_confirmationService;_viewModel,,EnsureUserReportVotingConsent,VintageStoryModManager.Models.ModVersionVoteComments;VintageStoryModManager.Models.ModVersionVoteCounts;VintageStoryModManager.Models.ModVersionVoteSummary;VintageStoryModManager.Services.DialogSeverity;VintageStoryModManager.Services.InternetAccessDisabledException;VintageStoryModManager.Services.UserReportsDialogTextBuilder;VintageStoryModManager.ViewModels.ModListItemViewModel;VintageStoryModManager.Views.Dialogs.ModVoteDialog,"_confirmationService.NotifyAsync(
+                    UserReportsDialogTextBuilder.BuildLoadFailureMessage(ex.Message),
+                    ""Simple VS Manager"",
+                    DialogSeverity.Error)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    UserReportsDialogTextBuilder.CannotSubmitUserReportMessage,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_confirmationService.NotifyAsync(
+                    ex.Message,
+                    ""Simple VS Manager"",
+                    DialogSeverity.Information)
+                .ConfigureAwait;_viewModel
+                .RefreshUserReportAsync(mod)
+                .ConfigureAwait",Button.Click,
+MainWindow.ViewModel.cs,DisposeCurrentViewModel,False,False,_viewModel,_viewModel,DisposeViewModel;StopGameSessionMonitor,VintageStoryModManager.ViewModels.MainViewModel,,,
+MainWindow.ViewModel.cs,DisposeViewModel,False,False,,,,,,,OnUserReportVoteSubmitted;ViewModelOnPropertyChanged
+MainWindow.ViewModel.cs,HandleViewModelInitializationFailure,False,False,_dataDirectory;_modActivityLoggingService;_userConfiguration,_dataDirectory,DisposeCurrentViewModel,VintageStoryModManager.Services.ModManagerMessageBox,,,
+MainWindow.ViewModel.cs,InitializeViewModel,False,False,_userConfiguration;_viewModel,_cloudModlistsLoaded;_localModlistsLoaded;_selectedCloudModlist;_viewModel,ApplyColumnVisibilityPreferencesToViewModel;ApplyPlayerIdentityToUiAndCloudStore;AttachToModsView;RestoreSortPreference;SubscribeModBrowserToDirectoryWatcher;UpdateGameVersionMenuItem,VintageStoryModManager.ViewModels.MainViewModel,,,OnUserReportVoteSubmitted;ViewModelOnPropertyChanged
+MainWindow.ViewModel.cs,InitializeViewModelAsync,True,False,_isInitializing,_isInitializing,StartGameSessionMonitor;StartModsWatcher;TryShowModUsagePromptAsync,VintageStoryModManager.Services.ModManagerMessageBox,TryShowModUsagePromptAsync().ConfigureAwait;viewModel.InitializeAsync,,
+MainWindow.ViewModel.cs,ReloadViewModelAsync,True,False,_userConfiguration;_viewModel,_viewModel,ApplyColumnVisibilityPreferencesToViewModel;ApplyPlayerIdentityToUiAndCloudStore;AttachToModsView;DisposeViewModel;InitializeViewModelAsync;RefreshDeleteCachedModsMenuHeaderAsync;StartModsWatcher;StopGameSessionMonitor;StopModsWatcher;UpdateGameVersionMenuItem,VintageStoryModManager.Services.ModManagerMessageBox;VintageStoryModManager.ViewModels.MainViewModel,InitializeViewModelAsync;RefreshDeleteCachedModsMenuHeaderAsync,,OnUserReportVoteSubmitted;ViewModelOnPropertyChanged
+MainWindow.ViewModelPropertyChanges.cs,ViewModelOnPropertyChanged,False,True,_currentModsView;_suppressSortPreferenceSave;_userConfiguration;_viewModel,,AttachToModsView;HandleModlistsVisibilityChanged;RefreshHoverOverlayState;RefreshModsAfterDependencyResolutionAsync;ScheduleRefreshAfterModlistLoadIfReady;ShouldPreserveModsViewState;ShouldRefreshAfterDependencyResolution;SyncMiddleTabControlToViewModel;UpdateSortPreferenceFromSelectedOption,VintageStoryModManager.ViewModels.MainViewModel,RefreshModsAfterDependencyResolutionAsync().ConfigureAwait,,ScheduleRefreshAfterModlistLoadIfReady
+MainWindow.WindowState.cs,ApplyStoredWindowDimensions,False,False,_userConfiguration,,IsWindowPositionOnScreen,,,,
+MainWindow.WindowState.cs,IsWindowPositionOnScreen,False,False,WindowPositionScreenMargin,,,,,,
+MainWindow.WindowState.cs,OnActivated,False,False,_isWindowActive,_isWindowActive,,,,,
+MainWindow.WindowState.cs,OnClosed,False,False,_backupSemaphore;_cloudModlistStore;_cloudStoreLock;_votesCacheWatcher,,StopModsWatcher;UnsubscribeModBrowserFromDirectoryWatcher,,,,
+MainWindow.WindowState.cs,OnDeactivated,False,False,,_isWindowActive,,,,,
+MainWindow.WindowState.cs,SaveWindowDimensions,False,False,_userConfiguration,,,,,,

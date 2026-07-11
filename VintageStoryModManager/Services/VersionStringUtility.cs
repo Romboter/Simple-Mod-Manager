@@ -295,4 +295,38 @@ internal static class VersionStringUtility
         ParsedVersionPartsCache.TryAdd(normalizedVersion, (int[])parts.Clone());
         return true;
     }
+
+    internal static bool VersionsMatch(string? desiredVersion, string? installedVersion)
+        {
+            if (string.IsNullOrWhiteSpace(desiredVersion) && string.IsNullOrWhiteSpace(installedVersion)) return true;
+
+            if (!string.IsNullOrWhiteSpace(desiredVersion) && !string.IsNullOrWhiteSpace(installedVersion))
+            {
+                if (string.Equals(desiredVersion.Trim(), installedVersion.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                var desiredNormalized = VersionStringUtility.Normalize(desiredVersion);
+                var installedNormalized = VersionStringUtility.Normalize(installedVersion);
+                if (!string.IsNullOrWhiteSpace(desiredNormalized)
+                    && !string.IsNullOrWhiteSpace(installedNormalized)
+                    && string.Equals(desiredNormalized, installedNormalized, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
+        }
+
+    internal static bool MatchesDesiredVersion(
+        string? desiredVersion,
+        string? desiredNormalized,
+        string? candidateVersion,
+        string? candidateNormalized)
+    {
+        return (!string.IsNullOrWhiteSpace(desiredVersion)
+                && !string.IsNullOrWhiteSpace(candidateVersion)
+                && string.Equals(candidateVersion, desiredVersion, StringComparison.OrdinalIgnoreCase))
+               || (!string.IsNullOrWhiteSpace(desiredNormalized)
+                   && !string.IsNullOrWhiteSpace(candidateNormalized)
+                   && string.Equals(candidateNormalized, desiredNormalized, StringComparison.OrdinalIgnoreCase));
+    }
 }

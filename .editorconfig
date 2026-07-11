@@ -1,0 +1,28 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs,xaml,csproj,sln,props,targets}]
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml,md}]
+indent_style = space
+indent_size = 2
+
+[*.cs]
+dotnet_diagnostic.IDE0005.severity = suggestion
+
+# Keep generated files out of style fights.
+[*.Designer.cs]
+generated_code = true
+
+[*.g.cs]
+generated_code = true
+
+[*.g.i.cs]
+generated_code = true

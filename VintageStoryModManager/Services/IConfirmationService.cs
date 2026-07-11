@@ -1,12 +1,27 @@
-using System.Threading.Tasks;
-
 namespace VintageStoryModManager.Services
 {
+    /// <summary>Severity of a seam dialog; maps to the themed dialog's icon.</summary>
+    public enum DialogSeverity
+    {
+        Information,
+        Warning,
+        Error,
+        Question
+    }
+
     /// <summary>
-    ///     Service for showing confirmation dialogs in a testable, MVVM-friendly way.
+    ///     Service for user confirmation and notification dialogs, backed by the app's standard
+    ///     themed message dialog. Lets ViewModels prompt without direct window dependencies.
     /// </summary>
     public interface IConfirmationService
     {
-        Task<bool> ConfirmAsync(string message, string title);
+        /// <summary>Yes/No-style confirmation. Custom button text via confirmText/cancelText (null = Yes/No).</summary>
+        Task<bool> ConfirmAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Question,
+            string? confirmText = null, string? cancelText = null);
+
+        /// <summary>OK-only notification.</summary>
+        Task NotifyAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Information);
     }
 }
