@@ -102,6 +102,17 @@ public sealed class SettingsMenuViewModelTests
             NotifyMessages.Add((message, title, severity));
             return Task.CompletedTask;
         }
+
+        public int ConfirmOkCancelCalls { get; private set; }
+        public bool OkCancelAnswer { get; set; }
+
+        public Task<bool> ConfirmOkCancelAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Question,
+            string? okText = null, string? cancelText = null)
+        {
+            ConfirmOkCancelCalls++;
+            return Task.FromResult(OkCancelAnswer);
+        }
     }
 
     private sealed record Fixture(
