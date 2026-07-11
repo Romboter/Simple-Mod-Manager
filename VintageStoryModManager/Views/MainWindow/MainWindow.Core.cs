@@ -1,6 +1,5 @@
 #nullable enable
 using CommunityToolkit.Mvvm.Input;
-using SimpleVsManager.Cloud;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Net.Http;
@@ -189,8 +188,6 @@ public partial class MainWindow : Window
         set => SetValue(HasModlistDownloadSpeedProperty, value);
     }
 
-    private readonly SemaphoreSlim _cloudStoreLock = new(1, 1);
-
     private readonly List<MenuItem> _developerProfileMenuItems = new();
 
     private readonly List<MenuItem> _gameProfileMenuItems = new();
@@ -206,6 +203,8 @@ public partial class MainWindow : Window
     private readonly DataFolderBackupCoordinator _dataFolderBackupCoordinator;
 
     private readonly ModlistBackupCoordinator _modlistBackupCoordinator;
+
+    private readonly CloudWorkflowCoordinator _cloudWorkflowCoordinator;
 
     private readonly ModActivityLoggingService _modActivityLoggingService;
 
@@ -224,10 +223,6 @@ public partial class MainWindow : Window
     private CloudModlistListEntry? _selectedCloudModlist;
 
     private bool _cloudModlistsLoaded;
-
-    private bool _firebaseMigrationAttempted;
-
-    private FirebaseModlistStore? _cloudModlistStore;
 
     private ICollectionView? _currentModsView;
 
@@ -317,6 +312,10 @@ public partial class MainWindow : Window
             _userConfiguration.GetConfigurationDirectory(),
             _userConfiguration.CustomDataBackupLocation));
         _modlistBackupCoordinator = new ModlistBackupCoordinator(EnsureBackupDirectory);
+        _cloudWorkflowCoordinator = new CloudWorkflowCoordinator(
+            () => _viewModel?.PlayerUid,
+            () => _viewModel?.PlayerName,
+            _userConfiguration);
         _modActivityLoggingService = new ModActivityLoggingService(_userConfiguration);
         _serverTargetService = new ServerTargetService(_userConfiguration.GetConfigurationDirectory());
         _modSelection = new ModGridSelectionService(

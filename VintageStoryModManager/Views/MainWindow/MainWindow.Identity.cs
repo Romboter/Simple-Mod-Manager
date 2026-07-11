@@ -18,7 +18,7 @@ public partial class MainWindow
         var suffixSource = _viewModel?.PlayerUid;
         if (string.IsNullOrWhiteSpace(suffixSource)) suffixSource = fallbackUserId;
 
-        if (string.IsNullOrWhiteSpace(suffixSource)) suffixSource = _cloudModlistStore?.CurrentUserId;
+        if (string.IsNullOrWhiteSpace(suffixSource)) suffixSource = _cloudWorkflowCoordinator.CurrentStore?.CurrentUserId;
 
         return UploaderNameResolver.Resolve(_viewModel?.PlayerName, suffixSource);
     }
@@ -27,21 +27,14 @@ public partial class MainWindow
     {
         SetUsernameDisplay(ResolveUploaderName());
 
-        if (_cloudModlistStore is not null) ApplyPlayerIdentityToCloudStore(_cloudModlistStore);
-    }
-
-    private void ApplyPlayerIdentityToCloudStore(FirebaseModlistStore? store)
-    {
-        if (store is null) return;
-
-        store.SetPlayerIdentity(_viewModel?.PlayerUid, _viewModel?.PlayerName);
+        _cloudWorkflowCoordinator.ApplyPlayerIdentity(_cloudWorkflowCoordinator.CurrentStore);
     }
 
     private void SaveUploaderName()
     {
         if (_userConfiguration is null) return;
 
-        var uploader = ResolveUploaderName(_cloudModlistStore?.CurrentUserId);
+        var uploader = ResolveUploaderName(_cloudWorkflowCoordinator.CurrentStore?.CurrentUserId);
         SetUsernameDisplay(uploader);
     }
 

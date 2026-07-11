@@ -209,7 +209,7 @@ public partial class MainWindow
         var playerName = _viewModel?.PlayerName;
         if (!string.IsNullOrWhiteSpace(playerName)) return playerName.Trim();
 
-        var suffixSource = _viewModel?.PlayerUid ?? _cloudModlistStore?.CurrentUserId;
+        var suffixSource = _viewModel?.PlayerUid ?? _cloudWorkflowCoordinator.CurrentStore?.CurrentUserId;
         if (!string.IsNullOrWhiteSpace(suffixSource)) return ResolveUploaderName(suffixSource);
 
         return "Anonymous";
