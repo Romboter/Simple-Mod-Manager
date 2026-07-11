@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
+using VintageStoryModManager.ViewModels;
 using Xunit;
 
 namespace VintageStoryModManager.Tests;
@@ -108,6 +109,34 @@ public sealed class ModlistWorkflowServiceTests
                 filePath, modStates, "My List", null, null, "Tester", null, "1.20.0");
 
             Assert.True(result.Success);
+            Assert.True(File.Exists(filePath));
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void SavePdfModlist_WritesFile()
+    {
+        var directory = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            var filePath = Path.Combine(directory, "My List.pdf");
+            var modStates = new[] { new ModPresetModState("mod1", "1.0.0", true, null, null) };
+
+            ModlistWorkflowService.SavePdfModlist(
+                filePath,
+                "My List",
+                version: null,
+                description: null,
+                uploaderName: "Tester",
+                gameVersion: "1.20.0",
+                mods: Array.Empty<ModListItemViewModel>(),
+                modStates: modStates,
+                includedConfigurations: null);
+
             Assert.True(File.Exists(filePath));
         }
         finally

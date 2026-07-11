@@ -3,6 +3,7 @@
 using System.IO;
 using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Models;
+using VintageStoryModManager.ViewModels;
 
 namespace VintageStoryModManager.Services;
 
@@ -61,6 +62,41 @@ internal static class ModlistWorkflowService
             gameVersion);
 
         return LocalModlistFileService.Save(filePath, serializable);
+    }
+
+    public static void SavePdfModlist(
+        string filePath,
+        string listName,
+        string? version,
+        string? description,
+        string uploaderName,
+        string? gameVersion,
+        IReadOnlyList<ModListItemViewModel> mods,
+        IReadOnlyList<ModPresetModState> modStates,
+        IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations)
+    {
+        var presetName = string.IsNullOrWhiteSpace(listName) ? "Installed Mods" : listName.Trim();
+        var serializable = PresetSnapshotBuilder.BuildModlistPreset(
+            modStates,
+            presetName,
+            description,
+            version,
+            uploaderName,
+            includedConfigurations,
+            gameVersion);
+
+        var serializableConfigList = PresetConfigurationSerializer.BuildSerializableConfigList(includedConfigurations);
+
+        InstalledModsPdfGenerator.GenerateInstalledModsPdf(
+            filePath,
+            listName,
+            version,
+            description,
+            uploaderName,
+            gameVersion,
+            mods,
+            serializable,
+            serializableConfigList);
     }
 }
 
