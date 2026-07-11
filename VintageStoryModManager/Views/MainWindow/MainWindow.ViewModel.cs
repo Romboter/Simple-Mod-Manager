@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Windows;
+using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
 
 using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
@@ -22,10 +23,11 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            WpfMessageBox.Show($"Failed to load mods:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    $"Failed to load mods:\n{ex.Message}",
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
         finally
         {
@@ -133,10 +135,11 @@ public partial class MainWindow
                 StartModsWatcher();
             }
 
-            WpfMessageBox.Show($"Failed to reload mods:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    $"Failed to reload mods:\n{ex.Message}",
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
 
         await RefreshDeleteCachedModsMenuHeaderAsync();
