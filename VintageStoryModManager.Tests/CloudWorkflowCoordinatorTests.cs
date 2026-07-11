@@ -41,4 +41,25 @@ public sealed class CloudWorkflowCoordinatorTests
 
         Assert.Null(exception);
     }
+
+    [Fact]
+    public async Task MigrateLegacyFirebaseDataIfNeededAsync_NoPlayerUid_ReturnsNoPlayerUid()
+    {
+        var coordinator = CreateCoordinator(playerUid: null);
+
+        var outcome = await coordinator.MigrateLegacyFirebaseDataIfNeededAsync();
+
+        Assert.Equal(CloudMigrationOutcome.NoPlayerUid, outcome);
+    }
+
+    [Fact]
+    public async Task MigrateLegacyFirebaseDataIfNeededAsync_SecondCall_ReturnsAlreadyAttempted()
+    {
+        var coordinator = CreateCoordinator(playerUid: null);
+
+        await coordinator.MigrateLegacyFirebaseDataIfNeededAsync();
+        var second = await coordinator.MigrateLegacyFirebaseDataIfNeededAsync();
+
+        Assert.Equal(CloudMigrationOutcome.AlreadyAttempted, second);
+    }
 }

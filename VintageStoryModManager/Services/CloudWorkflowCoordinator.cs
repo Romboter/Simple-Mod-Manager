@@ -43,10 +43,10 @@ public sealed class CloudWorkflowCoordinator
     {
         if (_migrationAttempted) return CloudMigrationOutcome.AlreadyAttempted;
 
+        _migrationAttempted = true;
+
         var playerUid = _playerUidProvider();
         if (string.IsNullOrWhiteSpace(playerUid)) return CloudMigrationOutcome.NoPlayerUid;
-
-        _migrationAttempted = true;
 
         var migrationService = new FirebaseModlistMigrationService();
         var migrationSucceeded = await migrationService
