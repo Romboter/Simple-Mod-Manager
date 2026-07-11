@@ -102,6 +102,18 @@ public sealed class SettingsMenuViewModelTests
             NotifyMessages.Add((message, title, severity));
             return Task.CompletedTask;
         }
+
+        public int ConfirmThreeWayCalls { get; private set; }
+        public ThreeWayConfirmResult ThreeWayAnswer { get; set; } = ThreeWayConfirmResult.Cancel;
+
+        public Task<ThreeWayConfirmResult> ConfirmThreeWayAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Question,
+            string? yesText = null, string? noText = null,
+            SuppressibleConfirmOption? suppressOption = null)
+        {
+            ConfirmThreeWayCalls++;
+            return Task.FromResult(ThreeWayAnswer);
+        }
     }
 
     private sealed record Fixture(
