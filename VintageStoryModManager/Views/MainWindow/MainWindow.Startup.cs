@@ -22,7 +22,7 @@ public partial class MainWindow
 
         _userConfiguration.EnablePersistence();
 
-        MigrateLegacyRebuiltModlistsIfNeeded();
+        await MigrateLegacyRebuiltModlistsIfNeededAsync().ConfigureAwait(true);
 
         // Ensure firebase-auth.json is backed up if it exists and hasn't been backed up yet
         FirebaseAnonymousAuthenticator.EnsureStartupBackup(_userConfiguration);
@@ -64,7 +64,7 @@ public partial class MainWindow
         await RefreshManagerUpdateLinkAsync();
     }
 
-    private void MigrateLegacyRebuiltModlistsIfNeeded()
+    private async Task MigrateLegacyRebuiltModlistsIfNeededAsync()
     {
         if (_userConfiguration.RebuiltModlistMigrationCompleted) return;
 
@@ -104,11 +104,11 @@ public partial class MainWindow
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
         {
             _modActivityLoggingService.LogError("Failed to prepare the Rebuilt modlists folder", ex);
-            WpfMessageBox.Show(
-                $"Failed to prepare the Rebuilt modlists folder:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    $"Failed to prepare the Rebuilt modlists folder:\n{ex.Message}",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
         }
     }
 
@@ -124,14 +124,13 @@ public partial class MainWindow
             ? $"Simple VS Manager {currentVersion} is now installed. Clearing cached mod data is recommended after updates to avoid stale information.\n\nWould you like to clear the caches now?"
             : $"Simple VS Manager was updated from version {previousVersion} to {currentVersion}. Clearing cached mod data is recommended after updates to avoid stale information.\n\nWould you like to clear the caches now?";
 
-        var result = WpfMessageBox.Show(
-            this,
-            message,
-            "Simple VS Manager",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+        var result = await _confirmationService.ConfirmAsync(
+                message,
+                "Simple VS Manager",
+                DialogSeverity.Question)
+            .ConfigureAwait(true);
 
-        if (result == MessageBoxResult.Yes) await ClearManagerCachesForVersionUpdateAsync().ConfigureAwait(true);
+        if (result) await ClearManagerCachesForVersionUpdateAsync().ConfigureAwait(true);
     }
 
     private async Task ClearManagerCachesForVersionUpdateAsync()
@@ -141,22 +140,20 @@ public partial class MainWindow
             await Task.Run(() => ManagerCacheCleanupService.ClearManagerCaches(false)).ConfigureAwait(true);
             await RefreshDeleteCachedModsMenuHeaderAsync().ConfigureAwait(true);
 
-            WpfMessageBox.Show(
-                this,
-                "Cached mod data cleared successfully. Fresh data will be downloaded as needed.",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await _confirmationService.NotifyAsync(
+                    "Cached mod data cleared successfully. Fresh data will be downloaded as needed.",
+                    "Simple VS Manager",
+                    DialogSeverity.Information)
+                .ConfigureAwait(true);
         }
         catch (Exception ex)
         {
             _modActivityLoggingService.LogError("Failed to clear cached mod data", ex);
-            WpfMessageBox.Show(
-                this,
-                $"Failed to clear cached mod data:\n{ex.Message}",
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            await _confirmationService.NotifyAsync(
+                    $"Failed to clear cached mod data:\n{ex.Message}",
+                    "Simple VS Manager",
+                    DialogSeverity.Error)
+                .ConfigureAwait(true);
         }
     }
 
