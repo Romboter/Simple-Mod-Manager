@@ -9,6 +9,31 @@ namespace VintageStoryModManager.Services
         Question
     }
 
+    /// <summary>Result of a three-way (Yes/No/Cancel) seam confirmation.</summary>
+    public enum ThreeWayConfirmResult
+    {
+        Yes,
+        No,
+        Cancel
+    }
+
+    /// <summary>
+    ///     An extra dialog button that maps to the "No" outcome but also fires a side-effecting
+    ///     callback when clicked (e.g. "No, don't ask again" persisting a suppression setting).
+    /// </summary>
+    public sealed class SuppressibleConfirmOption
+    {
+        public SuppressibleConfirmOption(string buttonText, Action onSelected)
+        {
+            ButtonText = buttonText ?? throw new ArgumentNullException(nameof(buttonText));
+            OnSelected = onSelected ?? throw new ArgumentNullException(nameof(onSelected));
+        }
+
+        public string ButtonText { get; }
+
+        public Action OnSelected { get; }
+    }
+
     /// <summary>
     ///     Service for user confirmation and notification dialogs, backed by the app's standard
     ///     themed message dialog. Lets ViewModels prompt without direct window dependencies.
@@ -23,5 +48,15 @@ namespace VintageStoryModManager.Services
         /// <summary>OK-only notification.</summary>
         Task NotifyAsync(string message, string title,
             DialogSeverity severity = DialogSeverity.Information);
+
+        /// <summary>
+        ///     Yes/No/Cancel-style confirmation. Custom button text via yesText/noText (null = Yes/No).
+        ///     An optional <paramref name="suppressOption"/> adds a fourth button that maps to the
+        ///     "No" outcome and additionally invokes its callback when clicked.
+        /// </summary>
+        Task<ThreeWayConfirmResult> ConfirmThreeWayAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Question,
+            string? yesText = null, string? noText = null,
+            SuppressibleConfirmOption? suppressOption = null);
     }
 }

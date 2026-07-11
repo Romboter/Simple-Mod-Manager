@@ -38,6 +38,38 @@ namespace VintageStoryModManager.Services
             return Task.CompletedTask;
         }
 
+        public Task<ThreeWayConfirmResult> ConfirmThreeWayAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Question,
+            string? yesText = null, string? noText = null,
+            SuppressibleConfirmOption? suppressOption = null)
+        {
+            MessageDialogButtonContentOverrides? overrides = null;
+            if (yesText is not null || noText is not null)
+                overrides = new MessageDialogButtonContentOverrides { Yes = yesText, No = noText };
+
+            MessageDialogExtraButton? extraButton = null;
+            if (suppressOption is not null)
+                extraButton = new MessageDialogExtraButton(
+                    suppressOption.ButtonText,
+                    MessageBoxResult.No,
+                    suppressOption.OnSelected);
+
+            var result = ModManagerMessageBox.Show(
+                message,
+                title,
+                MessageBoxButton.YesNoCancel,
+                MapSeverity(severity),
+                extraButton,
+                overrides);
+
+            return Task.FromResult(result switch
+            {
+                MessageBoxResult.Yes => ThreeWayConfirmResult.Yes,
+                MessageBoxResult.No => ThreeWayConfirmResult.No,
+                _ => ThreeWayConfirmResult.Cancel
+            });
+        }
+
         private static MessageBoxImage MapSeverity(DialogSeverity severity) => severity switch
         {
             DialogSeverity.Warning => MessageBoxImage.Warning,
