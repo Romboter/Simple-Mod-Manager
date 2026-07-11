@@ -58,5 +58,10 @@ namespace VintageStoryModManager.Services
             DialogSeverity severity = DialogSeverity.Question,
             string? yesText = null, string? noText = null,
             SuppressibleConfirmOption? suppressOption = null);
+
+        /// <summary>OK/Cancel-style confirmation. Custom button text via okText/cancelText (null = OK/Cancel).</summary>
+        Task<bool> ConfirmOkCancelAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Question,
+            string? okText = null, string? cancelText = null);
     }
 }

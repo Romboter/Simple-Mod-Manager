@@ -70,6 +70,24 @@ namespace VintageStoryModManager.Services
             });
         }
 
+        public Task<bool> ConfirmOkCancelAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Question,
+            string? okText = null, string? cancelText = null)
+        {
+            MessageDialogButtonContentOverrides? overrides = null;
+            if (okText is not null || cancelText is not null)
+                overrides = new MessageDialogButtonContentOverrides { Ok = okText, Cancel = cancelText };
+
+            var result = ModManagerMessageBox.Show(
+                message,
+                title,
+                MessageBoxButton.OKCancel,
+                MapSeverity(severity),
+                buttonContentOverrides: overrides);
+
+            return Task.FromResult(result == MessageBoxResult.OK);
+        }
+
         private static MessageBoxImage MapSeverity(DialogSeverity severity) => severity switch
         {
             DialogSeverity.Warning => MessageBoxImage.Warning,

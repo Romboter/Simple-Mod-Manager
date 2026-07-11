@@ -118,7 +118,7 @@ public partial class MainWindow
         }
     }
 
-    private void ModlistsTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void ModlistsTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isUpdatingModlistsTabSelection) return;
         if (_viewModel?.IsViewingModlistTab != true) return;
@@ -135,7 +135,7 @@ public partial class MainWindow
 
         if (FirebaseAuthFileService.HasFirebaseAuthStateFile()) EnsureFirebaseAuthBackedUpIfAvailable();
 
-        if (!EnsureCloudModlistsConsent())
+        if (!await EnsureCloudModlistsConsentAsync().ConfigureAwait(true))
         {
             _isUpdatingModlistsTabSelection = true;
             try

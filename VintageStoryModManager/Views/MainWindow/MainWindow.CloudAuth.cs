@@ -4,15 +4,13 @@ using System.IO;
 using System.Security;
 using System.Windows;
 using VintageStoryModManager.Services;
-using VintageStoryModManager.Views.Dialogs;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
 {
 
-    private bool EnsureCloudModlistsConsent()
+    private async Task<bool> EnsureCloudModlistsConsentAsync()
     {
         var message =
             "In this tab you can easily save and load Modlists from an online database (Google Firebase), for free." +
@@ -22,10 +20,10 @@ public partial class MainWindow
             Environment.NewLine + Environment.NewLine +
             "You will not need to sign in or provide any account information or do anything really :) Press OK to continue and never show this again!";
 
-        return EnsureFirebaseAuthConsent(message);
+        return await EnsureFirebaseAuthConsentAsync(message).ConfigureAwait(true);
     }
 
-    private bool EnsureFirebaseAuthConsent(string message)
+    private async Task<bool> EnsureFirebaseAuthConsentAsync(string message)
     {
         var stateFilePath = FirebaseAnonymousAuthenticator.GetStateFilePath();
         if (string.IsNullOrWhiteSpace(stateFilePath)) return true;
@@ -36,23 +34,15 @@ public partial class MainWindow
             return true;
         }
 
-        var buttonOverrides = new MessageDialogButtonContentOverrides
-        {
-            Cancel = "No thanks"
-        };
-
-        var result = WpfMessageBox.Show(
-            this,
-            message,
-            "Simple VS Manager",
-            MessageBoxButton.OKCancel,
-            MessageBoxImage.Information,
-            buttonContentOverrides: buttonOverrides);
-
-        return result == MessageBoxResult.OK;
+        return await _confirmationService.ConfirmOkCancelAsync(
+                message,
+                "Simple VS Manager",
+                DialogSeverity.Information,
+                cancelText: "No thanks")
+            .ConfigureAwait(true);
     }
 
-    private bool EnsureUserReportVotingConsent()
+    private async Task<bool> EnsureUserReportVotingConsentAsync()
     {
         var message =
             "To enable voting, Simple VS Manager will create a firebase-auth.json (basically just a code that identifies you as the owner of your mod compatibility votes) file in its configuration folder. " +
@@ -60,7 +50,7 @@ public partial class MainWindow
             Environment.NewLine + Environment.NewLine +
             "You will not need to sign in or provide any account information or do anything really :) Press OK to continue and never show this again!";
 
-        return EnsureFirebaseAuthConsent(message);
+        return await EnsureFirebaseAuthConsentAsync(message).ConfigureAwait(true);
     }
 
     private void EnsureFirebaseAuthBackedUpIfAvailable()
@@ -104,14 +94,13 @@ public partial class MainWindow
             "Use this if you lost access to online modlists or votes after moving or deleting files.\n\n" +
             "Continue?";
 
-        var confirmation = WpfMessageBox.Show(
-            this,
-            confirmationMessage,
-            "Simple VS Manager",
-            MessageBoxButton.OKCancel,
-            MessageBoxImage.Question);
+        var confirmation = await _confirmationService.ConfirmOkCancelAsync(
+                confirmationMessage,
+                "Simple VS Manager",
+                DialogSeverity.Question)
+            .ConfigureAwait(true);
 
-        if (confirmation != MessageBoxResult.OK) return;
+        if (!confirmation) return;
 
         try
         {

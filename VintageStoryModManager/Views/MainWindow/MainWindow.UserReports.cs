@@ -29,7 +29,7 @@ public partial class MainWindow
             return;
         }
 
-        if (!EnsureUserReportVotingConsent()) return;
+        if (!await EnsureUserReportVotingConsentAsync().ConfigureAwait(true)) return;
 
         _viewModel.EnableUserReportFetching();
 

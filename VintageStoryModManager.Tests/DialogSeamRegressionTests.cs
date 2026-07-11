@@ -22,7 +22,6 @@ public sealed class DialogSeamRegressionTests
         ["MainWindow.Startup.cs"] = 5,
         ["MainWindow.PathInitialization.cs"] = 5,
         ["MainWindow.ViewModel.cs"] = 3,
-        ["MainWindow.CloudAuth.cs"] = 2,
         ["MainWindow.Profiles.cs"] = 1,
         ["MainWindow.ModConfigCapture.cs"] = 1,
         ["MainWindow.CloudManagement.cs"] = 1,

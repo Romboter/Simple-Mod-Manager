@@ -7,15 +7,19 @@ public sealed class ConfirmationServiceInterfaceTests
 {
     private sealed class RecordingConfirmation : IConfirmationService
     {
+        public bool ConfirmAnswer { get; set; }
         public ThreeWayConfirmResult AnswerToReturn { get; set; } = ThreeWayConfirmResult.Yes;
+        public bool OkCancelAnswer { get; set; } = true;
         public bool SuppressCallbackInvoked { get; private set; }
         public string? LastYesText { get; private set; }
         public string? LastNoText { get; private set; }
+        public string? LastOkText { get; private set; }
+        public string? LastCancelText { get; private set; }
 
         public Task<bool> ConfirmAsync(string message, string title,
             DialogSeverity severity = DialogSeverity.Question,
             string? confirmText = null, string? cancelText = null) =>
-            Task.FromResult(true);
+            Task.FromResult(ConfirmAnswer);
 
         public Task NotifyAsync(string message, string title,
             DialogSeverity severity = DialogSeverity.Information) =>
@@ -29,6 +33,15 @@ public sealed class ConfirmationServiceInterfaceTests
             LastYesText = yesText;
             LastNoText = noText;
             return Task.FromResult(AnswerToReturn);
+        }
+
+        public Task<bool> ConfirmOkCancelAsync(string message, string title,
+            DialogSeverity severity = DialogSeverity.Question,
+            string? okText = null, string? cancelText = null)
+        {
+            LastOkText = okText;
+            LastCancelText = cancelText;
+            return Task.FromResult(OkCancelAnswer);
         }
     }
 
@@ -64,5 +77,27 @@ public sealed class ConfirmationServiceInterfaceTests
 
         Assert.True(invoked);
         Assert.Equal("No, don't ask again", option.ButtonText);
+    }
+
+    [Fact]
+    public async Task ConfirmOkCancelAsync_ReturnsTrueForOk()
+    {
+        var recording = new RecordingConfirmation { OkCancelAnswer = true };
+        IConfirmationService service = recording;
+
+        var result = await service.ConfirmOkCancelAsync("message", "title");
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task ConfirmOkCancelAsync_PassesCustomButtonText()
+    {
+        var recording = new RecordingConfirmation();
+        IConfirmationService service = recording;
+
+        await service.ConfirmOkCancelAsync("message", "title", cancelText: "No thanks");
+
+        Assert.Equal("No thanks", recording.LastCancelText);
     }
 }
