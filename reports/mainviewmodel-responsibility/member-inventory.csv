@@ -1,0 +1,240 @@
+Member,Kind,Visibility,StartLine,EndLine,Cluster,FieldsRead,FieldsWritten
+UserReportVoteSubmitted,event,public,157,158,User Reports & Voting,,
+MainViewModel (ctor),method,public,159,217,Construction & Disposal,configuration;dataDirectory,DataDirectory;_voteEtagCachePath;_configuration;_settingsStore;_discoveryService;_databaseService;_tagFilterService;InstalledGameVersion;_modsWatcher;_clientSettingsWatcher;ModsView;SearchResultsView;CloudModlistsView;LocalModlistsView;InstalledTagFilters;_mods;_searchResults;_sortOptions;SortOptions;_clearSearchCommand;_showMainTabCommand;_showDatabaseTabCommand;_showModlistTabCommand;_hasEnabledUserReportFetching;_isAutoRefreshDisabled;_allowModDetailsRefresh;RefreshCommand
+DataDirectory,property,public,219,220,Construction & Disposal,DataDirectory,
+PlayerUid,property,public,221,222,Misc Infrastructure,_settingsStore,
+PlayerName,property,public,223,224,Misc Infrastructure,_settingsStore,
+ModsView,property,public,225,226,Mod Loading & Refresh,ModsView,
+SearchResultsView,property,public,227,228,Mod Loading & Refresh,SearchResultsView,
+CloudModlistsView,property,public,229,230,Cloud/Local Modlist Collections,CloudModlistsView,
+LocalModlistsView,property,public,231,232,Cloud/Local Modlist Collections,LocalModlistsView,
+ModsWatcher,property,public,233,234,Mod Loading & Refresh,_modsWatcher,
+TimingService,property,public,235,236,Mod Loading & Refresh,_timingService,
+InstalledTagFilters,property,public,237,238,Tag Filtering,_installedTagFilters,
+CurrentModsView,property,public,239,245,View Section / Tab Navigation,_viewSection;SearchResultsView;CloudModlistsView;ModsView,
+CanAccessCloudModlists,property,public,246,247,Internet Access State,,
+SortOptions,property,public,248,249,Sorting,SortOptions,
+SelectedSortOption,property,public,250,258,Sorting,_selectedSortOption;ModsView,_selectedSortOption
+IsBusy,property,public,259,264,Busy State & Progress,_isBusy,_isBusy
+IsLoadingMods,property,public,265,273,Busy State & Progress,_isLoadingMods,_isLoadingMods
+LoadingProgress,property,public,274,279,Busy State & Progress,_loadingProgress,_loadingProgress
+LoadingStatusText,property,public,280,285,Busy State & Progress,_loadingStatusText,_loadingStatusText
+IsLoadingModDetails,property,public,286,298,Busy State & Progress,_isLoadingModDetails,_isLoadingModDetails
+IsModDetailsProgressVisible,property,public,299,304,Busy State & Progress,_isModDetailsProgressVisible,_isModDetailsProgressVisible
+IsFastCheckInProgress,property,public,305,313,Fast Check & Update Polling,_isFastCheckInProgress,_isFastCheckInProgress
+ModDetailsProgress,property,public,314,319,Busy State & Progress,_modDetailsProgress,_modDetailsProgress
+ModDetailsStatusText,property,public,320,325,Busy State & Progress,_modDetailsStatusText,_modDetailsStatusText
+IsCompactView,property,public,326,331,Misc Infrastructure,_isCompactView,_isCompactView
+HasSelectedTags,property,public,332,340,Tag Filtering,_hasSelectedTags,_hasSelectedTags
+TagsColumnHeader,property,public,341,343,Tag Filtering,_hasSelectedTags,
+IsModInfoExpanded,property,public,344,349,Misc Infrastructure,_isModInfoExpanded,_isModInfoExpanded
+StatusMessage,property,public,350,358,Status Reporting,_statusMessage,_statusMessage
+HasStatusMessage,property,public,359,360,Status Reporting,_statusMessage,
+SelectedMod,property,public,361,369,Selected Mod / Activation & Snapshots,_selectedMod,_selectedMod
+HasSelectedMod,property,public,370,371,Selected Mod / Activation & Snapshots,_selectedMod,
+HasSelectedMods,property,public,372,377,Selected Mod / Activation & Snapshots,_hasSelectedMods,_hasSelectedMods
+HasMultipleSelectedMods,property,public,378,383,Selected Mod / Activation & Snapshots,_hasMultipleSelectedMods,_hasMultipleSelectedMods
+IsErrorStatus,property,public,384,389,Status Reporting,_isErrorStatus,_isErrorStatus
+ShowMainTabCommand,property,public,390,391,View Section / Tab Navigation,_showMainTabCommand,
+ShowDatabaseTabCommand,property,public,392,393,View Section / Tab Navigation,_showDatabaseTabCommand,
+ShowModlistTabCommand,property,public,394,395,View Section / Tab Navigation,_showModlistTabCommand,
+IsViewingModlistTab,property,public,396,397,View Section / Tab Navigation,_viewSection,
+IsViewingMainTab,property,public,398,399,View Section / Tab Navigation,_viewSection,
+SearchModDatabase,property,public,400,401,View Section / Tab Navigation,_viewSection,
+UseModDbDesignView,property,public,402,407,Misc Infrastructure,_useModDbDesignView,_useModDbDesignView
+HasCloudModlists,property,public,408,409,Cloud/Local Modlist Collections,_cloudModlists,
+HasLocalModlists,property,public,410,411,Cloud/Local Modlist Collections,_localModlists,
+SearchText,property,public,412,435,Search & Filtering,_searchText;_searchTokens,_searchText;_searchTokens
+HasSearchText,property,public,436,437,Search & Filtering,_searchTokens,
+TotalMods,property,public,438,446,Mod Loading & Refresh,_totalMods,_totalMods
+ActiveMods,property,public,447,455,Mod Loading & Refresh,_activeMods,_activeMods
+UpdatableModsCount,property,public,456,468,Mod Loading & Refresh,_updatableModsCount,_updatableModsCount
+SummaryText,property,public,469,472,Mod Loading & Refresh,_totalMods;_activeMods,
+UpdateAllButtonLabel,property,public,473,476,Mod Loading & Refresh,_updatableModsCount,
+UpdateAllModsMenuHeader,property,public,477,480,Mod Loading & Refresh,_updatableModsCount,
+NoModsFoundMessage,property,public,481,483,Mod Loading & Refresh,DataDirectory,
+ClearSearchCommand,property,public,484,485,Search & Filtering,_clearSearchCommand,
+RefreshCommand,property,public,486,487,Mod Loading & Refresh,RefreshCommand,
+InstalledGameVersion,property,public,488,489,Misc Infrastructure,InstalledGameVersion,
+Dispose,method,public,490,554,Construction & Disposal,_disposed;_mods;_searchResults;_installedTagFilters;_fastCheckTimer;_searchDebounceTimer;_pendingSearchCts;_databaseInfoBatchTimer;_pendingDatabaseInfoUpdates;_databaseRefreshCts;_databaseRefreshTask;_clientSettingsWatcher;_modDetailsBusyScope;_userReportRefreshLimiter;_voteService,_disposed;_fastCheckTimer;_searchDebounceTimer;_pendingSearchCts;_databaseInfoBatchTimer;_databaseRefreshCts;_modDetailsBusyScope
+EnterBusyScope,method,public,556,559,Busy State & Progress,,
+SetInstalledColumnVisibility,method,public,561,569,Tag Filtering,,
+SetViewSection,method,private,571,619,View Section / Tab Navigation,_viewSection;_searchText,_viewSection;SelectedMod;SearchText
+FastCheck,method,public,621,632,Fast Check & Update Polling,_isAutoRefreshDisabled;_hasPendingFastCheck;_isFastCheckRunning,_hasPendingFastCheck;_isFastCheckRunning
+RunFastCheckAsync,method,private,634,664,Fast Check & Update Polling,_hasPendingFastCheck,_hasPendingFastCheck;IsFastCheckInProgress;_isFastCheckRunning
+ResetFastCheckTimer,method,private,666,676,Fast Check & Update Polling,_disposed;_isAutoRefreshDisabled;_fastCheckTimer,_fastCheckTimer
+StopFastCheckTimer,method,private,678,684,Fast Check & Update Polling,_fastCheckTimer,
+OnFastCheckTimerElapsed,method,private,686,691,Fast Check & Update Polling,_disposed;_isAutoRefreshDisabled,
+CheckForNewModReleasesAsync,method,private,693,776,Fast Check & Update Polling,_modEntriesBySourcePath,
+CheckForVoteChangesAsync,method,private,778,814,Fast Check & Update Polling,InstalledGameVersion;_mods,
+CheckVoteChangesForModAsync,method,private,816,894,Fast Check & Update Polling,_userReportEtags;_latestReleaseUserReportEtags;InstalledGameVersion,
+StoreUserReportEtag,method,private,896,899,User Reports & Voting,,_userReportEtags
+StoreLatestReleaseUserReportEtag,method,private,901,904,User Reports & Voting,,_latestReleaseUserReportEtags
+GetVoteEtag,method,private,906,919,User Reports & Voting,InstalledGameVersion,
+UpdateVoteEtag,method,private,921,951,User Reports & Voting,_voteEtagPersistenceLock;InstalledGameVersion,target dictionary (param)
+BuildVoteEtagKey,method,private static,953,956,User Reports & Voting,,
+LoadVoteEtagsFromDisk,method,private,958,985,User Reports & Voting,_voteEtagCachePath;_voteEtagPersistenceLock,_userReportEtags;_latestReleaseUserReportEtags
+PersistVoteEtagsLocked,method,private,987,1007,User Reports & Voting,_voteEtagCachePath;_userReportEtags;_latestReleaseUserReportEtags,
+VoteEtagCacheState,nested class,private sealed,1009,1014,User Reports & Voting,,
+IsDifferentVersion,method,private static,1016,1027,Fast Check & Update Polling,,
+InitializeAsync,method,public,1028,1031,Mod Loading & Refresh,,
+ReplaceCloudModlists,method,public,1033,1044,Cloud/Local Modlist Collections,_cloudModlists;CloudModlistsView,_cloudModlists
+TryReplaceCloudModlist,method,public,1046,1055,Cloud/Local Modlist Collections,_cloudModlists;CloudModlistsView,_cloudModlists
+ReplaceLocalModlists,method,public,1057,1068,Cloud/Local Modlist Collections,_localModlists;LocalModlistsView,_localModlists
+GetCurrentDisabledEntries,method,public,1070,1073,Selected Mod / Activation & Snapshots,_settingsStore,
+GetCurrentModStates,method,public,1075,1080,Selected Mod / Activation & Snapshots,_mods,
+GetInstalledModsSnapshot,method,public,1082,1085,Selected Mod / Activation & Snapshots,_mods,
+GetActiveModUsageSnapshot,method,public,1087,1117,Selected Mod / Activation & Snapshots,InstalledGameVersion;_mods,
+GetActiveModIdsSnapshot,method,public,1119,1135,Selected Mod / Activation & Snapshots,_mods,
+TryGetInstalledModDisplayName,method,public,1137,1155,Selected Mod / Activation & Snapshots,_mods,
+ApplyPresetAsync,method,public,1157,1272,Preset Application,_mods;_settingsStore,SelectedSortOption;ModsView (Refresh)
+ReportStatus,method,public,1274,1277,Status Reporting,,
+OnInternetAccessStateChanged,method,public,1279,1284,Internet Access State,_allowModDetailsRefresh;_modEntriesBySourcePath,
+SetAutoRefreshDisabled,method,internal,1286,1295,Selected Mod / Activation & Snapshots,_isAutoRefreshDisabled,_isAutoRefreshDisabled;_allowModDetailsRefresh
+ForceNextRefreshToLoadDetails,method,internal,1297,1300,Mod Loading & Refresh,,_isModDetailsRefreshForced
+RefreshInstalledModDetails,method,internal,1302,1306,Mod Database Info Enrichment,_modEntriesBySourcePath,
+SetSelectedMod,method,internal,1308,1313,Selected Mod / Activation & Snapshots,,HasSelectedMods;HasMultipleSelectedMods;SelectedMod
+RemoveSearchResult,method,internal,1315,1322,Selected Mod / Activation & Snapshots,_searchResults;SelectedMod,_searchResults;SelectedMod
+FindInstalledModById,method,public,1324,1338,Selected Mod / Activation & Snapshots,_mods,
+FindModBySourcePath,method,internal,1340,1347,Selected Mod / Activation & Snapshots,_modViewModelsBySourcePath,
+PreserveActivationStateAsync,method,internal,1349,1366,Selected Mod / Activation & Snapshots,_settingsStore,
+ApplyActivationChangeAsync,method,internal,1368,1393,Selected Mod / Activation & Snapshots,_settingsStore,
+GetSourcePathsForModsWithErrors,method,internal,1395,1413,Mod Loading & Refresh,_mods,
+RefreshModsWithErrorsAsync,method,internal,1415,1530,Mod Loading & Refresh,_mods;_modEntriesBySourcePath;_modsWatcher;_discoveryService;_allowModDetailsRefresh;SelectedMod,_modEntriesBySourcePath;TotalMods
+LoadModsAsync,method,private,1532,1647,Mod Loading & Refresh,_isModDetailsRefreshForced;_allowModDetailsRefresh;_isAutoRefreshDisabled;_mods;_modsWatcher;SelectedMod,IsLoadingMods;LoadingProgress;LoadingStatusText;_isModDetailsRefreshForced;_allowModDetailsRefresh;TotalMods
+PerformFullReloadAsync,method,private,1649,1794,Mod Loading & Refresh,_modEntriesBySourcePath;_discoveryService;_allowModDetailsRefresh,_modEntriesBySourcePath;_modViewModelsBySourcePath;_mods;TotalMods;SelectedMod;_isInitialLoad
+LoadingProgressUpdate,record struct,private readonly,1796,1796,Mod Loading & Refresh,,
+CheckForModStateChangesAsync,method,public,1798,1837,Mod Loading & Refresh,_clientSettingsWatcher;_modsWatcher;_modsStateFingerprint;_modsStateLock,_modsStateFingerprint
+ApplyClientSettingsChangesAsync,method,private,1839,1878,Mod Loading & Refresh,_settingsStore;_mods,_cachedBasePaths
+CreateModViewModel,method,private,1880,1895,Mod Loading & Refresh,_settingsStore;InstalledGameVersion;_configuration;_allowModDetailsRefresh;_timingService,
+UpdateModsStateSnapshotAsync,method,private,1897,1916,Mod Loading & Refresh,_modsWatcher;_modsStateLock,_modsStateFingerprint
+CaptureModsStateFingerprintAsync,method,private,1918,1931,Mod Loading & Refresh,_discoveryService,
+UpdateActiveCount,method,private,1933,1937,Mod Loading & Refresh,_mods,ActiveMods
+UpdateUpdatableCount,method,private,1939,1942,Mod Loading & Refresh,_mods,UpdatableModsCount
+ClearSearchResults,method,private,1944,1964,Search & Filtering,_searchResults,_searchResults;SelectedMod
+OnModsCollectionChanged,method,private,1966,1989,Mod Loading & Refresh,_mods,
+OnSearchResultsCollectionChanged,method,private,1991,2012,Mod Loading & Refresh,_searchResults,
+EnumerateModItems,method,private static,2014,2021,Mod Loading & Refresh,,
+AttachInstalledMod,method,private,2025,2030,Mod Loading & Refresh,_installedModSubscriptions;_allowModDetailsRefresh,_installedModSubscriptions
+DetachInstalledMod,method,private,2032,2035,Mod Loading & Refresh,_installedModSubscriptions,_installedModSubscriptions
+DetachAllInstalledMods,method,private,2037,2044,Mod Loading & Refresh,_installedModSubscriptions,_installedModSubscriptions
+AttachSearchResult,method,private,2046,2053,Mod Loading & Refresh,_searchResultSubscriptions,_searchResultSubscriptions
+DetachSearchResult,method,private,2055,2058,Mod Loading & Refresh,_searchResultSubscriptions,_searchResultSubscriptions
+DetachAllSearchResults,method,private,2060,2067,Mod Loading & Refresh,_searchResultSubscriptions,_searchResultSubscriptions
+OnInstalledModPropertyChanged,method,private,2069,2085,Mod Loading & Refresh,,
+OnSearchResultPropertyChanged,method,private,2087,2100,Mod Loading & Refresh,,
+RunUserReportOperationAsync,method,private,2102,2120,User Reports & Voting,_userReportRefreshLimiter,
+BeginUserReportOperation,method,private,2122,2134,User Reports & Voting,_userReportOperationLock;_activeUserReportOperations,_activeUserReportOperations
+EndUserReportOperation,method,private,2136,2146,User Reports & Voting,_userReportOperationLock;_activeUserReportOperations,_activeUserReportOperations
+QueueLatestReleaseUserReportRefresh,method,private,2148,2157,User Reports & Voting,_areUserReportsVisible,
+RefreshLatestReleaseUserReportAsync,method,public,2159,2166,User Reports & Voting,,
+RefreshLatestReleaseUserReportCoreAsync,method,private,2168,2259,User Reports & Voting,InstalledGameVersion;_latestReleaseUserReportEtags,
+QueueUserReportRefresh,method,private,2261,2270,User Reports & Voting,_areUserReportsVisible,
+EnableUserReportFetching,method,public,2272,2307,User Reports & Voting,_areUserReportsVisible;_hasFetchedUserReportsThisSession;_allowModDetailsRefresh;_installedModSubscriptions;_searchResultSubscriptions,_hasEnabledUserReportFetching;_hasFetchedUserReportsThisSession
+RefreshUserReportAsync,method,public,2309,2316,User Reports & Voting,,
+SubmitUserReportVoteAsync,method,public,2318,2387,User Reports & Voting,InstalledGameVersion,
+RaiseUserReportVoteSubmitted,method,private,2389,2398,User Reports & Voting,,
+RefreshUserReportCoreAsync,method,private,2400,2481,User Reports & Voting,InstalledGameVersion;_userReportEtags,
+SetTagsColumnVisibility,method,private,2483,2501,Tag Filtering,_isTagsColumnVisible;_mods;_searchResults;_allowModDetailsRefresh;_modEntriesBySourcePath,_isTagsColumnVisible
+SetUserReportsColumnVisibility,method,private,2503,2517,Tag Filtering,_areUserReportsVisible;_allowModDetailsRefresh,_areUserReportsVisible;_hasEnabledUserReportFetching;_hasFetchedUserReportsThisSession
+ScheduleInstalledTagFilterRefresh,method,private,2519,2557,Tag Filtering,_isInstalledTagRefreshPending;_tagFilterService;_mods,_isInstalledTagRefreshPending
+ResetInstalledTagFilters,method,private,2559,2565,Tag Filtering,_isTagsColumnVisible;_tagFilterService,
+ApplyInstalledTagFilters,method,private,2567,2605,Tag Filtering,_isTagsColumnVisible;_lastInstalledAvailableTags;_installedTagFilters;_tagFilterService;_suppressInstalledTagFilterSelectionChanges,_lastInstalledAvailableTags;_installedTagFilters;_suppressInstalledTagFilterSelectionChanges
+OnInstalledTagFilterPropertyChanged,method,private,2607,2619,Tag Filtering,_suppressInstalledTagFilterSelectionChanges;_installedTagFilters,
+OnModDatabaseTagFilterPropertyChanged,method,private,2621,2627,Tag Filtering,,(dead code - no callers)
+SyncSelectedTagsToService,method,private,2629,2637,Tag Filtering,_tagFilterService,
+UpdateHasSelectedTags,method,private,2639,2642,Tag Filtering,_tagFilterService,HasSelectedTags
+BeginBusyScope,method,private,2644,2664,Busy State & Progress,_busyStateLock;_busyOperationCount;_busyReleaseCts,_busyOperationCount;_busyReleaseCts
+EndBusyScope,method,private,2666,2690,Busy State & Progress,_busyStateLock;_busyOperationCount;_busyReleaseCts,_busyOperationCount;_busyReleaseCts
+ScheduleBusyRelease,method,private,2692,2723,Busy State & Progress,_busyStateLock;_busyReleaseCts,_busyReleaseCts
+UpdateIsBusy,method,private,2725,2748,Busy State & Progress,,_hasActiveBusyScope
+RecalculateIsBusy,method,private,2750,2765,Busy State & Progress,_hasActiveBusyScope;_isLoadingMods;_isLoadingModDetails,IsBusy
+UpdateIsLoadingModDetails,method,private,2767,2780,Busy State & Progress,,IsLoadingModDetails
+UpdateModDetailsProgressVisibility,method,private,2782,2786,Busy State & Progress,_isLoadingModDetails;_isFastCheckInProgress,IsModDetailsProgressVisible
+UpdateLoadedModsStatus,method,private,2788,2798,Status Reporting,_isModDetailsStatusActive,
+IsModDetailsRefreshPending,method,private,2800,2803,Busy State & Progress,_pendingModDetailsRefreshCount,
+OnModDetailsRefreshEnqueued,method,private,2805,2825,Busy State & Progress,_pendingModDetailsRefreshCount;_isModDetailsStatusActive,_pendingModDetailsRefreshCount
+OnModDetailsRefreshCompleted,method,private,2827,2851,Busy State & Progress,_pendingModDetailsRefreshCount;_modDetailsRefreshCompletedWork;_isModDetailsStatusActive,_pendingModDetailsRefreshCount;_modDetailsRefreshCompletedWork
+EnsureModDetailsBusyScope,method,private,2853,2859,Busy State & Progress,_modDetailsBusyScopeLock;_modDetailsBusyScope,_modDetailsBusyScope
+ReleaseModDetailsBusyScope,method,private,2861,2868,Busy State & Progress,_modDetailsBusyScopeLock;_modDetailsBusyScope,_modDetailsBusyScope
+BuildModDetailsLoadingStatusMessage,method,private,2870,2873,Status Reporting,TotalMods,
+BuildModDetailsReadyStatusMessage,method,private,2875,2880,Status Reporting,_hasShownModDetailsLoadingStatus;TotalMods,
+AddModDetailsWork,method,private,2882,2888,Busy State & Progress,_modDetailsRefreshTotalWork,_modDetailsRefreshTotalWork
+UpdateModDetailsProgress,method,private,2890,2912,Busy State & Progress,_modDetailsProgressStage;_modDetailsRefreshTotalWork;_modDetailsRefreshCompletedWork,_modDetailsProgressStage;ModDetailsProgress;ModDetailsStatusText
+ResetModDetailsProgress,method,private,2914,2921,Busy State & Progress,,_modDetailsRefreshCompletedWork;_modDetailsRefreshTotalWork;_modDetailsProgressStage;ModDetailsProgress;ModDetailsStatusText
+UpdateSearchResultsAsync,method,private,2923,2933,Mod Database Search/Browse (dead),_searchResults,_searchResults;SelectedMod (dead code - no callers)
+LoadModDatabaseLogosAsync,method,private,2935,2958,Mod Database Search/Browse (dead),,(dead code - no callers)
+GetInstalledModIdsAsync,method,private,2960,2973,Mod Database Search/Browse (dead),_mods,(dead code - no callers)
+IsResultInstalled,method,private static,2975,2984,Mod Database Search/Browse (dead),,(dead code - no callers)
+InvokeOnDispatcherAsync(Action),method,private static,2986,3004,Misc Infrastructure,,
+InvokeOnDispatcherAsync(Func<T>),method,private static,3006,3019,Misc Infrastructure,,
+CreateSearchResultEntry,method,private static,3021,3059,Mod Database Search/Browse (dead),,(dead code - no callers)
+CreateSearchResultViewModel,method,private,3061,3065,Mod Database Search/Browse (dead),InstalledGameVersion;_configuration;_allowModDetailsRefresh,(dead code - no callers)
+BuildSearchResultDescription,method,private static,3067,3070,Mod Database Search/Browse (dead),,(dead code - no callers)
+BuildModDatabasePageUrl,method,private static,3072,3084,Mod Database Search/Browse (dead),,(dead code - no callers)
+RejectActivationChangeAsync,method,private static,3086,3089,Mod Database Search/Browse (dead),,(dead code - no callers)
+FilterMod,method,private,3091,3101,Search & Filtering,_tagFilterService;_searchTokens,
+CreateSearchTokens,method,private static,3103,3109,Search & Filtering,,
+GetDisplayPath,method,private,3111,3141,Misc Infrastructure,_cachedBasePaths,_cachedBasePaths
+GetBasePathsList,method,private,3143,3168,Misc Infrastructure,_settingsStore,
+EnumerateBasePaths,method,private,3170,3174,Misc Infrastructure,_cachedBasePaths,_cachedBasePaths (dead code - no callers)
+CreateSortOptions,method,private static,3175,3191,Sorting,,
+ReapplyActiveSortIfNeeded,method,private,3193,3202,Sorting,SelectedSortOption,
+IsActiveSortProperty,method,private static,3204,3211,Sorting,,
+SetStatus,method,private,3213,3220,Status Reporting,,StatusMessage;IsErrorStatus;_isModDetailsStatusActive;_hasShownModDetailsLoadingStatus
+LoadChangedModEntries,method,private,3222,3242,Mod Loading & Refresh,_discoveryService,
+ResetCalculatedModState,method,private static,3244,3249,Mod Loading & Refresh,,
+CopyTransientModState,method,private static,3251,3264,Mod Loading & Refresh,,
+ApplyPartialUpdates,method,private,3266,3373,Mod Loading & Refresh,_mods;_modViewModelsBySourcePath;_modEntriesBySourcePath;SelectedMod,_mods;_modViewModelsBySourcePath;_modEntriesBySourcePath;SelectedMod
+QueueDatabaseInfoRefresh,method,private,3375,3401,Mod Database Info Enrichment,_allowModDetailsRefresh;_databaseRefreshLock;_databaseRefreshCts,_databaseRefreshCts;_databaseRefreshTask
+RefreshDatabaseInfoBatchAsync,method,private,3403,3443,Mod Database Info Enrichment,,
+NeedsDatabaseRefresh,method,private,3445,3456,Mod Database Info Enrichment,,
+ShouldSkipOnlineDatabaseRefresh,method,private,3458,3467,Mod Database Info Enrichment,,
+TryGetTagSuppressionKey,method,private static,3469,3492,Mod Database Info Enrichment,,
+RefreshDatabaseInfoProgressivelyAsync,method,private,3494,3533,Mod Database Info Enrichment,_databaseService,
+RefreshDatabaseInfoAsync,method,private,3535,3698,Mod Database Info Enrichment,_databaseService;_suppressedTagEntries,_suppressedTagEntries
+PopulateOfflineDatabaseInfoAsync,method,private,3700,3723,Mod Database Info Enrichment,,
+PopulateOfflineInfoForEntryAsync,method,private,3725,3742,Mod Database Info Enrichment,,
+ApplyDatabaseInfoAsync,method,private,3744,3760,Mod Database Info Enrichment,_isInitialLoad,
+ShouldUseBatchedUpdates,method,private,3762,3769,Mod Database Info Enrichment,,
+QueueDatabaseInfoUpdate,method,private,3771,3808,Mod Database Info Enrichment,_databaseInfoBatchLock;_pendingDatabaseInfoUpdates;_databaseInfoBatchTimer,_pendingDatabaseInfoUpdates;_databaseInfoBatchTimer
+FlushDatabaseInfoBatch,method,private,3810,3821,Mod Database Info Enrichment,_databaseInfoBatchLock,
+FlushDatabaseInfoBatchLocked,method,private,3823,3836,Mod Database Info Enrichment,_databaseInfoBatchLock;_pendingDatabaseInfoUpdates,_pendingDatabaseInfoUpdates
+ApplyDatabaseInfoBatchAsync,method,private,3838,3891,Mod Database Info Enrichment,_modEntriesBySourcePath,_modEntriesBySourcePath
+ApplyDatabaseInfoImmediateAsync,method,private,3893,3941,Mod Database Info Enrichment,_modEntriesBySourcePath,_modEntriesBySourcePath
+PrepareDatabaseInfoForVisibility,method,private,3943,3956,Mod Database Info Enrichment,_isTagsColumnVisible,
+CreateInfoWithoutTags,method,private static,3958,3985,Mod Database Info Enrichment,,
+CreateOfflineDatabaseInfo,method,private,3987,4015,Mod Database Info Enrichment,,
+MergeOfflineAndCachedInfo,method,private static,4017,4060,Mod Database Info Enrichment,,
+MergeReleases,method,private static,4062,4092,Mod Database Info Enrichment,,
+CreateOfflineReleases,method,private,4094,4120,Mod Database Info Enrichment,,
+CreateOfflineRelease,method,private,4122,4143,Mod Database Info Enrichment,,
+EnumerateCachedModReleases,method,private,4145,4164,Mod Database Info Enrichment,,
+TryCreateCachedRelease,method,private,4166,4278,Mod Database Info Enrichment,,
+IsModIdMatch,method,private static,4280,4285,Mod Database Info Enrichment,,
+FindArchiveEntry,method,private static,4287,4295,Mod Database Info Enrichment,,
+GetString,method,private static,4297,4303,Mod Database Info Enrichment,,
+TryGetProperty,method,private static,4305,4316,Mod Database Info Enrichment,,
+TryResolveVersionFromMap,method,private static,4318,4337,Mod Database Info Enrichment,,
+ParseDependencies,method,private static,4339,4355,Mod Database Info Enrichment,,
+AggregateRequiredGameVersions,method,private static,4357,4377,Mod Database Info Enrichment,,
+DetermineOfflineLastUpdatedUtc,method,private static,4379,4390,Mod Database Info Enrichment,,
+OnInternetAccessChanged,method,private,4392,4405,Internet Access State,,
+RefreshInternetAccessDependentState,method,private,4407,4438,Internet Access State,_mods;_searchResults;_viewSection,_viewSection
+CompareOfflineReleases,method,private static,4440,4458,Mod Database Info Enrichment,,
+ExtractRequiredGameVersions,method,private static,4460,4473,Mod Database Info Enrichment,,
+DetermineInstalledGameCompatibility,method,private,4475,4497,Mod Database Info Enrichment,InstalledGameVersion;_configuration,
+TryCreateFileUri,method,private static,4499,4518,Mod Database Info Enrichment,,
+TryGetReleaseFileName,method,private static,4520,4536,Mod Database Info Enrichment,,
+ModUserReportChangedEventArgs,nested class,public sealed,4538,4560,User Reports & Voting,,
+TryGetLastWriteTimeUtc,method,private static,4561,4577,Mod Database Info Enrichment,,
+ViewSection,enum,private,4579,4585,View Section / Tab Navigation,,
+VoteCheckTarget,record,private sealed,4586,4592,Fast Check & Update Polling,,
+UserReportOperationScope,nested class,private sealed,4593,4613,User Reports & Voting,,
+PerformClientSettingsCleanupIfNeeded,method,private,4615,4628,Mod Loading & Refresh,_configuration;_settingsStore,
+CalculateAdaptiveSearchDebounce,method,private,4634,4652,Search & Filtering,_mods,
+TriggerDebouncedInstalledModsSearch,method,private,4654,4681,Search & Filtering,_searchDebounceLock;_disposed;_pendingSearchCts;_searchDebounceTimer,_pendingSearchCts;_searchDebounceTimer
+OnSearchDebounceTimerElapsed,method,private,4683,4695,Search & Filtering,_searchDebounceLock;_disposed;_pendingSearchCts,
+ExecuteInstalledModsSearch,method,private,4697,4722,Search & Filtering,_searchDebounceLock;_disposed;_pendingSearchCts,
+RefreshModsViewIfNotCancelled,method,private,4724,4730,Search & Filtering,ModsView,
+BusyScope,nested class,private sealed,4732,4749,Busy State & Progress,,

@@ -1,6 +1,10 @@
 # .NET / Visual Studio / C#
 # Generated from https://www.toptal.com/developers/gitignore/api/csharp,visualstudio
 
+# Agents
+.claude/
+.agents/
+
 # Project-specific folders
 VS_1.21_assets/
 VS_1.21_Decompiled/
