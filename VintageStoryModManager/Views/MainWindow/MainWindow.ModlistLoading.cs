@@ -48,10 +48,10 @@ public partial class MainWindow
             return;
         }
 
-        var loadMode = PromptModlistLoadMode();
+        var loadMode = await PromptModlistLoadModeAsync().ConfigureAwait(true);
         if (loadMode is not ModlistLoadMode mode) return;
 
-        if (mode == ModlistLoadMode.Replace && !EnsureModlistBackupBeforeLoad()) return;
+        if (mode == ModlistLoadMode.Replace && !await EnsureModlistBackupBeforeLoadAsync().ConfigureAwait(true)) return;
 
         PrepareForModlistLoad();
 
