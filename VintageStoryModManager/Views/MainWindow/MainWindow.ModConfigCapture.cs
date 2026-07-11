@@ -1,10 +1,8 @@
 #nullable enable
 
-using System.Windows;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -20,8 +18,8 @@ public partial class MainWindow
             selectByDefault);
     }
 
-    private Dictionary<string, IReadOnlyList<ModConfigurationSnapshot>>?
-        TryReadModConfigurations(
+    private async Task<Dictionary<string, IReadOnlyList<ModConfigurationSnapshot>>?>
+        TryReadModConfigurationsAsync(
             IReadOnlyList<ModConfigOption> selectedConfigOptions)
     {
         var (configurations, errorMessage) =
@@ -29,11 +27,11 @@ public partial class MainWindow
 
         if (errorMessage is not null)
         {
-            WpfMessageBox.Show(
-                errorMessage,
-                "Simple VS Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await _confirmationService.NotifyAsync(
+                    errorMessage,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
         }
 
         return configurations;
