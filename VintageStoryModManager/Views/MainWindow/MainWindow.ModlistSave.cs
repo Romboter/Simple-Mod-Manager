@@ -183,7 +183,7 @@ public partial class MainWindow
         var trimmedName = string.IsNullOrWhiteSpace(modlistName) ? null : modlistName.Trim();
         if (string.IsNullOrEmpty(trimmedName) || _viewModel is null) return false;
 
-        var serializable = PresetSnapshotBuilder.BuildModlistPreset(
+        json = ModlistWorkflowService.BuildModlistJson(
             _viewModel!.GetCurrentModStates(),
             trimmedName,
             description,
@@ -192,8 +192,6 @@ public partial class MainWindow
             includedConfigurations,
             gameVersion);
 
-        json =
-            PdfModlistSerializer.SerializeToJson(serializable);
         return true;
     }
 }

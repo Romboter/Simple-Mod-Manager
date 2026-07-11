@@ -2,6 +2,7 @@
 
 using System.IO;
 using VintageStoryModManager.Helpers;
+using VintageStoryModManager.Models;
 
 namespace VintageStoryModManager.Services;
 
@@ -17,6 +18,27 @@ internal static class ModlistWorkflowService
         var filePath = Path.Combine(directory, entryName + extension);
 
         return new ModlistFilePathResolution(entryName, filePath, File.Exists(filePath));
+    }
+
+    public static string BuildModlistJson(
+        IReadOnlyList<ModPresetModState> modStates,
+        string modlistName,
+        string? description,
+        string? version,
+        string uploader,
+        IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? includedConfigurations,
+        string? gameVersion)
+    {
+        var serializable = PresetSnapshotBuilder.BuildModlistPreset(
+            modStates,
+            modlistName,
+            description,
+            version,
+            uploader,
+            includedConfigurations,
+            gameVersion);
+
+        return PdfModlistSerializer.SerializeToJson(serializable);
     }
 }
 
