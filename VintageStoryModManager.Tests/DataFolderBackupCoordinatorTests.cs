@@ -47,4 +47,27 @@ public sealed class DataFolderBackupCoordinatorTests
 
         Directory.Delete(dataDir, true);
     }
+
+    [Fact]
+    public void ResolveInstalledVersionForDelete_NoInstalledVersion_ReturnsNulls()
+    {
+        // VintageStoryVersionLocator also probes the VINTAGE_STORY environment variable, which can
+        // point at a real install on a dev machine. Scope-clear it for this test only so the result
+        // is deterministic regardless of the host environment.
+        var previousVintageStoryEnv = Environment.GetEnvironmentVariable("VINTAGE_STORY");
+        Environment.SetEnvironmentVariable("VINTAGE_STORY", null);
+        try
+        {
+            var coordinator = new DataFolderBackupCoordinator(new DataBackupService(Path.GetTempPath()));
+
+            var (display, normalized) = coordinator.ResolveInstalledVersionForDelete("C:/definitely-not-a-vs-install");
+
+            Assert.Null(display);
+            Assert.Null(normalized);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("VINTAGE_STORY", previousVintageStoryEnv);
+        }
+    }
 }

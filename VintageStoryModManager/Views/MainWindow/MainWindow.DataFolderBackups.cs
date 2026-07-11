@@ -73,7 +73,7 @@ public partial class MainWindow
                 .ToArray();
         }
 
-        var (_, normalizedInstalledVersion) = VintageStoryVersionLocator.GetNormalizedInstalledVersion(_gameDirectory);
+        var (_, normalizedInstalledVersion) = _dataFolderBackupCoordinator.ResolveInstalledVersionForDelete(_gameDirectory);
         deleteBackupsMenuItem.IsEnabled = !string.IsNullOrWhiteSpace(dataDirectory)
                                           && !string.IsNullOrWhiteSpace(normalizedInstalledVersion)
                                           && filteredBackups.Length > 0;
@@ -244,7 +244,7 @@ public partial class MainWindow
             return;
         }
 
-        var (installedVersion, normalizedInstalledVersion) = VintageStoryVersionLocator.GetNormalizedInstalledVersion(_gameDirectory);
+        var (displayVersion, normalizedInstalledVersion) = _dataFolderBackupCoordinator.ResolveInstalledVersionForDelete(_gameDirectory);
         if (string.IsNullOrWhiteSpace(normalizedInstalledVersion))
         {
             await _confirmationService.NotifyAsync(
@@ -255,9 +255,8 @@ public partial class MainWindow
             return;
         }
 
-        var displayVersion = installedVersion ?? normalizedInstalledVersion;
         var confirmed = await _confirmationService.ConfirmAsync(
-                DataFolderBackupDialogTextBuilder.BuildDeleteConfirmation(displayVersion),
+                DataFolderBackupDialogTextBuilder.BuildDeleteConfirmation(displayVersion!),
                 "Simple VS Manager",
                 DialogSeverity.Warning)
             .ConfigureAwait(true);
@@ -266,7 +265,7 @@ public partial class MainWindow
 
         try
         {
-            var deleted = _dataFolderBackupCoordinator.DeleteBackups(_dataDirectory!, displayVersion);
+            var deleted = _dataFolderBackupCoordinator.DeleteBackups(_dataDirectory!, displayVersion!);
             if (deleted == 0)
             {
                 await _confirmationService.NotifyAsync(

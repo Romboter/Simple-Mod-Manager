@@ -87,4 +87,14 @@ internal sealed class DataFolderBackupCoordinator
 
         return new DataBackupRestoreCheck(DataBackupRestoreValidation.Ok, null, null);
     }
+
+    public (string? DisplayVersion, string? NormalizedVersion) ResolveInstalledVersionForDelete(string? gameDirectory)
+    {
+        var (installedVersion, normalizedInstalledVersion) = VintageStoryVersionLocator.GetNormalizedInstalledVersion(gameDirectory);
+
+        if (string.IsNullOrWhiteSpace(normalizedInstalledVersion))
+            return (null, null);
+
+        return (installedVersion ?? normalizedInstalledVersion, normalizedInstalledVersion);
+    }
 }
