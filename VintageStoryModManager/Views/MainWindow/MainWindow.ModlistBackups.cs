@@ -18,10 +18,10 @@ public partial class MainWindow
 
         menuItem.Items.Clear();
 
-        string directory;
+        IReadOnlyList<string> files;
         try
         {
-            directory = EnsureBackupDirectory();
+            files = _modlistBackupCoordinator.ListBackupFiles();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -34,23 +34,7 @@ public partial class MainWindow
             return;
         }
 
-        string[] files;
-        try
-        {
-            files = Directory.GetFiles(directory, "*.json");
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            Trace.TraceWarning("Failed to enumerate backups: {0}", ex.Message);
-            menuItem.Items.Add(new MenuItem
-            {
-                Header = "Backups unavailable",
-                IsEnabled = false
-            });
-            return;
-        }
-
-        if (files.Length == 0)
+        if (files.Count == 0)
         {
             menuItem.Items.Add(new MenuItem
             {
@@ -60,21 +44,8 @@ public partial class MainWindow
             return;
         }
 
-        Array.Sort(files, (left, right) =>
-            File.GetLastWriteTimeUtc(right).CompareTo(File.GetLastWriteTimeUtc(left)));
-
-        var appStartedAdded = false;
-
         foreach (var file in files)
         {
-            var isAppStarted = BackupRetentionService.IsAppStartedBackup(file);
-            if (isAppStarted)
-            {
-                if (appStartedAdded) continue;
-
-                appStartedAdded = true;
-            }
-
             var displayName = Path.GetFileNameWithoutExtension(file);
             var item = new MenuItem
             {

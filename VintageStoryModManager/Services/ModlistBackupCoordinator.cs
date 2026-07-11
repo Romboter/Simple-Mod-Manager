@@ -107,4 +107,30 @@ internal sealed class ModlistBackupCoordinator : IDisposable
             ? new ModlistBackupLoadResult(preset, null, FileMissing: false)
             : new ModlistBackupLoadResult(null, errorMessage, FileMissing: false);
     }
+
+    public IReadOnlyList<string> ListBackupFiles()
+    {
+        var directory = _ensureBackupDirectory();
+        var files = Directory.GetFiles(directory, "*.json");
+
+        Array.Sort(files, (left, right) =>
+            File.GetLastWriteTimeUtc(right).CompareTo(File.GetLastWriteTimeUtc(left)));
+
+        var result = new List<string>();
+        var appStartedAdded = false;
+
+        foreach (var file in files)
+        {
+            var isAppStarted = BackupRetentionService.IsAppStartedBackup(file);
+            if (isAppStarted)
+            {
+                if (appStartedAdded) continue;
+                appStartedAdded = true;
+            }
+
+            result.Add(file);
+        }
+
+        return result;
+    }
 }

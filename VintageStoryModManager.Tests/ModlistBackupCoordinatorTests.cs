@@ -83,4 +83,30 @@ public sealed class ModlistBackupCoordinatorTests : IDisposable
         Assert.Null(result.Preset);
         Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
     }
+
+    [Fact]
+    public void ListBackupFiles_MultipleAppStartedBackups_OnlyNewestIncluded()
+    {
+        var coordinator = CreateCoordinator();
+        var older = Path.Combine(_backupDirectory, "old -- AppStarted (1 mod).json");
+        var newer = Path.Combine(_backupDirectory, "new -- AppStarted (1 mod).json");
+        File.WriteAllText(older, "{}");
+        File.SetLastWriteTimeUtc(older, DateTime.UtcNow.AddMinutes(-10));
+        File.WriteAllText(newer, "{}");
+
+        var files = coordinator.ListBackupFiles();
+
+        Assert.Single(files);
+        Assert.Equal(newer, files[0]);
+    }
+
+    [Fact]
+    public void ListBackupFiles_NoFiles_ReturnsEmpty()
+    {
+        var coordinator = CreateCoordinator();
+
+        var files = coordinator.ListBackupFiles();
+
+        Assert.Empty(files);
+    }
 }
