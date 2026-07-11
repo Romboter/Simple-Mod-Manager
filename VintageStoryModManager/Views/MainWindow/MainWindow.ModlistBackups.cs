@@ -1,12 +1,10 @@
 #nullable enable
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
-using VintageStoryModManager.Helpers;
 using VintageStoryModManager.ViewModels;
 using VintageStoryModManager.Views.Dialogs;
 
@@ -147,76 +145,26 @@ public partial class MainWindow
             true);
     }
 
-    private async Task CreateBackupAsync(
+    private Task CreateBackupAsync(
             string trigger,
             string fallbackFileName,
             bool pruneAutomaticBackups,
             bool pruneAppStartedBackups)
     {
-        if (_viewModel is null) return;
+        if (_viewModel is null) return Task.CompletedTask;
 
-        await _backupSemaphore.WaitAsync().ConfigureAwait(true);
-        try
-        {
-            var mods = _viewModel.GetInstalledModsSnapshot();
-            var modCount = mods.Count;
+        var mods = _viewModel.GetInstalledModsSnapshot();
+        var includedConfigurations = CaptureConfigurationsForBackup(mods);
 
-            var timestamp = DateTime.Now;
-            var formattedTimestamp =
-                timestamp.ToString("dd MMM yyyy '•' HH.mm '•' ss's'", CultureInfo.InvariantCulture);
-
-            var normalizedTrigger = string.IsNullOrWhiteSpace(trigger)
-                ? "Automatic"
-                : trigger.Trim();
-            var modLabel = modCount == 1 ? "1 mod" : $"{modCount} mods";
-            var displayName = $"{formattedTimestamp} -- {normalizedTrigger} ({modLabel})";
-
-            string directory;
-            try
-            {
-                directory = EnsureBackupDirectory();
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                Trace.TraceWarning("Failed to prepare backup directory: {0}", ex.Message);
-                return;
-            }
-
-            var fileName = FileNameHelper.SanitizeFileName(displayName, fallbackFileName);
-            var filePath = Path.Combine(directory, $"{fileName}.json");
-
-            var includedConfigurations =
-                CaptureConfigurationsForBackup(mods);
-
-            var serializable = PresetSnapshotBuilder.BuildSerializablePreset(
-                _viewModel!.GetCurrentModStates(),
-                displayName,
-                true,
-                true,
-                includedConfigurations,
-                ResolveGameVersion(null));
-
-            var json =
-                PdfModlistSerializer.SerializeToJson(serializable);
-
-            try
-            {
-                await File.WriteAllTextAsync(filePath, json).ConfigureAwait(true);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                Trace.TraceWarning("Failed to write backup {0}: {1}", filePath, ex.Message);
-                return;
-            }
-
-            if (pruneAutomaticBackups) BackupRetentionService.PruneAutomaticBackups(directory);
-
-            if (pruneAppStartedBackups) BackupRetentionService.PruneAppStartedBackups(directory);
-        }
-        finally
-        {
-            _backupSemaphore.Release();
-        }
+        return _modlistBackupCoordinator.CreateBackupAsync(
+            trigger,
+            fallbackFileName,
+            pruneAutomaticBackups,
+            pruneAppStartedBackups,
+            _viewModel.GetCurrentModStates(),
+            mods.Count,
+            includedConfigurations,
+            ResolveGameVersion(null));
     }
 
     private IReadOnlyDictionary<string, IReadOnlyList<ModConfigurationSnapshot>>? CaptureConfigurationsForBackup(
