@@ -58,4 +58,29 @@ public sealed class ModlistBackupCoordinatorTests : IDisposable
         var files = Directory.GetFiles(_backupDirectory, "*.json");
         Assert.Equal(2, files.Length);
     }
+
+    [Fact]
+    public void LoadBackupForRestore_MissingFile_ReturnsFileMissing()
+    {
+        var coordinator = CreateCoordinator();
+
+        var result = coordinator.LoadBackupForRestore(Path.Combine(_backupDirectory, "does-not-exist.json"));
+
+        Assert.True(result.FileMissing);
+        Assert.Null(result.Preset);
+    }
+
+    [Fact]
+    public void LoadBackupForRestore_InvalidJson_ReturnsErrorMessage()
+    {
+        var coordinator = CreateCoordinator();
+        var path = Path.Combine(_backupDirectory, "bad.json");
+        File.WriteAllText(path, "{ not valid json ");
+
+        var result = coordinator.LoadBackupForRestore(path);
+
+        Assert.False(result.FileMissing);
+        Assert.Null(result.Preset);
+        Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
+    }
 }

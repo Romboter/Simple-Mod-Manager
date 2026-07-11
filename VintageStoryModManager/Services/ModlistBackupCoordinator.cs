@@ -8,6 +8,8 @@ using VintageStoryModManager.Models;
 
 namespace VintageStoryModManager.Services;
 
+public sealed record ModlistBackupLoadResult(ModPreset? Preset, string? ErrorMessage, bool FileMissing);
+
 internal sealed class ModlistBackupCoordinator : IDisposable
 {
     private readonly Func<string> _ensureBackupDirectory;
@@ -87,5 +89,22 @@ internal sealed class ModlistBackupCoordinator : IDisposable
         {
             _backupSemaphore.Release();
         }
+    }
+
+    public ModlistBackupLoadResult LoadBackupForRestore(string backupPath)
+    {
+        if (!File.Exists(backupPath))
+            return new ModlistBackupLoadResult(null, null, FileMissing: true);
+
+        var loaded = PresetFileLoader.TryLoadPresetFromFile(
+            backupPath,
+            "Backup",
+            new PresetLoadOptions(true, true, true),
+            out var preset,
+            out var errorMessage);
+
+        return loaded
+            ? new ModlistBackupLoadResult(preset, null, FileMissing: false)
+            : new ModlistBackupLoadResult(null, errorMessage, FileMissing: false);
     }
 }

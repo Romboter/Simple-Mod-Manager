@@ -105,7 +105,9 @@ public partial class MainWindow
     {
         if (_viewModel is null) return;
 
-        if (!File.Exists(backupPath))
+        var result = _modlistBackupCoordinator.LoadBackupForRestore(backupPath);
+
+        if (result.FileMissing)
         {
             await _confirmationService.NotifyAsync(
                     ModlistBackupDialogTextBuilder.SelectedBackupMissingMessage,
@@ -115,13 +117,9 @@ public partial class MainWindow
             return;
         }
 
-        if (!PresetFileLoader.TryLoadPresetFromFile(backupPath,
-                "Backup",
-                ModListLoadOptions,
-                out var preset,
-                out var errorMessage))
+        if (result.Preset is null)
         {
-            var message = ModlistBackupDialogTextBuilder.BuildRestoreFailureMessage(errorMessage);
+            var message = ModlistBackupDialogTextBuilder.BuildRestoreFailureMessage(result.ErrorMessage);
             await _confirmationService.NotifyAsync(
                     message,
                     "Simple VS Manager",
@@ -130,10 +128,9 @@ public partial class MainWindow
             return;
         }
 
-        var loadedPreset = preset!;
-        await ApplyPresetAsync(loadedPreset, restoreConfigurations).ConfigureAwait(true);
+        await ApplyPresetAsync(result.Preset, restoreConfigurations).ConfigureAwait(true);
         _viewModel.ReportStatus(
-            ModlistBackupDialogTextBuilder.BuildRestoredStatusMessage(loadedPreset.Name));
+            ModlistBackupDialogTextBuilder.BuildRestoredStatusMessage(result.Preset.Name));
     }
 
     private Task CreateAppStartedBackupAsync()
