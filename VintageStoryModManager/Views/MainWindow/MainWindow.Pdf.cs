@@ -1,9 +1,7 @@
 #nullable enable
 
-using System.Collections.Generic;
 using System.IO;
 using System.Security;
-using System.Threading.Tasks;
 using System.Windows;
 using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Models;
