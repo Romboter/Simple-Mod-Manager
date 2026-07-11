@@ -6,8 +6,6 @@ using VintageStoryModManager.Models;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.Views.Dialogs;
 
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
-
 namespace VintageStoryModManager.Views;
 
 public partial class MainWindow
@@ -33,14 +31,13 @@ public partial class MainWindow
     {
         if (!_userConfiguration.GameProfileCreationWarningAcknowledged)
         {
-            var confirmation = WpfMessageBox.Show(
-                this,
-                "Game Profiles are specifically made to manage different Vintage Story installations, using different Data and Game folders. If you are looking for a way to easily switch between mod lists, use Modlists to swap between different mod sets. This dialog will not be shown again.",
-                "Simple VS Manager",
-                MessageBoxButton.OKCancel,
-                MessageBoxImage.Warning);
+            var confirmation = await _confirmationService.ConfirmOkCancelAsync(
+                    "Game Profiles are specifically made to manage different Vintage Story installations, using different Data and Game folders. If you are looking for a way to easily switch between mod lists, use Modlists to swap between different mod sets. This dialog will not be shown again.",
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
 
-            if (confirmation != MessageBoxResult.OK) return;
+            if (!confirmation) return;
 
             _userConfiguration.SetGameProfileCreationWarningAcknowledged(true);
         }

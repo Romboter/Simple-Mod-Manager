@@ -60,7 +60,7 @@ public partial class MainWindow
         var gameVersion = ResolveGameVersion(metadataDialog.VintageStoryVersion);
 
         var selectedConfigOptions = metadataDialog.GetSelectedConfigOptions();
-        var includedConfigurations = TryReadModConfigurations(selectedConfigOptions);
+        var includedConfigurations = await TryReadModConfigurationsAsync(selectedConfigOptions).ConfigureAwait(true);
 
         await TrySaveInstalledModsPdfAsync(
                 listName,

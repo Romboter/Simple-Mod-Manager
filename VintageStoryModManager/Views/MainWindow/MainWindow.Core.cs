@@ -252,6 +252,8 @@ public partial class MainWindow : Window
 
     private bool _isApplyingPreset;
 
+    private bool _closeConfirmed;
+
     private bool _isAutomaticRefreshRunning;
 
     private bool _isCloudModlistRefreshInProgress;

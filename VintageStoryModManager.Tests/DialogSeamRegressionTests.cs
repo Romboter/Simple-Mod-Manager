@@ -19,11 +19,8 @@ public sealed class DialogSeamRegressionTests
     /// </summary>
     private static readonly Dictionary<string, int> AllowedDirectDialogCallCounts = new()
     {
-        ["MainWindow.Startup.cs"] = 5,
         ["MainWindow.PathInitialization.cs"] = 5,
-        ["MainWindow.ViewModel.cs"] = 3,
-        ["MainWindow.Profiles.cs"] = 1,
-        ["MainWindow.ModConfigCapture.cs"] = 1,
+        ["MainWindow.ViewModel.cs"] = 1,
         ["MainWindow.CloudManagement.cs"] = 1,
     };
 
