@@ -27,7 +27,7 @@ public partial class MainWindow
         FirebaseModlistStore store;
         try
         {
-            store = await EnsureCloudStoreInitializedAsync();
+            store = await _cloudWorkflowCoordinator.EnsureStoreInitializedAsync();
         }
         catch (Exception ex)
         {
@@ -88,69 +88,4 @@ public partial class MainWindow
                 .ConfigureAwait(true);
         }
     }
-
-    private async Task MigrateLegacyFirebaseDataIfNeededAsync()
-    {
-        if (_firebaseMigrationAttempted) return;
-
-        var playerUid = _viewModel?.PlayerUid;
-        if (string.IsNullOrWhiteSpace(playerUid)) return;
-
-        _firebaseMigrationAttempted = true;
-
-        try
-        {
-            var migrationService = new FirebaseModlistMigrationService();
-            var migrationSucceeded = await migrationService
-                .TryMigrateAsync(playerUid, _viewModel?.PlayerName, _userConfiguration, CancellationToken.None)
-                .ConfigureAwait(true);
-
-            if (migrationSucceeded)
-                await Dispatcher.InvokeAsync(async () =>
-                        await _confirmationService.NotifyAsync(
-                                "Due to bandwidth issues, the manager is changing to another database. Your modlists will be saved and moved to the new database. Each user's modlists will appear in the Online Modlists tab when they update. All compatibility votes have been reset. Thank you for using the manager and voting!",
-                                "Simple VS Manager",
-                                DialogSeverity.Information)
-                            .ConfigureAwait(true))
-                    .Result.ConfigureAwait(true);
-        }
-        catch (Exception ex)
-        {
-            StatusLogService.AppendStatus($"Failed to migrate cloud modlists to the new Firebase project: {ex.Message}",
-                true);
-        }
-    }
-
-    private async Task<FirebaseModlistStore> EnsureCloudStoreInitializedAsync()
-    {
-        if (_cloudModlistStore is { } existingStore)
-        {
-            ApplyPlayerIdentityToCloudStore(existingStore);
-            return existingStore;
-        }
-
-        await _cloudStoreLock.WaitAsync();
-        try
-        {
-            if (_cloudModlistStore is { } cached)
-            {
-                ApplyPlayerIdentityToCloudStore(cached);
-                return cached;
-            }
-
-            // Migration is only attempted once (see _firebaseMigrationAttempted flag).
-            // The dialog is shown from the primary call in MainWindow_Loaded.
-            await MigrateLegacyFirebaseDataIfNeededAsync().ConfigureAwait(false);
-
-            var store = new FirebaseModlistStore();
-            ApplyPlayerIdentityToCloudStore(store);
-            _cloudModlistStore = store;
-            return store;
-        }
-        finally
-        {
-            _cloudStoreLock.Release();
-        }
-    }
-
 }
