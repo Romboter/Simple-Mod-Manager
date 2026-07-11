@@ -82,15 +82,11 @@ public partial class MainWindow
         try
         {
             var modListDirectory = EnsureModListDirectory();
-            var suggestedEntryName = !string.IsNullOrWhiteSpace(listName)
-                ? listName
-                : suggestedName;
-            var entryName = FileNameHelper.BuildSuggestedFileName(suggestedEntryName, "Modlist");
-            var filePath = Path.Combine(modListDirectory, entryName + ".json");
+            var resolution = ModlistWorkflowService.ResolveModlistFilePath(modListDirectory, listName, suggestedName, ".json");
 
-            if (File.Exists(filePath))
+            if (resolution.AlreadyExists)
             {
-                var message = ModlistDialogTextBuilder.BuildReplaceExistingMessage(Path.GetFileName(filePath));
+                var message = ModlistDialogTextBuilder.BuildReplaceExistingMessage(Path.GetFileName(resolution.FilePath));
                 var confirmation = await _confirmationService.ConfirmAsync(
                         message,
                         "Replace Modlist",
@@ -100,16 +96,17 @@ public partial class MainWindow
                 if (!confirmation) return (false, null);
             }
 
-            var serializable = PresetSnapshotBuilder.BuildModlistPreset(
+            var presetName = string.IsNullOrWhiteSpace(listName) ? resolution.EntryName : listName;
+            var saveResult = ModlistWorkflowService.SaveJsonModlist(
+                resolution.FilePath,
                 _viewModel!.GetCurrentModStates(),
-                string.IsNullOrWhiteSpace(listName) ? entryName : listName,
+                presetName,
                 description,
                 version,
                 createdBy,
                 includedConfigurations,
                 gameVersion);
 
-            var saveResult = LocalModlistFileService.Save(filePath, serializable);
             if (!saveResult.Success)
             {
                 await _confirmationService.NotifyAsync(
@@ -120,8 +117,8 @@ public partial class MainWindow
                 return (false, null);
             }
 
-            _viewModel?.ReportStatus($"Saved modlist \"{entryName}\".");
-            return (true, filePath);
+            _viewModel?.ReportStatus($"Saved modlist \"{resolution.EntryName}\".");
+            return (true, resolution.FilePath);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
                                       or PathTooLongException)

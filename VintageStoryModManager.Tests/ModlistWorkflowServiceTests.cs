@@ -94,4 +94,25 @@ public sealed class ModlistWorkflowServiceTests
         Assert.Equal("My List", document.RootElement.GetProperty("name").GetString());
         Assert.Equal("Tester", document.RootElement.GetProperty("uploader").GetString());
     }
+
+    [Fact]
+    public void SaveJsonModlist_WritesFileAndReturnsSuccess()
+    {
+        var directory = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            var filePath = Path.Combine(directory, "My List.json");
+            var modStates = new[] { new ModPresetModState("mod1", "1.0.0", true, null, null) };
+
+            var result = ModlistWorkflowService.SaveJsonModlist(
+                filePath, modStates, "My List", null, null, "Tester", null, "1.20.0");
+
+            Assert.True(result.Success);
+            Assert.True(File.Exists(filePath));
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
 }
