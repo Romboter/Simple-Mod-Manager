@@ -12,7 +12,7 @@ public enum CloudMigrationOutcome
     Migrated
 }
 
-public sealed class CloudWorkflowCoordinator
+public sealed class CloudWorkflowCoordinator : IDisposable
 {
     private readonly Func<string?> _playerUidProvider;
     private readonly Func<string?> _playerNameProvider;
@@ -37,6 +37,23 @@ public sealed class CloudWorkflowCoordinator
     public void ApplyPlayerIdentity(FirebaseModlistStore? store)
     {
         store?.SetPlayerIdentity(_playerUidProvider(), _playerNameProvider());
+    }
+
+    /// <summary>
+    /// Drops the cached store reference without disposing it, forcing the next
+    /// <see cref="EnsureStoreInitializedAsync"/> call to construct a fresh one. Used after cloud
+    /// authorization/account data is deleted (matches the pre-extraction MainWindow behavior of
+    /// setting the field to null without disposing the previous instance).
+    /// </summary>
+    public void ResetStore()
+    {
+        _store = null;
+    }
+
+    public void Dispose()
+    {
+        _storeLock.Dispose();
+        _store?.Dispose();
     }
 
     public async Task<CloudMigrationOutcome> MigrateLegacyFirebaseDataIfNeededAsync()

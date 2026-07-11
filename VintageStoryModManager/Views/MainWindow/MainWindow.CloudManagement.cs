@@ -198,7 +198,7 @@ public partial class MainWindow
 
         DeleteFirebaseAuthFiles();
 
-        _cloudModlistStore = null;
+        _cloudWorkflowCoordinator.ResetStore();
         _cloudModlistsLoaded = false;
 
         SetCloudModlistSelection(null);

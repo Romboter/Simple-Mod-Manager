@@ -95,7 +95,7 @@ public partial class MainWindow
             DeveloperProfileManager.UpdateOriginalProfile(profileDirectory);
         }
 
-        _cloudModlistStore = null;
+        _cloudWorkflowCoordinator.ResetStore();
         await ReloadViewModelAsync();
         UpdateDeveloperProfileMenuChecks();
     }

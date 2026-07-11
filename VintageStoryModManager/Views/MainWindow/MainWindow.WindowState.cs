@@ -78,8 +78,7 @@ public partial class MainWindow
         StopModsWatcher();
         _votesCacheWatcher?.Dispose();
         _modlistBackupCoordinator.Dispose();
-        _cloudStoreLock.Dispose();
-        _cloudModlistStore?.Dispose();
+        _cloudWorkflowCoordinator.Dispose();
         base.OnClosed(e);
     }
 }
