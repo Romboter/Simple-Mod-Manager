@@ -7,7 +7,6 @@ using SimpleVsManager.Cloud;
 using VintageStoryModManager.Helpers;
 using VintageStoryModManager.Services;
 using VintageStoryModManager.ViewModels;
-using WpfMessageBox = VintageStoryModManager.Services.ModManagerMessageBox;
 
 namespace VintageStoryModManager.Views;
 
@@ -176,24 +175,26 @@ public partial class MainWindow
         });
     }
 
-    private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
+    private async void MainWindow_OnClosing(object? sender, CancelEventArgs e)
     {
-        if (_isApplyingPreset || _viewModel?.IsLoadingMods == true)
+        if (!_closeConfirmed && (_isApplyingPreset || _viewModel?.IsLoadingMods == true))
         {
+            e.Cancel = true;
+
             const string message =
                 "A modlist is still being applied. Exiting now may leave some mods missing or disabled. Do you want to exit anyway?";
 
-            var result = WpfMessageBox.Show(
-                message,
-                "Simple VS Manager",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+            var confirmed = await _confirmationService.ConfirmAsync(
+                    message,
+                    "Simple VS Manager",
+                    DialogSeverity.Warning)
+                .ConfigureAwait(true);
 
-            if (result != MessageBoxResult.Yes)
-            {
-                e.Cancel = true;
-                return;
-            }
+            if (!confirmed) return;
+
+            _closeConfirmed = true;
+            Close();
+            return;
         }
 
         SaveWindowDimensions();
