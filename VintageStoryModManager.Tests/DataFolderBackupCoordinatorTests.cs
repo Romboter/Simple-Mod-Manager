@@ -70,4 +70,29 @@ public sealed class DataFolderBackupCoordinatorTests
             Environment.SetEnvironmentVariable("VINTAGE_STORY", previousVintageStoryEnv);
         }
     }
+
+    [Fact]
+    public void GetBackupsForRestoreMenu_NullDataDirectory_ReturnsEmpty()
+    {
+        var coordinator = new DataFolderBackupCoordinator(new DataBackupService(Path.GetTempPath()));
+
+        var result = coordinator.GetBackupsForRestoreMenu(null, maxItems: 15);
+
+        Assert.Empty(result.Displayed);
+        Assert.Equal(0, result.TotalMatching);
+    }
+
+    [Fact]
+    public void GetBackupsForRestoreMenu_NoBackupsOnDisk_ReturnsEmpty()
+    {
+        var tempConfigDir = Directory.CreateTempSubdirectory().FullName;
+        var coordinator = new DataFolderBackupCoordinator(new DataBackupService(tempConfigDir));
+
+        var result = coordinator.GetBackupsForRestoreMenu("C:/some-data-dir", maxItems: 15);
+
+        Assert.Empty(result.Displayed);
+        Assert.Equal(0, result.TotalMatching);
+
+        Directory.Delete(tempConfigDir, true);
+    }
 }

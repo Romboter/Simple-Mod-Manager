@@ -6,7 +6,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using VintageStoryModManager.Services;
-using VintageStoryModManager.Helpers;
 using DataFolderBackupProgress = VintageStoryModManager.Services.DataBackupProgress;
 using DataFolderBackupSummary = VintageStoryModManager.Services.DataBackupSummary;
 using WinForms = System.Windows.Forms;
@@ -61,24 +60,14 @@ public partial class MainWindow
         }
 
         var dataDirectory = _dataDirectory;
-        DataFolderBackupSummary[] filteredBackups;
-        if (string.IsNullOrWhiteSpace(dataDirectory))
-        {
-            filteredBackups = Array.Empty<DataFolderBackupSummary>();
-        }
-        else
-        {
-            filteredBackups = backups
-                .Where(summary => PathRelationshipHelper.IsSameDirectory(summary.SourceDataDirectory, dataDirectory))
-                .ToArray();
-        }
+        var menuList = _dataFolderBackupCoordinator.GetBackupsForRestoreMenu(dataDirectory, MaxDataBackupsMenuItems);
 
         var (_, normalizedInstalledVersion) = _dataFolderBackupCoordinator.ResolveInstalledVersionForDelete(_gameDirectory);
         deleteBackupsMenuItem.IsEnabled = !string.IsNullOrWhiteSpace(dataDirectory)
                                           && !string.IsNullOrWhiteSpace(normalizedInstalledVersion)
-                                          && filteredBackups.Length > 0;
+                                          && menuList.TotalMatching > 0;
 
-        if (filteredBackups.Length == 0)
+        if (menuList.TotalMatching == 0)
         {
             var header = string.IsNullOrWhiteSpace(dataDirectory)
                 ? "Set VintagestoryData folder to restore backups"
@@ -91,9 +80,7 @@ public partial class MainWindow
             return;
         }
 
-        var displayedBackups = filteredBackups
-            .Take(MaxDataBackupsMenuItems)
-            .ToArray();
+        var displayedBackups = menuList.Displayed;
 
         foreach (var backup in displayedBackups)
         {
@@ -113,11 +100,11 @@ public partial class MainWindow
             menuItem.Items.Add(item);
         }
 
-        if (filteredBackups.Length > displayedBackups.Length)
+        if (menuList.TotalMatching > displayedBackups.Count)
         {
             menuItem.Items.Add(new MenuItem
             {
-                Header = $"Showing latest {displayedBackups.Length} of {filteredBackups.Length} backups",
+                Header = $"Showing latest {displayedBackups.Count} of {menuList.TotalMatching} backups",
                 IsEnabled = false
             });
         }

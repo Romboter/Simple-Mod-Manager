@@ -18,6 +18,10 @@ public readonly record struct DataBackupRestoreCheck(
     string? BackupVersionDisplay,
     string? InstalledVersionDisplay);
 
+public readonly record struct DataBackupMenuList(
+    IReadOnlyList<DataBackupSummary> Displayed,
+    int TotalMatching);
+
 internal sealed class DataFolderBackupCoordinator
 {
     private DataBackupService _dataBackupService;
@@ -96,5 +100,18 @@ internal sealed class DataFolderBackupCoordinator
             return (null, null);
 
         return (installedVersion ?? normalizedInstalledVersion, normalizedInstalledVersion);
+    }
+
+    public DataBackupMenuList GetBackupsForRestoreMenu(string? dataDirectory, int maxItems)
+    {
+        if (string.IsNullOrWhiteSpace(dataDirectory))
+            return new DataBackupMenuList(Array.Empty<DataBackupSummary>(), 0);
+
+        var filtered = GetAvailableBackups()
+            .Where(summary => PathRelationshipHelper.IsSameDirectory(summary.SourceDataDirectory, dataDirectory))
+            .ToArray();
+
+        var displayed = filtered.Take(maxItems).ToArray();
+        return new DataBackupMenuList(displayed, filtered.Length);
     }
 }
