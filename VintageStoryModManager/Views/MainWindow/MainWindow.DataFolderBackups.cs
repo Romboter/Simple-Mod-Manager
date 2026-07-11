@@ -6,7 +6,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using VintageStoryModManager.Services;
-using VintageStoryModManager.Helpers;
 using DataFolderBackupProgress = VintageStoryModManager.Services.DataBackupProgress;
 using DataFolderBackupSummary = VintageStoryModManager.Services.DataBackupSummary;
 using WinForms = System.Windows.Forms;
@@ -61,24 +60,14 @@ public partial class MainWindow
         }
 
         var dataDirectory = _dataDirectory;
-        DataFolderBackupSummary[] filteredBackups;
-        if (string.IsNullOrWhiteSpace(dataDirectory))
-        {
-            filteredBackups = Array.Empty<DataFolderBackupSummary>();
-        }
-        else
-        {
-            filteredBackups = backups
-                .Where(summary => PathRelationshipHelper.IsSameDirectory(summary.SourceDataDirectory, dataDirectory))
-                .ToArray();
-        }
+        var menuList = _dataFolderBackupCoordinator.GetBackupsForRestoreMenu(dataDirectory, MaxDataBackupsMenuItems);
 
-        var (_, normalizedInstalledVersion) = VintageStoryVersionLocator.GetNormalizedInstalledVersion(_gameDirectory);
+        var (_, normalizedInstalledVersion) = _dataFolderBackupCoordinator.ResolveInstalledVersionForDelete(_gameDirectory);
         deleteBackupsMenuItem.IsEnabled = !string.IsNullOrWhiteSpace(dataDirectory)
                                           && !string.IsNullOrWhiteSpace(normalizedInstalledVersion)
-                                          && filteredBackups.Length > 0;
+                                          && menuList.TotalMatching > 0;
 
-        if (filteredBackups.Length == 0)
+        if (menuList.TotalMatching == 0)
         {
             var header = string.IsNullOrWhiteSpace(dataDirectory)
                 ? "Set VintagestoryData folder to restore backups"
@@ -91,9 +80,7 @@ public partial class MainWindow
             return;
         }
 
-        var displayedBackups = filteredBackups
-            .Take(MaxDataBackupsMenuItems)
-            .ToArray();
+        var displayedBackups = menuList.Displayed;
 
         foreach (var backup in displayedBackups)
         {
@@ -113,11 +100,11 @@ public partial class MainWindow
             menuItem.Items.Add(item);
         }
 
-        if (filteredBackups.Length > displayedBackups.Length)
+        if (menuList.TotalMatching > displayedBackups.Count)
         {
             menuItem.Items.Add(new MenuItem
             {
-                Header = $"Showing latest {displayedBackups.Length} of {filteredBackups.Length} backups",
+                Header = $"Showing latest {displayedBackups.Count} of {menuList.TotalMatching} backups",
                 IsEnabled = false
             });
         }
@@ -244,7 +231,7 @@ public partial class MainWindow
             return;
         }
 
-        var (installedVersion, normalizedInstalledVersion) = VintageStoryVersionLocator.GetNormalizedInstalledVersion(_gameDirectory);
+        var (displayVersion, normalizedInstalledVersion) = _dataFolderBackupCoordinator.ResolveInstalledVersionForDelete(_gameDirectory);
         if (string.IsNullOrWhiteSpace(normalizedInstalledVersion))
         {
             await _confirmationService.NotifyAsync(
@@ -255,9 +242,8 @@ public partial class MainWindow
             return;
         }
 
-        var displayVersion = installedVersion ?? normalizedInstalledVersion;
         var confirmed = await _confirmationService.ConfirmAsync(
-                DataFolderBackupDialogTextBuilder.BuildDeleteConfirmation(displayVersion),
+                DataFolderBackupDialogTextBuilder.BuildDeleteConfirmation(displayVersion!),
                 "Simple VS Manager",
                 DialogSeverity.Warning)
             .ConfigureAwait(true);
@@ -266,7 +252,7 @@ public partial class MainWindow
 
         try
         {
-            var deleted = _dataFolderBackupCoordinator.DeleteBackups(_dataDirectory!, displayVersion);
+            var deleted = _dataFolderBackupCoordinator.DeleteBackups(_dataDirectory!, displayVersion!);
             if (deleted == 0)
             {
                 await _confirmationService.NotifyAsync(
@@ -299,34 +285,35 @@ public partial class MainWindow
 
     private async Task RestoreDataBackupAsync(DataFolderBackupSummary summary)
     {
-        if (string.IsNullOrWhiteSpace(_dataDirectory) || !Directory.Exists(_dataDirectory)) return;
+        var check = _dataFolderBackupCoordinator.ValidateRestore(summary, _dataDirectory, _gameDirectory);
 
-        if (!PathRelationshipHelper.IsSameDirectory(summary.SourceDataDirectory, _dataDirectory))
+        switch (check.Result)
         {
-            await _confirmationService.NotifyAsync(
-                    DataFolderBackupDialogTextBuilder.DifferentDataFolderRestoreMessage,
-                    "Simple VS Manager",
-                    DialogSeverity.Warning)
-                .ConfigureAwait(true);
-            return;
-        }
+            case DataBackupRestoreValidation.DataDirectoryUnavailable:
+                await _confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.DataDirectoryUnavailableForRestoreMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
+                return;
 
-        var (installedVersion, normalizedInstalledVersion) = VintageStoryVersionLocator.GetNormalizedInstalledVersion(_gameDirectory);
-        var normalizedBackupVersion = VersionStringUtility.Normalize(summary.VintageStoryVersion);
-        if (!string.IsNullOrWhiteSpace(normalizedBackupVersion)
-            && !string.IsNullOrWhiteSpace(normalizedInstalledVersion)
-            && !string.Equals(normalizedBackupVersion, normalizedInstalledVersion, StringComparison.OrdinalIgnoreCase))
-        {
-            var backupVersionDisplay = summary.VintageStoryVersion ?? normalizedBackupVersion;
-            var installedVersionDisplay = installedVersion ?? normalizedInstalledVersion;
-            await _confirmationService.NotifyAsync(
-                    DataFolderBackupDialogTextBuilder.BuildVersionMismatchMessage(
-                        backupVersionDisplay,
-                        installedVersionDisplay),
-                    "Simple VS Manager",
-                    DialogSeverity.Warning)
-                .ConfigureAwait(true);
-            return;
+            case DataBackupRestoreValidation.DifferentDataFolder:
+                await _confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.DifferentDataFolderRestoreMessage,
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
+                return;
+
+            case DataBackupRestoreValidation.VersionMismatch:
+                await _confirmationService.NotifyAsync(
+                        DataFolderBackupDialogTextBuilder.BuildVersionMismatchMessage(
+                            check.BackupVersionDisplay!,
+                            check.InstalledVersionDisplay!),
+                        "Simple VS Manager",
+                        DialogSeverity.Warning)
+                    .ConfigureAwait(true);
+                return;
         }
 
         ShowDataBackupOverlay("Preparing to restore VintagestoryData...");

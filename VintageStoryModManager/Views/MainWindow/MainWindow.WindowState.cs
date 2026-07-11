@@ -77,7 +77,7 @@ public partial class MainWindow
         UnsubscribeModBrowserFromDirectoryWatcher();
         StopModsWatcher();
         _votesCacheWatcher?.Dispose();
-        _backupSemaphore.Dispose();
+        _modlistBackupCoordinator.Dispose();
         _cloudStoreLock.Dispose();
         _cloudModlistStore?.Dispose();
         base.OnClosed(e);

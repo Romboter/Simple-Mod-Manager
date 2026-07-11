@@ -59,9 +59,9 @@ public partial class MainWindow : Window
     private static readonly int AutomaticConfigMaxWordDistance = DevConfig.AutomaticConfigMaxWordDistance;
 
     private static readonly HttpClient ConnectivityTestHttpClient = new()
-        {
-            Timeout = TimeSpan.FromSeconds(10)
-        };
+    {
+        Timeout = TimeSpan.FromSeconds(10)
+    };
 
     private static readonly PresetLoadOptions StandardPresetLoadOptions = new(true, false, false);
 
@@ -142,54 +142,52 @@ public partial class MainWindow : Window
                 new PropertyMetadata(false));
 
     public bool IsDataBackupInProgress
-        {
-            get => (bool)GetValue(IsDataBackupInProgressProperty);
-            set => SetValue(IsDataBackupInProgressProperty, value);
-        }
+    {
+        get => (bool)GetValue(IsDataBackupInProgressProperty);
+        set => SetValue(IsDataBackupInProgressProperty, value);
+    }
 
     public double DataBackupProgress
-        {
-            get => (double)GetValue(DataBackupProgressProperty);
-            set => SetValue(DataBackupProgressProperty, value);
-        }
+    {
+        get => (double)GetValue(DataBackupProgressProperty);
+        set => SetValue(DataBackupProgressProperty, value);
+    }
 
     public string DataBackupStatusMessage
-        {
-            get => (string)GetValue(DataBackupStatusMessageProperty);
-            set => SetValue(DataBackupStatusMessageProperty, value);
-        }
+    {
+        get => (string)GetValue(DataBackupStatusMessageProperty);
+        set => SetValue(DataBackupStatusMessageProperty, value);
+    }
 
     public bool IsModlistInstallInProgress
-        {
-            get => (bool)GetValue(IsModlistInstallInProgressProperty);
-            set => SetValue(IsModlistInstallInProgressProperty, value);
-        }
+    {
+        get => (bool)GetValue(IsModlistInstallInProgressProperty);
+        set => SetValue(IsModlistInstallInProgressProperty, value);
+    }
 
     public double ModlistInstallProgress
-        {
-            get => (double)GetValue(ModlistInstallProgressProperty);
-            set => SetValue(ModlistInstallProgressProperty, value);
-        }
+    {
+        get => (double)GetValue(ModlistInstallProgressProperty);
+        set => SetValue(ModlistInstallProgressProperty, value);
+    }
 
     public string ModlistInstallStatusMessage
-        {
-            get => (string)GetValue(ModlistInstallStatusMessageProperty);
-            set => SetValue(ModlistInstallStatusMessageProperty, value);
-        }
+    {
+        get => (string)GetValue(ModlistInstallStatusMessageProperty);
+        set => SetValue(ModlistInstallStatusMessageProperty, value);
+    }
 
     public string ModlistDownloadSpeed
-        {
-            get => (string)GetValue(ModlistDownloadSpeedProperty);
-            set => SetValue(ModlistDownloadSpeedProperty, value);
-        }
+    {
+        get => (string)GetValue(ModlistDownloadSpeedProperty);
+        set => SetValue(ModlistDownloadSpeedProperty, value);
+    }
 
     public bool HasModlistDownloadSpeed
-        {
-            get => (bool)GetValue(HasModlistDownloadSpeedProperty);
-            set => SetValue(HasModlistDownloadSpeedProperty, value);
-        }
-
-    private readonly SemaphoreSlim _backupSemaphore = new(1, 1);
+    {
+        get => (bool)GetValue(HasModlistDownloadSpeedProperty);
+        set => SetValue(HasModlistDownloadSpeedProperty, value);
+    }
 
     private readonly SemaphoreSlim _cloudStoreLock = new(1, 1);
 
@@ -206,6 +204,8 @@ public partial class MainWindow : Window
     private readonly ModUpdateService _modUpdateService = new();
 
     private readonly DataFolderBackupCoordinator _dataFolderBackupCoordinator;
+
+    private readonly ModlistBackupCoordinator _modlistBackupCoordinator;
 
     private readonly ModActivityLoggingService _modActivityLoggingService;
 
@@ -306,98 +306,99 @@ public partial class MainWindow : Window
     private readonly IConfirmationService _confirmationService;
 
     public MainWindow()
+    {
+        RefreshModsUiCommand = new AsyncRelayCommand(
+            RefreshModsWithErrorHandlingAsync,
+            AsyncRelayCommandOptions.AllowConcurrentExecutions);
+
+        _userConfiguration = new UserConfigurationService();
+        _confirmationService = new ConfirmationService();
+        _dataFolderBackupCoordinator = new DataFolderBackupCoordinator(new DataBackupService(
+            _userConfiguration.GetConfigurationDirectory(),
+            _userConfiguration.CustomDataBackupLocation));
+        _modlistBackupCoordinator = new ModlistBackupCoordinator(EnsureBackupDirectory);
+        _modActivityLoggingService = new ModActivityLoggingService(_userConfiguration);
+        _serverTargetService = new ServerTargetService(_userConfiguration.GetConfigurationDirectory());
+        _modSelection = new ModGridSelectionService(
+            Dispatcher,
+            UpdateSelectedModButtons,
+            UpdateSelectedModFixButton,
+            UpdateSelectedModCopyForServerButton);
+
+        SettingsMenu = new SettingsMenuViewModel(
+            _userConfiguration,
+            _confirmationService,
+            () => _dataDirectory,
+            disable => _viewModel?.SetAutoRefreshDisabled(disable),
+            () => _viewModel?.OnInternetAccessStateChanged(),
+            InitializeTraceListener);
+
+        ThemeMenu = new ThemeMenuViewModel(
+            _userConfiguration,
+            (theme, palette) => App.ApplyTheme(theme, palette),
+            ClearScrollViewerCache);
+
+        InitializeComponent();
+
+        InitializeModBrowserView();
+
+        DeveloperProfileManager.CurrentProfileChanged += DeveloperProfileManager_OnCurrentProfileChanged;
+
+        RootGrid.SizeChanged += RootGrid_OnSizeChanged;
+
+        UpdateModlistLoadingUiState();
+
+        InitializeColumnVisibilityMenu();
+
+        ApplyStoredWindowDimensions();
+        InternetAccessManager.SetInternetAccessDisabled(_userConfiguration.DisableInternetAccess);
+        UpdateServerOptionsState(_userConfiguration.EnableServerOptions);
+        DisableHoverEffectsMenuItem.IsChecked = _userConfiguration.DisableHoverEffects;
+        HoverEffectHelper.SetDisableHoverEffects(this, _userConfiguration.DisableHoverEffects);
+        InitializeTraceListener();
+        _modActivityLoggingService.LogAppLaunch();
+
+        RefreshCustomThemeMenuItems();
+
+        if (ManagerVersionMenuItem is not null)
         {
-            RefreshModsUiCommand = new AsyncRelayCommand(
-                RefreshModsWithErrorHandlingAsync,
-                AsyncRelayCommandOptions.AllowConcurrentExecutions);
-
-            _userConfiguration = new UserConfigurationService();
-            _confirmationService = new ConfirmationService();
-            _dataFolderBackupCoordinator = new DataFolderBackupCoordinator(new DataBackupService(
-                _userConfiguration.GetConfigurationDirectory(),
-                _userConfiguration.CustomDataBackupLocation));
-            _modActivityLoggingService = new ModActivityLoggingService(_userConfiguration);
-            _serverTargetService = new ServerTargetService(_userConfiguration.GetConfigurationDirectory());
-            _modSelection = new ModGridSelectionService(
-                Dispatcher,
-                UpdateSelectedModButtons,
-                UpdateSelectedModFixButton,
-                UpdateSelectedModCopyForServerButton);
-
-            SettingsMenu = new SettingsMenuViewModel(
-                _userConfiguration,
-                _confirmationService,
-                () => _dataDirectory,
-                disable => _viewModel?.SetAutoRefreshDisabled(disable),
-                () => _viewModel?.OnInternetAccessStateChanged(),
-                InitializeTraceListener);
-
-            ThemeMenu = new ThemeMenuViewModel(
-                _userConfiguration,
-                (theme, palette) => App.ApplyTheme(theme, palette),
-                ClearScrollViewerCache);
-
-            InitializeComponent();
-
-            InitializeModBrowserView();
-
-            DeveloperProfileManager.CurrentProfileChanged += DeveloperProfileManager_OnCurrentProfileChanged;
-
-            RootGrid.SizeChanged += RootGrid_OnSizeChanged;
-
-            UpdateModlistLoadingUiState();
-
-            InitializeColumnVisibilityMenu();
-
-            ApplyStoredWindowDimensions();
-            InternetAccessManager.SetInternetAccessDisabled(_userConfiguration.DisableInternetAccess);
-            UpdateServerOptionsState(_userConfiguration.EnableServerOptions);
-            DisableHoverEffectsMenuItem.IsChecked = _userConfiguration.DisableHoverEffects;
-            HoverEffectHelper.SetDisableHoverEffects(this, _userConfiguration.DisableHoverEffects);
-            InitializeTraceListener();
-            _modActivityLoggingService.LogAppLaunch();
-
-            RefreshCustomThemeMenuItems();
-
-            if (ManagerVersionMenuItem is not null)
+            var managerVersion = ManagerVersionHelper.GetManagerInformationalVersion();
+            if (string.IsNullOrWhiteSpace(managerVersion))
             {
-                var managerVersion = ManagerVersionHelper.GetManagerInformationalVersion();
-                if (string.IsNullOrWhiteSpace(managerVersion))
-                {
-                    ManagerVersionMenuItem.Visibility = Visibility.Collapsed;
-                }
-                else
-                {
-                    ManagerVersionMenuItem.Header = $"Version: {managerVersion}";
-                    ManagerVersionMenuItem.Visibility = Visibility.Visible;
-                }
+                ManagerVersionMenuItem.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                ManagerVersionMenuItem.Header = $"Version: {managerVersion}";
+                ManagerVersionMenuItem.Visibility = Visibility.Visible;
+            }
+        }
+
+        TryInitializePaths();
+        RefreshDeveloperProfilesMenuEntries();
+        UpdateGameProfileMenuChecks();
+        UpdateActiveGameProfileDisplay();
+        UpdateSyncToServerMenuState();
+
+        UpdateGameVersionMenuItem(VintageStoryVersionLocator.GetInstalledVersion(_gameDirectory));
+
+        if (!string.IsNullOrWhiteSpace(_dataDirectory))
+            try
+            {
+                InitializeViewModel();
+            }
+            catch (Exception ex)
+            {
+                HandleViewModelInitializationFailure(ex);
             }
 
-            TryInitializePaths();
-            RefreshDeveloperProfilesMenuEntries();
-            UpdateGameProfileMenuChecks();
-            UpdateActiveGameProfileDisplay();
-            UpdateSyncToServerMenuState();
+        Loaded += MainWindow_Loaded;
+        Closing += MainWindow_OnClosing;
+        InternetAccessManager.InternetAccessChanged += InternetAccessManager_OnInternetAccessChanged;
 
-            UpdateGameVersionMenuItem(VintageStoryVersionLocator.GetInstalledVersion(_gameDirectory));
-
-            if (!string.IsNullOrWhiteSpace(_dataDirectory))
-                try
-                {
-                    InitializeViewModel();
-                }
-                catch (Exception ex)
-                {
-                    HandleViewModelInitializationFailure(ex);
-                }
-
-            Loaded += MainWindow_Loaded;
-            Closing += MainWindow_OnClosing;
-            InternetAccessManager.InternetAccessChanged += InternetAccessManager_OnInternetAccessChanged;
-
-            UpdateCloudModlistControlsEnabledState();
-            UpdateLocalModlistControlsEnabledState();
-        }
+        UpdateCloudModlistControlsEnabledState();
+        UpdateLocalModlistControlsEnabledState();
+    }
 
     public IAsyncRelayCommand RefreshModsUiCommand { get; }
 
