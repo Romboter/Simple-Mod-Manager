@@ -163,19 +163,24 @@
                             IsCheckable="True"
                             IsChecked="{Binding SettingsMenu.AutomaticDataBackupsEnabled, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
-                        <Separator x:Name="ServerOptionsSeparator1" />
+                        <Separator
+                            x:Name="ServerOptionsSeparator1"
+                            Visibility="{Binding ServerSync.IsServerOptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource IMM.BooleanToVisibilityConverter}}" />
                         <MenuItem
                             x:Name="ManageServerTargetsMenuItem"
                             Height="35"
-                            Click="ManageServerTargetsMenuItem_OnClick"
-                            Header="Server Targets..." />
+                            Command="{Binding ServerSync.ManageServerTargetsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            Header="Server Targets..."
+                            Visibility="{Binding ServerSync.IsServerOptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource IMM.BooleanToVisibilityConverter}}" />
                         <MenuItem
                             x:Name="SyncToServerMenuItem"
                             Height="35"
-                            Click="SyncToServerMenuItem_OnClick"
+                            Command="{Binding ServerSync.SyncToServerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             Header="Sync to Server..."
-                            IsEnabled="False" />
-                        <Separator x:Name="ServerOptionsSeparator2" />
+                            Visibility="{Binding ServerSync.IsServerOptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource IMM.BooleanToVisibilityConverter}}" />
+                        <Separator
+                            x:Name="ServerOptionsSeparator2"
+                            Visibility="{Binding ServerSync.IsServerOptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource IMM.BooleanToVisibilityConverter}}" />
                         <MenuItem
                             Height="35"
                             Click="ExitMenuItem_OnClick"
@@ -519,9 +524,9 @@
                         <MenuItem
                             x:Name="EnableServerOptionsMenuItem"
                             Padding="12,6"
-                            Click="EnableServerOptionsMenuItem_OnClick"
                             Header="Enable server options"
                             IsCheckable="True"
+                            IsChecked="{Binding ServerSync.IsServerOptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
                             Style="{StaticResource ToggleMenuItemStyle}" />
 
                         <MenuItem Padding="12,6" Header="Enable logging for...">
