@@ -18,7 +18,7 @@ public partial class MainWindow
         UpdateGameVersionMenuItem(VintageStoryVersionLocator.GetInstalledVersion(_gameDirectory));
         await ReloadViewModelAsync();
         UpdateActiveGameProfileDisplay();
-        UpdateSyncToServerMenuState();
+        ServerSync.RefreshSyncAvailability();
     }
 
     private void GameProfilesMenuItem_OnSubmenuOpened(object sender, RoutedEventArgs e)
@@ -117,7 +117,7 @@ public partial class MainWindow
         _userConfiguration.SetActiveProfileType(dialog.SelectedProfileType);
         _userConfiguration.SetActiveServerTargetId(dialog.SelectedServerTargetId);
 
-        UpdateSyncToServerMenuState();
+        ServerSync.RefreshSyncAvailability();
     }
 
     private async void DeleteGameProfileMenuItem_OnClick(object sender, RoutedEventArgs e)

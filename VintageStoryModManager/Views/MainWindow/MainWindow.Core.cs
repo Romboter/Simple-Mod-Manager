@@ -320,6 +320,15 @@ public partial class MainWindow : Window, IDialogLauncher
             _userConfiguration);
         _modActivityLoggingService = new ModActivityLoggingService(_userConfiguration);
         _serverTargetService = new ServerTargetService(_userConfiguration.GetConfigurationDirectory());
+        ServerSync = new ServerSyncViewModel(
+            _userConfiguration,
+            _serverTargetService,
+            _syncEngine,
+            _confirmationService,
+            this,
+            ShowHostKeyVerificationAsync,
+            () => _dataDirectory,
+            OnServerOptionsEnabledChanged);
         _modSelection = new ModGridSelectionService(
             Dispatcher,
             UpdateSelectedModButtons,
@@ -353,7 +362,7 @@ public partial class MainWindow : Window, IDialogLauncher
 
         ApplyStoredWindowDimensions();
         InternetAccessManager.SetInternetAccessDisabled(_userConfiguration.DisableInternetAccess);
-        UpdateServerOptionsState(_userConfiguration.EnableServerOptions);
+        OnServerOptionsEnabledChanged(_userConfiguration.EnableServerOptions);
         DisableHoverEffectsMenuItem.IsChecked = _userConfiguration.DisableHoverEffects;
         HoverEffectHelper.SetDisableHoverEffects(this, _userConfiguration.DisableHoverEffects);
         InitializeTraceListener();
@@ -379,7 +388,7 @@ public partial class MainWindow : Window, IDialogLauncher
         RefreshDeveloperProfilesMenuEntries();
         UpdateGameProfileMenuChecks();
         UpdateActiveGameProfileDisplay();
-        UpdateSyncToServerMenuState();
+        ServerSync.RefreshSyncAvailability();
 
         UpdateGameVersionMenuItem(VintageStoryVersionLocator.GetInstalledVersion(_gameDirectory));
 
@@ -411,6 +420,8 @@ public partial class MainWindow : Window, IDialogLauncher
     }
 
     public SettingsMenuViewModel SettingsMenu { get; }
+
+    public ServerSyncViewModel ServerSync { get; }
 
     public ThemeMenuViewModel ThemeMenu { get; }
 
