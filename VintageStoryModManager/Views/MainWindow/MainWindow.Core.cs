@@ -14,7 +14,7 @@ using Point = System.Windows.Point;
 
 namespace VintageStoryModManager.Views;
 
-public partial class MainWindow : Window
+public partial class MainWindow : Window, IDialogLauncher
 {
 
     private const int MaxDataBackupsMenuItems = 15;
@@ -402,6 +402,13 @@ public partial class MainWindow : Window
     }
 
     public IAsyncRelayCommand RefreshModsUiCommand { get; }
+
+    public bool? ShowDialog(Window dialog)
+    {
+        ArgumentNullException.ThrowIfNull(dialog);
+        dialog.Owner = this;
+        return dialog.ShowDialog();
+    }
 
     public SettingsMenuViewModel SettingsMenu { get; }
 
